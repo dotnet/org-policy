@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GitHubPermissionSurveyor": {
+      "commandName": "Project",
+      "commandLineArgs": "dotnet"
+    }
+  }
+}
