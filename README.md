@@ -40,3 +40,13 @@ the same org, the next time the tool runs it won't talk to GitHub.
 This is useful if you want to play with the format of the report. However, that
 also means that you will keep getting (potentially) stale data. So you might
 want to delete the file periodically.
+
+## Markdown export
+
+In case you're a ~~masochist~~ [Markdown fetishist][md], you can also specify
+the file extension `.md`, in which case the result is written as a Markdown
+table. Feel free to use pivot tables and XLOOKUP...oh wait.
+
+My personal opinion: Excel for life. Don't at me.
+
+[md]: https://twitter.com/timheuer/status/1187405333532033026

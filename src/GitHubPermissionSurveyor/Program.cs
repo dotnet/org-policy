@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -76,10 +77,18 @@ namespace GitHubPermissionSurveyor
                 }
             }
 
-            if (outputFileName != null)
-                csvDocument.Save(outputFileName);
-            else
+            if (outputFileName == null)
+            {
                 csvDocument.ViewInExcel();
+            }
+            else
+            {
+                var extension = Path.GetExtension(outputFileName);
+                if (extension == ".md")
+                    csvDocument.SaveAsMarkdownTable(outputFileName);
+                else
+                    csvDocument.Save(outputFileName);
+            }
         }
 
         private static string CreateHyperlink(bool useFormula, string url, string text)
