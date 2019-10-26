@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GitHubPermissionPolicyChecker": {
+      "commandName": "Project",
+      "commandLineArgs": "dotnet"
+    }
+  }
+}

@@ -1,12 +1,11 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace GitHubPermissionSurveyor
+namespace Terrajobst.GitHubCaching
 {
-    internal class CachedTeam
+    public sealed class CachedTeam
     {
         public string Id { get; set; }
         public string Name { get; set; }

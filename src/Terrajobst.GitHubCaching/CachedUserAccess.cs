@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace GitHubPermissionSurveyor
+namespace Terrajobst.GitHubCaching
 {
-    internal class CachedUserAccess
+    public sealed class CachedUserAccess
     {
         public string RepoName { get; set; }
         public string User { get; set; }

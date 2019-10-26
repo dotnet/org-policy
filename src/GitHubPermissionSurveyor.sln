@@ -5,9 +5,13 @@ VisualStudioVersion = 16.0.29409.185
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GitHubPermissionSurveyor", "GitHubPermissionSurveyor\GitHubPermissionSurveyor.csproj", "{55143B90-2894-4BF8-8C56-82D7B32EDCFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrajobst.Csv", "Terrajobst.Csv\Terrajobst.Csv.csproj", "{94F65290-CCE6-44D4-9107-1DB8046DC625}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Terrajobst.Csv", "Terrajobst.Csv\Terrajobst.Csv.csproj", "{94F65290-CCE6-44D4-9107-1DB8046DC625}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrajobst.Csv.Excel", "Terrajobst.Csv.Excel\Terrajobst.Csv.Excel.csproj", "{C245801A-88F8-415B-9D31-2123CF6B2DBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Terrajobst.Csv.Excel", "Terrajobst.Csv.Excel\Terrajobst.Csv.Excel.csproj", "{C245801A-88F8-415B-9D31-2123CF6B2DBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrajobst.GitHubCaching", "Terrajobst.GitHubCaching\Terrajobst.GitHubCaching.csproj", "{DA36972E-CBE7-4F5D-B0A1-00A98191039E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubPermissionPolicyChecker", "GitHubPermissionPolicyChecker\GitHubPermissionPolicyChecker.csproj", "{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +31,14 @@ Global
 		{C245801A-88F8-415B-9D31-2123CF6B2DBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C245801A-88F8-415B-9D31-2123CF6B2DBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C245801A-88F8-415B-9D31-2123CF6B2DBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA36972E-CBE7-4F5D-B0A1-00A98191039E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA36972E-CBE7-4F5D-B0A1-00A98191039E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA36972E-CBE7-4F5D-B0A1-00A98191039E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA36972E-CBE7-4F5D-B0A1-00A98191039E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

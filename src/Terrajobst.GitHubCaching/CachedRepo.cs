@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace GitHubPermissionSurveyor
+namespace Terrajobst.GitHubCaching
 {
-    internal class CachedRepo
+    public sealed class CachedRepo
     {
         public string Name { get; set; }
         public bool IsPrivate { get; set; }

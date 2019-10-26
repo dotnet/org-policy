@@ -1,15 +1,9 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
-namespace GitHubPermissionSurveyor
+namespace Terrajobst.GitHubCaching
 {
-    internal class CachedOrg
+    public sealed class CachedOrg
     {
         public string Name { get; set; }
         public List<string> Owners { get; set; } = new List<string>();
@@ -17,7 +11,7 @@ namespace GitHubPermissionSurveyor
         public List<CachedRepo> Repos { get; set; } = new List<CachedRepo>();
         public List<CachedUserAccess> Collaborators { get; set; } = new List<CachedUserAccess>();
 
-        public void Initialize()
+        internal void Initialize()
         {
             var teamById = Teams.ToDictionary(t => t.Id);
             var repoByName = Repos.ToDictionary(r => r.Name);
@@ -54,50 +48,6 @@ namespace GitHubPermissionSurveyor
             }
 
             Collaborators.RemoveAll(c => c.Repo == null);
-        }
-
-        private static string GetCachedPath()
-        {
-            var exePath = Environment.GetCommandLineArgs()[0];
-            var exeDir = Path.GetDirectoryName(exePath);
-            return Path.Combine(exeDir, "cached-org.json");
-        }
-
-        public static async Task<CachedOrg> LoadAsync(string orgName)
-        {
-            var path = GetCachedPath();
-            if (!File.Exists(path))
-                return null;
-
-            using (var stream = File.OpenRead(path))
-            {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-                options.Converters.Add(new JsonStringEnumConverter());
-                var orgData = await JsonSerializer.DeserializeAsync<CachedOrg>(stream, options);
-                orgData.Initialize();
-
-                if (orgData.Name != orgName)
-                    return null;
-
-                return orgData;
-            }
-        }
-
-        public async Task SaveAsync()
-        {
-            var path = GetCachedPath();
-            using (var stream = File.Create(path))
-            {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-                options.Converters.Add(new JsonStringEnumConverter());
-                await JsonSerializer.SerializeAsync(stream, this, options);
-            }
         }
 
         public string DescribeAccess(CachedUserAccess collaborator)

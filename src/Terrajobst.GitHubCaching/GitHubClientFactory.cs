@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 using Octokit;
 
-namespace GitHubPermissionSurveyor
+namespace Terrajobst.GitHubCaching
 {
-    internal static class GitHubClientFactory
+    public static class GitHubClientFactory
     {
         public static async Task<GitHubClient> CreateAsync(string scopes = "public_repo, read:org")
         {
