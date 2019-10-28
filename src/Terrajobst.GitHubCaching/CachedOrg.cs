@@ -16,6 +16,11 @@ namespace Terrajobst.GitHubCaching
             var teamById = Teams.ToDictionary(t => t.Id);
             var repoByName = Repos.ToDictionary(r => r.Name);
 
+            foreach (var repo in Repos)
+            {
+                repo.Org = this;
+            }
+
             foreach (var team in Teams)
             {
                 if (!string.IsNullOrEmpty(team.ParentId))
@@ -35,6 +40,7 @@ namespace Terrajobst.GitHubCaching
                     }
                 }
 
+                team.Org = this;
                 team.Repos.RemoveAll(r => r.Repo == null);
             }
 
@@ -77,6 +83,21 @@ namespace Terrajobst.GitHubCaching
             }
 
             return "(Collaborator)";
+        }
+
+        public static string GetRepoUrl(string orgName, string repoName)
+        {
+            return $"https://github.com/{orgName}/{repoName}";
+        }
+
+        public static string GetTeamUrl(string orgName, string teamName)
+        {
+            return $"https://github.com/orgs/{orgName}/teams/{teamName.ToLower()}";
+        }
+
+        public static string GetUserUrl(string userName)
+        {
+            return $"https://github.com/{userName}";
         }
     }
 }

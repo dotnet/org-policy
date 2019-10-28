@@ -46,19 +46,18 @@ namespace GitHubPermissionSurveyor
                 {
                     var publicPrivate = repo.IsPrivate ? "private" : "public";
                     var lastPush = repo.LastPush.ToLocalTime().DateTime.ToString();
-                    var repoUrl = $"https://github.com/{cachedOrg.Name}/{repo.Name}";
 
                     foreach (var teamAccess in repo.Teams)
                     {
                         var permissions = teamAccess.Permission.ToString().ToLower();
                         var teamName = teamAccess.Team.Name;
-                        var teamUrl = $"https://github.com/orgs/{cachedOrg.Name}/teams/{teamName.ToLower()}";
+                        var teamUrl = teamAccess.Team.Url;
 
-                        writer.Write(CreateHyperlink(isForExcel, repoUrl, repo.Name));
+                        writer.WriteHyperlink(repo.Url, repo.Name, isForExcel);
                         writer.Write(publicPrivate);
                         writer.Write(lastPush);
                         writer.Write("team");
-                        writer.Write(CreateHyperlink(isForExcel, teamUrl, teamName));
+                        writer.WriteHyperlink(teamUrl, teamName, isForExcel);
                         writer.Write(permissions);
                         writer.Write(teamName);
                         writer.WriteLine();
@@ -67,14 +66,14 @@ namespace GitHubPermissionSurveyor
                     foreach (var userAccess in repo.Users)
                     {
                         var via = cachedOrg.DescribeAccess(userAccess);
-                        var userUrl = $"https://github.com/{userAccess.User}";
+                        var userUrl = CachedOrg.GetUserUrl(userAccess.User);
                         var permissions = userAccess.Permission.ToString().ToLower();
 
-                        writer.Write(CreateHyperlink(isForExcel, repoUrl, repo.Name));
+                        writer.WriteHyperlink(repo.Url, repo.Name, isForExcel);
                         writer.Write(publicPrivate);
                         writer.Write(lastPush);
                         writer.Write("user");
-                        writer.Write(CreateHyperlink(isForExcel, userUrl, userAccess.User));
+                        writer.WriteHyperlink(userUrl, userAccess.User, isForExcel);
                         writer.Write(permissions);
                         writer.Write(via);
                         writer.WriteLine();
@@ -94,13 +93,6 @@ namespace GitHubPermissionSurveyor
                 else
                     csvDocument.Save(outputFileName);
             }
-        }
-
-        private static string CreateHyperlink(bool useFormula, string url, string text)
-        {
-            return useFormula
-                    ? $"=HYPERLINK(\"{url}\", \"{text}\")"
-                    : text;
         }
     }
 }

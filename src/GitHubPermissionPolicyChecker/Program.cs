@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using GitHubPermissionPolicyChecker.Rules;
+
 using Terrajobst.Csv;
 using Terrajobst.GitHubCaching;
 
@@ -35,11 +37,12 @@ namespace GitHubPermissionPolicyChecker
 
         private static async Task RunAsync(string orgName, string outputFileName)
         {
+            var isForExcel = outputFileName == null;
             var client = await GitHubClientFactory.CreateAsync();
             var loader = new CachedOrgLoader(client, Console.Out, forceUpdate: false);
             var cachedOrg = await loader.LoadAsync(orgName);
 
-            var csvDocument = new CsvDocument("org", "rule", "violation");
+            var csvDocument = new CsvDocument("org", "rule", "violation", "repo", "user", "team");
             using (var writer = csvDocument.Append())
             {
                 var rules = GetRules();
@@ -52,7 +55,28 @@ namespace GitHubPermissionPolicyChecker
                     {
                         writer.Write(orgName);
                         writer.Write(ruleName);
-                        writer.Write(violation);
+                        writer.Write(violation.Message);
+
+                        if (violation.Repo == null)
+                            writer.Write(string.Empty);
+                        else
+                            writer.WriteHyperlink(violation.Repo.Url, violation.Repo.Name, isForExcel);
+
+                        if (violation.User == null)
+                        {
+                            writer.Write(string.Empty);
+                        }
+                        else
+                        {
+                            var url = CachedOrg.GetUserUrl(violation.User);
+                            writer.WriteHyperlink(url, violation.User, isForExcel);
+                        }
+
+                        if (violation.Team == null)
+                            writer.Write(string.Empty);
+                        else
+                            writer.WriteHyperlink(violation.Team.Url, violation.Team.Name, isForExcel);
+
                         writer.WriteLine();
                     }
                 }

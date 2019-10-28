@@ -9,6 +9,9 @@ namespace Terrajobst.GitHubCaching
         public CachedPermission Permission { get; set; }
 
         [JsonIgnore]
+        public CachedOrg Org => Repo.Org;
+
+        [JsonIgnore]
         public CachedRepo Repo { get; set; }
     }
 }

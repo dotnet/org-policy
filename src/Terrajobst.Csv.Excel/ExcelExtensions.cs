@@ -157,5 +157,13 @@ namespace Terrajobst.Csv
                 a.Quit();
             }
         }
+
+        public static void WriteHyperlink(this CsvWriter writer, string url, string text, bool useFormula = true)
+        {
+            text = useFormula
+                    ? $"=HYPERLINK(\"{url}\", \"{text}\")"
+                    : text;
+            writer.Write(text);
+        }
     }
 }

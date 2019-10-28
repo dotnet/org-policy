@@ -14,6 +14,12 @@ namespace Terrajobst.GitHubCaching
         public List<CachedTeamAccess> Repos { get; set; } = new List<CachedTeamAccess>();
 
         [JsonIgnore]
+        public CachedOrg Org { get; set; }
+
+        [JsonIgnore]
+        public string Url => CachedOrg.GetTeamUrl(Org.Name, Name);
+
+        [JsonIgnore]
         public CachedTeam Parent { get; set; }
 
         [JsonIgnore]
