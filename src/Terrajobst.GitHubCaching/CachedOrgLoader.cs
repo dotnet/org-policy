@@ -12,12 +12,12 @@ namespace Terrajobst.GitHubCaching
     {
         public CachedOrgLoader(GitHubClient gitHubClient, TextWriter logWriter, bool forceUpdate)
         {
-            GitHubClinet = gitHubClient;
+            GitHubClient = gitHubClient;
             LogWriter = logWriter;
             ForceUpdate = forceUpdate;
         }
 
-        public GitHubClient GitHubClinet { get; }
+        public GitHubClient GitHubClient { get; }
         public TextWriter LogWriter { get; }
         public bool ForceUpdate { get; }
 
@@ -103,20 +103,20 @@ namespace Terrajobst.GitHubCaching
 
         private async Task LoadOwnersAsync(CachedOrg cachedOrg)
         {
-            var owners = await GitHubClinet.Organization.Member.GetAll(cachedOrg.Name, OrganizationMembersFilter.All, OrganizationMembersRole.Admin, ApiOptions.None);
+            var owners = await GitHubClient.Organization.Member.GetAll(cachedOrg.Name, OrganizationMembersFilter.All, OrganizationMembersRole.Admin, ApiOptions.None);
             foreach (var owner in owners)
                 cachedOrg.Owners.Add(owner.Login);
         }
 
         private async Task LoadTeamsAsync(CachedOrg cachedOrg)
         {
-            var teams = await GitHubClinet.Organization.Team.GetAll(cachedOrg.Name);
+            var teams = await GitHubClient.Organization.Team.GetAll(cachedOrg.Name);
 
             var i = 0;
 
             foreach (var team in teams)
             {
-                PrintRateLimit(GitHubClinet);
+                PrintRateLimit(GitHubClient);
                 PrintPercentage(i++, teams.Count, team.Name);
 
                 var cachedTeam = new CachedTeam
@@ -128,12 +128,12 @@ namespace Terrajobst.GitHubCaching
                 cachedOrg.Teams.Add(cachedTeam);
 
                 var request = new TeamMembersRequest(TeamRoleFilter.All);
-                var members = await GitHubClinet.Organization.Team.GetAllMembers(team.Id, request);
+                var members = await GitHubClient.Organization.Team.GetAllMembers(team.Id, request);
 
                 foreach (var member in members)
                     cachedTeam.Members.Add(member.Login);
 
-                foreach (var repo in await GitHubClinet.Organization.Team.GetAllRepositories(team.Id))
+                foreach (var repo in await GitHubClient.Organization.Team.GetAllRepositories(team.Id))
                 {
                     var permissionLevel = repo.Permissions.Admin
                                             ? CachedPermission.Admin
@@ -153,12 +153,12 @@ namespace Terrajobst.GitHubCaching
 
         private async Task LoadReposAndCollaboratorsAsync(CachedOrg cachedOrg)
         {
-            var repos = await GitHubClinet.Repository.GetAllForOrg(cachedOrg.Name);
+            var repos = await GitHubClient.Repository.GetAllForOrg(cachedOrg.Name);
             var i = 0;
 
             foreach (var repo in repos)
             {
-                PrintRateLimit(GitHubClinet);
+                PrintRateLimit(GitHubClient);
                 PrintPercentage(i++, repos.Count, repo.FullName);
 
                 var cachedRepo = new CachedRepo
@@ -169,7 +169,7 @@ namespace Terrajobst.GitHubCaching
                 };
                 cachedOrg.Repos.Add(cachedRepo);
 
-                foreach (var user in await GitHubClinet.Repository.Collaborator.GetAll(repo.Owner.Login, repo.Name))
+                foreach (var user in await GitHubClient.Repository.Collaborator.GetAll(repo.Owner.Login, repo.Name))
                 {
                     var permission = user.Permissions.Admin
                                         ? CachedPermission.Admin
