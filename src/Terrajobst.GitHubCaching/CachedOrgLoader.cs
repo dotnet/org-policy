@@ -34,7 +34,7 @@ namespace Terrajobst.GitHubCaching
                                 ? null
                                 : await LoadFromCacheAsync(orgName);
 
-            if (cachedOrg == null)
+            if (cachedOrg == null || cachedOrg.Version != CachedOrg.CurrentVersion)
             {
                 cachedOrg = await LoadFromGitHubAsync(orgName);
                 await SaveToCacheAsync(orgName);
@@ -89,6 +89,7 @@ namespace Terrajobst.GitHubCaching
 
             var cachedOrg = new CachedOrg
             {
+                Version = CachedOrg.CurrentVersion,
                 Name = orgName
             };
 

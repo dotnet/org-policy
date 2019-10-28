@@ -5,6 +5,9 @@ namespace Terrajobst.GitHubCaching
 {
     public sealed class CachedOrg
     {
+        public static int CurrentVersion = 1;
+
+        public int Version { get; set; }
         public string Name { get; set; }
         public List<string> Owners { get; set; } = new List<string>();
         public List<CachedTeam> Teams { get; set; } = new List<CachedTeam>();
