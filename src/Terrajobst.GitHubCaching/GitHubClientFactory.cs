@@ -11,11 +11,13 @@ namespace Terrajobst.GitHubCaching
 {
     public static class GitHubClientFactory
     {
-        public static async Task<GitHubClient> CreateAsync(string scopes = "public_repo, read:org")
+        public static async Task<GitHubClient> CreateAsync(string token = null, string scopes = "public_repo, read:org")
         {
             var productInformation = new ProductHeaderValue(GetProductName());
             var client = new GitHubClient(productInformation);
-            var token = await GetTokenAsync(scopes);
+            if (string.IsNullOrEmpty(token))
+                token = await GetTokenAsync(scopes);
+
             client.Credentials = new Credentials(token);
             return client;
         }

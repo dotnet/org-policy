@@ -8,9 +8,11 @@ namespace Terrajobst.Ospo
 {
     public static class OspoClientFactory
     {
-        public static async Task<OspoClient> CreateAsync()
+        public static async Task<OspoClient> CreateAsync(string token = null)
         {
-            var token = await GetTokenAsync();
+            if (string.IsNullOrEmpty(token))
+                token = await GetTokenAsync();
+
             return new OspoClient(token);
         }
 

@@ -10,22 +10,29 @@ namespace Terrajobst.GitHubCaching
 {
     public sealed class CachedOrgLoader
     {
-        public CachedOrgLoader(GitHubClient gitHubClient, TextWriter logWriter, bool forceUpdate)
+        public CachedOrgLoader(GitHubClient gitHubClient, TextWriter logWriter = null, string cacheLocation = null, bool forceUpdate = false)
         {
             GitHubClient = gitHubClient;
-            LogWriter = logWriter;
+            LogWriter = logWriter ?? Console.Out;
+            CacheLocation = cacheLocation;
             ForceUpdate = forceUpdate;
         }
 
         public GitHubClient GitHubClient { get; }
         public TextWriter LogWriter { get; }
+        public string CacheLocation { get; }
         public bool ForceUpdate { get; }
 
         private string GetCachedPath(string orgName)
         {
-            var localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var cachedDirectory = Path.Combine(localData, "GitHubPermissionSurveyor", "Cache");
-            return Path.Combine(cachedDirectory, $"{orgName}.json");
+            if (string.IsNullOrEmpty(CacheLocation))
+            {
+                var localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var cachedDirectory = Path.Combine(localData, "GitHubPermissionSurveyor", "Cache");
+                return Path.Combine(cachedDirectory, $"{orgName}.json");
+            }
+
+            return CacheLocation;
         }
 
         public async Task<CachedOrg> LoadAsync(string orgName)
