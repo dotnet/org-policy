@@ -41,6 +41,6 @@ jobs:
     inputs:
       script: |
         $(policyChecker) dotnet --policy-repo terrajobst/policy-violations -o $(output) --cache-location $(cachePath) --ospo-token $(TokenOspo) --github-token $(GitHubToken)
-    condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual'))
+    condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual')))
   - task: PublishBuildArtifacts@1
     condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
