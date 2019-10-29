@@ -12,7 +12,7 @@ pool:
 variables:
   buildConfiguration: 'Release'
   sln: '$(Build.Repository.LocalPath)\src\GitHubPermissionSurveyor.sln'
-  outDir: $(Build.ArtifactStagingDirectory)
+  outDir: '$(Build.ArtifactStagingDirectory)'
 
 steps:
 - task: NuGetToolInstaller@1
@@ -23,5 +23,5 @@ steps:
 
 - task: MSBuild@1
   inputs:
-    solution: '**/*.sln'
+    solution: '$(sln)'
     msbuildArguments: '/p:OutDir=''$(outDir)'''
