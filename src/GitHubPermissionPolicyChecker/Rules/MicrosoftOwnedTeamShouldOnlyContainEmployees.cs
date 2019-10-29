@@ -25,7 +25,8 @@ namespace GitHubPermissionPolicyChecker.Rules
                                     Microsoft owned team {team.Markdown()} shouldn't contain user {user.Markdown()} because they are not an employee.
 
                                     * If this is a Microsoft user, they need to [link](https://docs.opensource.microsoft.com/tools/github/accounts/linking.html) their account.
-                                    * If this isn't a Microsoft user, their permission needs to be changed to `pull`.
+                                    * If this team is supposed to represent Microsoft and non-Microsoft, the team shouldn't be owned by Microsoft
+                                    * If this isn't a Microsoft user, they need to be removed from this team.
                                 ",
                                 team: team,
                                 user: user
