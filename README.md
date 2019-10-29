@@ -1,5 +1,30 @@
 # Policy tooling for the dotnet org 
 
+This repo contains tools and tracks policy violations.
+
+## `policop`
+
+This tool helps with enforcing [the policies] we're using in this organization.
+
+[the policies]: doc/README.md
+
+```
+usage: policop --org <org> [OPTIONS]+
+      --org=name             The name of the GitHub organization
+  -o, --output=path          The path where the output .csv file should be written to.
+      --cache-location=path  The path where the .json cache should be written to.
+      --github-token=token   The GitHub API token to be used.
+      --ospo-token=token     The OSPO API token to be used.
+      --policy-repo=repo     The GitHub repo policy violations should be file in.
+  @file                      Read response file for more options.
+```
+
+Example:
+
+```
+$ .\policop.exe --org dotnet -o D:\violations.csv
+```
+
 ## `permaudit`
 
 This tool helps to audit GitHub organizations by producing a report like this:
@@ -22,7 +47,7 @@ so it can create a personal access token (PAT). It needs read-only access to
 repos and orgs.
 
 ```
-$ \.permaudit.exe <org-name> [output-file]
+$ .\permaudit.exe <org-name> [output-file]
 ```
 
 If you don't specify an output file, the app will show the results in Excel. In

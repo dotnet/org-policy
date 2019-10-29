@@ -28,7 +28,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             var help = false;
 
             var options = new OptionSet()
-                .Add("orgName", "The {name} of the GitHub organization", v => orgName = v)
+                .Add("org=", "The {name} of the GitHub organization", v => orgName = v)
                 .Add("o|output=", "The {path} where the output .csv file should be written to.", v => outputFileName = v)
                 .Add("cache-location=", "The {path} where the .json cache should be written to.", v => cacheLocation = v)
                 .Add("github-token=", "The GitHub API {token} to be used.", v => githubToken = v)
@@ -44,7 +44,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
                 if (help)
                 {
                     var exeName = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
-                    Console.Error.WriteLine($"usage: {exeName} <org-name>");
+                    Console.Error.WriteLine($"usage: {exeName} --org <org> [OPTIONS]+");
                     options.WriteOptionDescriptions(Console.Error);
                     return;
                 }
@@ -57,7 +57,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
 
                 if (orgName == null)
                 {
-                    Console.Error.WriteLine($"error: <org-name> must be specified");
+                    Console.Error.WriteLine($"error: --org must be specified");
                     return;
                 }
 
