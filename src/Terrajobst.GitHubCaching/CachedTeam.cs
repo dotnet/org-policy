@@ -10,7 +10,8 @@ namespace Terrajobst.GitHubCaching
         public string Id { get; set; }
         public string Name { get; set; }
         public string ParentId { get; set; }
-        public List<string> Members { get; set; } = new List<string>();
+        public List<string> MaintainerLogins { get; set; } = new List<string>();
+        public List<string> MemberLogins { get; set; } = new List<string>();
         public List<CachedTeamAccess> Repos { get; set; } = new List<CachedTeamAccess>();
 
         [JsonIgnore]
@@ -24,6 +25,12 @@ namespace Terrajobst.GitHubCaching
 
         [JsonIgnore]
         public List<CachedTeam> Children { get; } = new List<CachedTeam>();
+
+        [JsonIgnore]
+        public List<CachedUser> Maintainers { get; } = new List<CachedUser>();
+
+        [JsonIgnore]
+        public List<CachedUser> Members { get; } = new List<CachedUser>();
 
         public string GetFullName()
         {

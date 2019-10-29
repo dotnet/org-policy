@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
+
 using Terrajobst.GitHubCaching;
 
 namespace GitHubPermissionPolicyChecker.Rules
 {
     internal sealed class MicrosoftTeamShouldOnlyGrantReadAccess : PolicyRule
     {
+        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftTeamShouldOnlyGrantReadAccess;
+
         public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
         {
             var microsoftTeam = org.GetMicrosoftTeam();
@@ -19,8 +22,10 @@ namespace GitHubPermissionPolicyChecker.Rules
                         teamAccess.Permission != CachedPermission.Pull)
                     {
                         yield return new PolicyViolation(
+                            Descriptor,
                             $"Repo '{repo.Name}' shouldn't grant '{teamAccess.Team.Name}' '{teamAccess.Permission.ToString().ToLower()}' permissions.",
-                            repo: repo, team: teamAccess.Team
+                            repo: repo,
+                            team: teamAccess.Team
                         );
                     }
                 }

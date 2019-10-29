@@ -1,23 +1,28 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Terrajobst.GitHubCaching
 {
     public sealed class CachedOrg
     {
-        public static int CurrentVersion = 1;
+        public static int CurrentVersion = 2;
 
         public int Version { get; set; }
         public string Name { get; set; }
-        public List<string> Owners { get; set; } = new List<string>();
         public List<CachedTeam> Teams { get; set; } = new List<CachedTeam>();
         public List<CachedRepo> Repos { get; set; } = new List<CachedRepo>();
         public List<CachedUserAccess> Collaborators { get; set; } = new List<CachedUserAccess>();
+        public List<CachedUser> Users { get; set; } = new List<CachedUser>();
 
         internal void Initialize()
         {
+            if (Version != CurrentVersion)
+                return;
+
             var teamById = Teams.ToDictionary(t => t.Id);
             var repoByName = Repos.ToDictionary(r => r.Name);
+            var userByLogin = Users.ToDictionary(u => u.Login);
 
             foreach (var repo in Repos)
             {
@@ -26,10 +31,27 @@ namespace Terrajobst.GitHubCaching
 
             foreach (var team in Teams)
             {
-                if (!string.IsNullOrEmpty(team.ParentId))
+                team.Org = this;
+
+                if (!string.IsNullOrEmpty(team.ParentId) && teamById.TryGetValue(team.ParentId, out var parentTeam))
                 {
-                    team.Parent = teamById[team.ParentId];
-                    team.Parent.Children.Add(team);
+                    team.Parent = parentTeam;
+                    parentTeam.Children.Add(team);
+                }
+
+                foreach (var maintainerLogin in team.MaintainerLogins)
+                {
+                    if (userByLogin.TryGetValue(maintainerLogin, out var maintainer))
+                        team.Maintainers.Add(maintainer);
+                }
+
+                foreach (var memberLogin in team.MemberLogins)
+                {
+                    if (userByLogin.TryGetValue(memberLogin, out var member))
+                    {
+                        team.Members.Add(member);
+                        member.Teams.Add(team);
+                    }
                 }
 
                 foreach (var repoAccess in team.Repos)
@@ -43,7 +65,6 @@ namespace Terrajobst.GitHubCaching
                     }
                 }
 
-                team.Org = this;
                 team.Repos.RemoveAll(r => r.Repo == null);
             }
 
@@ -54,32 +75,34 @@ namespace Terrajobst.GitHubCaching
                     collaborator.Repo = repo;
                     repo.Users.Add(collaborator);
                 }
+
+                if (userByLogin.TryGetValue(collaborator.UserLogin, out var user))
+                {
+                    collaborator.User = user;
+                    user.Repos.Add(collaborator);
+                }
             }
 
-            Collaborators.RemoveAll(c => c.Repo == null);
+            Collaborators.RemoveAll(c => c.Repo == null || c.User == null);
+
+            foreach (var user in Users)
+            {
+                user.Org = this;
+            }
         }
 
-        public string DescribeAccess(CachedUserAccess collaborator)
+        public string DescribeAccess(CachedUserAccess userAccess)
         {
-            return DescribeAccess(collaborator.RepoName, collaborator.User, collaborator.Permission);
-        }
-
-        public string DescribeAccess(string repoName, string user, CachedPermission level)
-        {
-            var repo = Repos.SingleOrDefault(r => r.Name == repoName);
-            if (repo == null)
-                return null;
-
-            if (Owners.Contains(user))
+            if (userAccess.User.IsOwner)
                 return "(Owner)";
 
-            foreach (var repoAccess in repo.Teams)
+            foreach (var teamAccess in userAccess.Repo.Teams)
             {
-                if (repoAccess.Permission == level)
+                if (teamAccess.Permission == userAccess.Permission)
                 {
-                    foreach (var team in repoAccess.Team.DescendentsAndSelf())
+                    foreach (var team in teamAccess.Team.DescendentsAndSelf())
                     {
-                        if (team.Members.Contains(user))
+                        if (team.Members.Contains(userAccess.User))
                             return team.GetFullName();
                     }
                 }
@@ -95,12 +118,26 @@ namespace Terrajobst.GitHubCaching
 
         public static string GetTeamUrl(string orgName, string teamName)
         {
-            return $"https://github.com/orgs/{orgName}/teams/{teamName.ToLower()}";
+            var sb = new StringBuilder();
+            foreach (var c in teamName)
+            {
+                if (char.IsLetterOrDigit(c))
+                {
+                    sb.Append(char.ToLower(c));
+                }
+                else
+                {
+                    sb.Append('-');
+                }
+            }
+
+            var teamNameFixed = sb.ToString();
+            return $"https://github.com/orgs/{orgName}/teams/{teamNameFixed}";
         }
 
-        public static string GetUserUrl(string userName)
+        public static string GetUserUrl(string login)
         {
-            return $"https://github.com/{userName}";
+            return $"https://github.com/{login}";
         }
     }
 }

@@ -6,6 +6,8 @@ namespace GitHubPermissionPolicyChecker.Rules
 {
     internal sealed class MicrosoftOwnedTeamShouldOnlyContainEmployees : PolicyRule
     {
+        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftOwnedTeamShouldOnlyContainEmployees;
+
         public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
         {
             foreach (var team in org.Teams)
@@ -15,11 +17,12 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     foreach (var user in team.Members)
                     {
-                        var isEmployee = org.IsEmployee(user);
+                        var isEmployee = user.IsInMicrosoftTeam();
                         if (!isEmployee)
                         {
                             yield return new PolicyViolation(
-                                $"Microsoft owned team '{user}' shouldn't contain '{team.Name}' because they are not an employee.",
+                                Descriptor,
+                                $"Microsoft owned team '{user.Login}' shouldn't contain '{team.Name}' because they are not an employee.",
                                 team: team,
                                 user: user
                             );

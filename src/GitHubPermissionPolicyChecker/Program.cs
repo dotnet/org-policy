@@ -42,19 +42,19 @@ namespace GitHubPermissionPolicyChecker
             var loader = new CachedOrgLoader(client, Console.Out, forceUpdate: false);
             var cachedOrg = await loader.LoadAsync(orgName);
 
-            var csvDocument = new CsvDocument("org", "rule", "violation", "repo", "user", "team");
+            var csvDocument = new CsvDocument("org", "rule", "fingerprint", "violation", "repo", "user", "team", "receivers");
             using (var writer = csvDocument.Append())
             {
                 var rules = GetRules();
                 foreach (var rule in rules)
                 {
-                    var ruleName = rule.GetType().Name;
                     var violations = rule.GetViolations(cachedOrg);
 
                     foreach (var violation in violations)
                     {
                         writer.Write(orgName);
-                        writer.Write(ruleName);
+                        writer.Write(violation.DiagnosticId);
+                        writer.Write(violation.Fingerprint.ToString());
                         writer.Write(violation.Message);
 
                         if (violation.Repo == null)
@@ -63,19 +63,17 @@ namespace GitHubPermissionPolicyChecker
                             writer.WriteHyperlink(violation.Repo.Url, violation.Repo.Name, isForExcel);
 
                         if (violation.User == null)
-                        {
                             writer.Write(string.Empty);
-                        }
                         else
-                        {
-                            var url = CachedOrg.GetUserUrl(violation.User);
-                            writer.WriteHyperlink(url, violation.User, isForExcel);
-                        }
+                            writer.WriteHyperlink(violation.User.Url, violation.User.Login, isForExcel);
 
                         if (violation.Team == null)
                             writer.Write(string.Empty);
                         else
                             writer.WriteHyperlink(violation.Team.Url, violation.Team.Name, isForExcel);
+
+                        var receivers = string.Join(", ", violation.Receivers.Select(r => r.Login));
+                        writer.Write(receivers);
 
                         writer.WriteLine();
                     }

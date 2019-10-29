@@ -2,7 +2,7 @@
 
 using Terrajobst.GitHubCaching;
 
-namespace GitHubPermissionPolicyChecker.Rules
+namespace GitHubPermissionPolicyChecker
 {
     internal abstract class PolicyRule
     {

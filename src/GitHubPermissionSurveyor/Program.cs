@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-
+using Octokit;
 using Terrajobst.Csv;
 using Terrajobst.GitHubCaching;
 
@@ -65,15 +65,15 @@ namespace GitHubPermissionSurveyor
 
                     foreach (var userAccess in repo.Users)
                     {
-                        var via = cachedOrg.DescribeAccess(userAccess);
-                        var userUrl = CachedOrg.GetUserUrl(userAccess.User);
+                        var via = userAccess.Describe().ToString();
+                        var userUrl = CachedOrg.GetUserUrl(userAccess.UserLogin);
                         var permissions = userAccess.Permission.ToString().ToLower();
 
                         writer.WriteHyperlink(repo.Url, repo.Name, isForExcel);
                         writer.Write(publicPrivate);
                         writer.Write(lastPush);
                         writer.Write("user");
-                        writer.WriteHyperlink(userUrl, userAccess.User, isForExcel);
+                        writer.WriteHyperlink(userUrl, userAccess.UserLogin, isForExcel);
                         writer.Write(permissions);
                         writer.Write(via);
                         writer.WriteLine();

@@ -6,21 +6,25 @@ namespace GitHubPermissionPolicyChecker.Rules
 {
     internal sealed class MicrosoftOwnedRepoShouldOnlyGrantReadAccessToExternals : PolicyRule
     {
+        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftOwnedRepoShouldOnlyGrantReadAccessToExternals;
+
         public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
         {
             foreach (var repo in org.Repos)
             {
-                var isOwnedByMicrosoft = repo.IsOwnedByMicrosoft();
-                if (isOwnedByMicrosoft)
+                var isRepoOwnedByMicrosoft = repo.IsOwnedByMicrosoft();
+                if (isRepoOwnedByMicrosoft)
                 {
                     foreach (var userAccess in repo.Users)
                     {
-                        var isEmployee = org.IsEmployee(userAccess.User);
-                        var isKnownBot = org.IsKnownBot(userAccess.User);
-                        if (!isEmployee && !isKnownBot && userAccess.Permission != CachedPermission.Pull)
+                        var userWorksForMicrosoft = userAccess.User.IsInMicrosoftTeam() ||
+                                                    userAccess.User.IsClaimingToBeWorkingForMicrosoft();
+                        var isKnownBot = userAccess.User.IsKnownBot();
+                        if (!userWorksForMicrosoft && !isKnownBot && userAccess.Permission != CachedPermission.Pull)
                         {
                             yield return new PolicyViolation(
-                                $"External contributor '{userAccess.User}' was granted more than 'pull' permissions to repo '{repo.Name}'.",
+                                Descriptor,
+                                $"Non-Microsoft contributor '{userAccess.User.Login}' was granted more than 'pull' permissions to Microsoft-owned repo '{repo.Name}'.",
                                 repo: repo,
                                 user: userAccess.User
                             );
