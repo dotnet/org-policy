@@ -13,6 +13,9 @@ variables:
   buildConfiguration: 'Release'
   sln: '$(Build.Repository.LocalPath)\src\GitHubPermissionSurveyor.sln'
   outDir: '$(Build.ArtifactStagingDirectory)\'
+  policyChecker: '$(Build.ArtifactStagingDirectory)\GitHubPermissionPolicyChecker.exe'
+  cachePath: '$(Build.ArtifactStagingDirectory)\dotnet.json'
+  output: '$(Build.ArtifactStagingDirectory)\dotnet.csv'
 
 steps:
 - task: NuGetToolInstaller@1
@@ -27,3 +30,7 @@ steps:
     msbuildArguments: '/p:OutDir=$(outDir)'
 - task: PublishBuildArtifacts@1
   condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+- task: CmdLine@2
+  inputs:
+    script: |
+      $(policyChecker) dotnet -o $(output) --cache-location $(cachePath) --ospo-token %TOKENOSPO% --github-token %GITHUBTOKEN%
