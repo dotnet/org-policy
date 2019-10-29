@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotnetOrg.GitHubCaching\Microsoft.DotnetOrg.GitHubCaching.csproj" />
+    <ProjectReference Include="..\Microsoft.DotnetOrg.Ospo\Microsoft.DotnetOrg.Ospo.csproj" />
+  </ItemGroup>
+
+</Project>

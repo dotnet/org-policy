@@ -1,0 +1,9 @@
+﻿<Project>
+
+  <PropertyGroup>
+    <Copyright>Copyright (c) Microsoft</Copyright>
+    <Company>Microsoft</Company>
+    <Product>dotnet org policy tooling</Product>  
+  </PropertyGroup>
+  
+</Project>

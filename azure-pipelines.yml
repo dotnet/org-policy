@@ -19,9 +19,9 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  sln: '$(Build.Repository.LocalPath)\src\GitHubPermissionSurveyor.sln'
+  sln: '$(Build.Repository.LocalPath)\src\Microsoft.DotnetOrg.Policies.sln'
   outDir: '$(Build.ArtifactStagingDirectory)\'
-  policyChecker: '$(Build.ArtifactStagingDirectory)\GitHubPermissionPolicyChecker.exe'
+  policyChecker: '$(Build.ArtifactStagingDirectory)\policop.exe'
   cachePath: '$(Build.ArtifactStagingDirectory)\dotnet.json'
   output: '$(Build.ArtifactStagingDirectory)\dotnet.csv'
 
