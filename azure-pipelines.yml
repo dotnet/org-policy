@@ -28,9 +28,12 @@ steps:
   inputs:
     solution: '$(sln)'
     msbuildArguments: '/p:OutDir=$(outDir)'
+
 - task: PublishBuildArtifacts@1
   condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
+
 - task: CmdLine@2
   inputs:
     script: |
       $(policyChecker) dotnet -o $(output) --cache-location $(cachePath) --ospo-token %TOKENOSPO% --github-token %GITHUBTOKEN%
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
