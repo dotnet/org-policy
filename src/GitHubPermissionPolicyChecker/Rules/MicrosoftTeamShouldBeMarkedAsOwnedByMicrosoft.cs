@@ -12,6 +12,7 @@ namespace GitHubPermissionPolicyChecker.Rules
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             var allowedPermission = CachedPermission.Pull;
+            var microsoftTeam = context.Org.GetMicrosoftTeam();
 
             foreach (var team in context.Org.Teams)
             {
@@ -22,7 +23,12 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     yield return new PolicyViolation(
                         Descriptor,
-                        $"Team '{team.Name}' grants at least one Microsoft-owned repo more than '{allowedPermission.ToString().ToLower()}' permissions. The team must be owned by Microsoft.",
+                        title: $"Team '{team.Name}' must be owned by Microsoft",
+                        body: $@"
+                            Team {team.Markdown()} grants at least one Microsoft-owned repo more than {allowedPermission.Markdown()} permissions. The team must be owned by Microsoft.
+
+                            To indicate that the team is owned by Microsoft, ensure that one of the parent teams is {microsoftTeam.Markdown()}.
+                        ",
                         team: team
                     );
                 }

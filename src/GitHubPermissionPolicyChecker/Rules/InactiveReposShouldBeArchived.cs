@@ -19,7 +19,10 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     yield return new PolicyViolation(
                         Descriptor,
-                        $"The last push to repo '{repo.Name}' is more than {threshold.TotalDays:N0} days ago. It should be archived.",
+                        title: $"Inactive repo '{repo.Name}' should be archived",
+                        body: $@"
+                            The last push to repo {repo.Markdown()} is more than {threshold.TotalDays:N0} days ago. It should be archived.
+                        ",
                         repo: repo
                     );
                 }

@@ -11,16 +11,23 @@ namespace GitHubPermissionPolicyChecker
 {
     internal sealed class PolicyViolation
     {
-        public PolicyViolation(PolicyDescriptor descriptor, string message, CachedRepo repo = null, CachedUser user = null, CachedTeam team = null, IReadOnlyCollection<CachedUser> receivers = null)
+        public PolicyViolation(PolicyDescriptor descriptor,
+                               string title,
+                               string body,
+                               CachedRepo repo = null,
+                               CachedUser user = null,
+                               CachedTeam team = null,
+                               IReadOnlyCollection<CachedUser> assignees = null)
         {
             Descriptor = descriptor;
             Fingerprint = ComputeFingerprint(descriptor, repo, user, team);
-            Message = message;
+            Title = title;
+            Body = UnindentAndTrim(body);
             Repo = repo;
             User = user;
             Team = team;
-            Receivers = receivers != null
-                        ? receivers
+            Assignees = assignees != null
+                        ? assignees
                         : repo != null
                           ? repo.GetAdministrators().ToArray()
                           : team != null
@@ -33,11 +40,12 @@ namespace GitHubPermissionPolicyChecker
         public string DiagnosticId => $"PR{((int)Descriptor) + 1:00}";
         public PolicyDescriptor Descriptor { get; }
         public Guid Fingerprint { get; }
-        public string Message { get; }
+        public string Title { get; }
+        public string Body { get; }
         public CachedRepo Repo { get; }
         public CachedUser User { get; }
         public CachedTeam Team { get; }
-        public IReadOnlyCollection<CachedUser> Receivers { get; }
+        public IReadOnlyCollection<CachedUser> Assignees { get; }
 
         private static Guid ComputeFingerprint(PolicyDescriptor descriptor, CachedRepo repo, CachedUser user, CachedTeam team)
         {
@@ -62,6 +70,44 @@ namespace GitHubPermissionPolicyChecker
                 var hashBytes = md5.ComputeHash(fingerprintBytes);
                 return new Guid(hashBytes);
             }
+        }
+
+        private static string UnindentAndTrim(string text)
+        {
+            return Unindent(text).Trim();
+        }
+
+        public static string Unindent(string text)
+        {
+            var minIndent = int.MaxValue;
+
+            using (var stringReader = new StringReader(text))
+            {
+                string line;
+                while ((line = stringReader.ReadLine()) != null)
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+
+                    var indent = line.Length - line.TrimStart().Length;
+                    minIndent = Math.Min(minIndent, indent);
+                }
+            }
+
+            var sb = new StringBuilder();
+            using (var stringReader = new StringReader(text))
+            {
+                string line;
+                while ((line = stringReader.ReadLine()) != null)
+                {
+                    var unindentedLine = line.Length < minIndent
+                        ? line
+                        : line.Substring(minIndent);
+                    sb.AppendLine(unindentedLine);
+                }
+            }
+
+            return sb.ToString();
         }
     }
 }

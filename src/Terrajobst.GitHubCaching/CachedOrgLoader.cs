@@ -13,13 +13,13 @@ namespace Terrajobst.GitHubCaching
         public CachedOrgLoader(GitHubClient gitHubClient, TextWriter logWriter = null, string cacheLocation = null, bool forceUpdate = false)
         {
             GitHubClient = gitHubClient;
-            LogWriter = logWriter ?? Console.Out;
+            Log = logWriter ?? Console.Out;
             CacheLocation = cacheLocation;
             ForceUpdate = forceUpdate;
         }
 
         public GitHubClient GitHubClient { get; }
-        public TextWriter LogWriter { get; }
+        public TextWriter Log { get; }
         public string CacheLocation { get; }
         public bool ForceUpdate { get; }
 
@@ -94,8 +94,8 @@ namespace Terrajobst.GitHubCaching
         {
             var start = DateTimeOffset.Now;
 
-            LogWriter.WriteLine($"Start: {start}");
-            LogWriter.WriteLine("Loading org data from GitHub...");
+            Log.WriteLine($"Start: {start}");
+            Log.WriteLine("Loading org data from GitHub...");
 
             var cachedOrg = new CachedOrg
             {
@@ -111,7 +111,7 @@ namespace Terrajobst.GitHubCaching
 
             var finish = DateTimeOffset.Now;
             var duration = finish - start;
-            LogWriter.WriteLine($"Finished: {finish}. Took {duration}.");
+            Log.WriteLine($"Finished: {finish}. Took {duration}.");
 
             cachedOrg.Initialize();
 
@@ -120,10 +120,10 @@ namespace Terrajobst.GitHubCaching
 
         private async Task LoadMembersAsync(CachedOrg cachedOrg)
         {
-            await PrintProgressAsync("Loading owner list");
+            await GitHubClient.PrintProgressAsync(Log, "Loading owner list");
             var owners = await GitHubClient.Organization.Member.GetAll(cachedOrg.Name, OrganizationMembersFilter.All, OrganizationMembersRole.Admin, ApiOptions.None);
 
-            await PrintProgressAsync("Loading non-owner list");
+            await GitHubClient.PrintProgressAsync(Log, "Loading non-owner list");
             var nonOwners = await GitHubClient.Organization.Member.GetAll(cachedOrg.Name, OrganizationMembersFilter.All, OrganizationMembersRole.Member, ApiOptions.None);
 
             foreach (var owner in owners)
@@ -151,13 +151,13 @@ namespace Terrajobst.GitHubCaching
 
         private async Task LoadTeamsAsync(CachedOrg cachedOrg)
         {
-            await PrintProgressAsync("Loading team list");
+            await GitHubClient.PrintProgressAsync(Log, "Loading team list");
             var teams = await GitHubClient.Organization.Team.GetAll(cachedOrg.Name);
             var i = 0;
 
             foreach (var team in teams)
             {
-                await PrintProgressAsync("Loading team", team.Name, i++, teams.Count);
+                await GitHubClient.PrintProgressAsync(Log, "Loading team", team.Name, i++, teams.Count);
 
                 var cachedTeam = new CachedTeam
                 {
@@ -173,7 +173,7 @@ namespace Terrajobst.GitHubCaching
                 foreach (var maintainer in maintainers)
                     cachedTeam.MaintainerLogins.Add(maintainer.Login);
 
-                await WaitForEnoughQuotaAsync();
+                await GitHubClient.WaitForEnoughQuotaAsync(Log);
 
                 var memberRequest = new TeamMembersRequest(TeamRoleFilter.All);
                 var members = await GitHubClient.Organization.Team.GetAllMembers(team.Id, memberRequest);
@@ -181,7 +181,7 @@ namespace Terrajobst.GitHubCaching
                 foreach (var member in members)
                     cachedTeam.MemberLogins.Add(member.Login);
 
-                await WaitForEnoughQuotaAsync();
+                await GitHubClient.WaitForEnoughQuotaAsync(Log);
 
                 foreach (var repo in await GitHubClient.Organization.Team.GetAllRepositories(team.Id))
                 {
@@ -203,13 +203,13 @@ namespace Terrajobst.GitHubCaching
 
         private async Task LoadReposAndCollaboratorsAsync(CachedOrg cachedOrg)
         {
-            await PrintProgressAsync("Loading repo list");
+            await GitHubClient.PrintProgressAsync(Log, "Loading repo list");
             var repos = await GitHubClient.Repository.GetAllForOrg(cachedOrg.Name);
             var i = 0;
 
             foreach (var repo in repos)
             {
-                await PrintProgressAsync("Loading repo", repo.FullName, i++, repos.Count);
+                await GitHubClient.PrintProgressAsync(Log, "Loading repo", repo.FullName, i++, repos.Count);
 
                 var cachedRepo = new CachedRepo
                 {
@@ -240,7 +240,7 @@ namespace Terrajobst.GitHubCaching
 
         private async Task LoadExternalUsersAsync(CachedOrg cachedOrg)
         {
-            await PrintProgressAsync("Loading outside collaborators");
+            await GitHubClient.PrintProgressAsync(Log, "Loading outside collaborators");
             var outsideCollaborators = await GitHubClient.Organization.OutsideCollaborator.GetAll(cachedOrg.Name, OrganizationMembersFilter.All, ApiOptions.None);
 
             foreach (var user in outsideCollaborators)
@@ -261,46 +261,13 @@ namespace Terrajobst.GitHubCaching
 
             foreach (var cachedUser in cachedOrg.Users)
             {
-                await PrintProgressAsync("Loading user details", cachedUser.Login, i++, cachedOrg.Users.Count);
+                await GitHubClient.PrintProgressAsync(Log, "Loading user details", cachedUser.Login, i++, cachedOrg.Users.Count);
 
                 var user = await GitHubClient.User.Get(cachedUser.Login);
                 cachedUser.Name = user.Name;
                 cachedUser.Company = user.Company;
                 cachedUser.Email = user.Email;
             }
-        }
-
-        private async Task PrintProgressAsync(string task, string itemName, int itemIndex, int itemCount)
-        {
-            var percentage = (itemIndex + 1) / (float)itemCount;
-            var text = $"{task}: {itemName} {percentage:P1}";
-            await PrintProgressAsync(text);
-        }
-
-        private async Task PrintProgressAsync(string text)
-        {
-            await WaitForEnoughQuotaAsync();
-
-            var rateLimit = GitHubClient.GetLastApiInfo()?.RateLimit;
-            var rateLimitText = rateLimit == null
-                                    ? null
-                                    : $" (Remaining API quota: {rateLimit.Remaining})";
-            LogWriter.WriteLine($"{text}...{rateLimitText}");
-        }
-
-        private Task WaitForEnoughQuotaAsync()
-        {
-            var rateLimit = GitHubClient.GetLastApiInfo()?.RateLimit;
-
-            if (rateLimit != null && rateLimit.Remaining <= 50)
-            {
-                var padding = TimeSpan.FromMinutes(2);
-                var waitTime = (rateLimit.Reset - DateTimeOffset.Now).Add(padding);
-                LogWriter.WriteLine($"API rate limit exceeded. Waiting {waitTime.TotalMinutes:N0} minutes until it resets ({rateLimit.Reset.ToLocalTime():M/d/yyyy h:mm tt}).");
-                return Task.Delay(waitTime);
-            }
-
-            return Task.CompletedTask;
         }
     }
 }

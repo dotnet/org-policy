@@ -51,7 +51,6 @@ namespace GitHubPermissionPolicyChecker
             return microsoftBotsTeam != null && microsoftBotsTeam.Members.Contains(user);
         }
 
-
         public static IEnumerable<CachedUser> GetAdministrators(this CachedRepo repo)
         {
             return repo.Users
@@ -59,5 +58,13 @@ namespace GitHubPermissionPolicyChecker
                                     !ua.Describe().IsOwner)
                        .Select(ua => ua.User);
         }
+
+        public static string Markdown(this CachedRepo repo) => $"[{repo.Name}]({repo.Url})";
+
+        public static string Markdown(this CachedTeam team) => $"[{team.Name}]({team.Url})";
+
+        public static string Markdown(this CachedUser user) => $"[{user.Login}]({user.Url})";
+
+        public static string Markdown(this CachedPermission permission) => $"`{permission.ToString().ToLower()}`";
     }
 }

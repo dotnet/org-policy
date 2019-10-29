@@ -18,14 +18,24 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     foreach (var userAccess in repo.Users.Where(ua => ua.Describe().IsCollaborator))
                     {
-                        var userWorksForMicrosoft = context.IsMicrosoftUser(userAccess.User);
-                        if (!userWorksForMicrosoft && userAccess.Permission != CachedPermission.Pull)
+                        var user = userAccess.User;
+                        var permission = userAccess.Permission;
+                        var userWorksForMicrosoft = context.IsMicrosoftUser(user);
+                        if (!userWorksForMicrosoft && permission != CachedPermission.Pull)
                         {
                             yield return new PolicyViolation(
                                 Descriptor,
-                                $"Non-Microsoft contributor '{userAccess.User.Login}' was granted more than 'pull' permissions to Microsoft-owned repo '{repo.Name}'.",
+                                title: $"Non-Microsoft contributor '{user.Login}' should only have 'pull' permission for '{repo.Name}'",
+                                body: $@"
+                                    The non-Microsoft contributor {user.Markdown()} was granted {permission.Markdown()} for the Microsoft-owned repo {repo.Markdown()}.
+
+                                    Only Microsoft users should have more than `pull` permissions.
+
+                                    * If this is a Microsoft user, they need to [link](https://docs.opensource.microsoft.com/tools/github/accounts/linking.html) their account.
+                                    * If this isn't a Microsoft user, their permission needs to be changed to `pull`.
+                                ",
                                 repo: repo,
-                                user: userAccess.User
+                                user: user
                             );
                         }
                     }

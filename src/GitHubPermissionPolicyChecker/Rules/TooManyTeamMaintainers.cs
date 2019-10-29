@@ -18,7 +18,10 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     yield return new PolicyViolation(
                         Descriptor,
-                        $"The team '{team.Name}' has {numberOfMaintainers} maintainers. Reduce the number of maintainers to {Threshold} or less.",
+                        title: $"Team '{team.Name}' has too many maintainers",
+                        body: $@"
+                            The team {team.Markdown()} has {numberOfMaintainers} maintainers. Reduce the number of maintainers to {Threshold} or less.
+                        ",
                         team: team
                     );
                 }

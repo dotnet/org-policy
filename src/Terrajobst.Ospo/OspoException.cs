@@ -15,12 +15,12 @@ namespace Terrajobst.Ospo
             : base(message)
         {
         }
-        
+
         public OspoException(string message, Exception inner)
             : base(message, inner)
         {
         }
-        
+
         protected OspoException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {

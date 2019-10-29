@@ -17,7 +17,12 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     yield return new PolicyViolation(
                         Descriptor,
-                        $"User '{user.Login}' seems to be a Microsoft employee. They should be linked to a Microsoft account.",
+                        title: $"Microsoft-user '{user.Login}' should be linked",
+                        body: $@"
+                            User {user.Markdown()} appears to be a Microsoft employee. They should be [linked](https://opensource.microsoft.com/link) to a Microsoft account.
+
+                            For more details, see [documentation](https://docs.opensource.microsoft.com/tools/github/accounts/linking.html).
+                        ",
                         user: user
                     );
                 }

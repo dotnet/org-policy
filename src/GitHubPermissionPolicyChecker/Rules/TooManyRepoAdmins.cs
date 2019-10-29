@@ -22,7 +22,10 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     yield return new PolicyViolation(
                         Descriptor,
-                        $"Repo '{repo.Name}' has {numberOfAdmins} admins. Reduce the number of admins to {Threshold} or less.",
+                        title: $"Repo '{repo.Name}' has too many admins",
+                        body: $@"
+                            The repo {repo.Markdown()} has {numberOfAdmins} admins. Reduce the number of admins to {Threshold} or less.
+                        ",
                         repo: repo
                     );
                 }
