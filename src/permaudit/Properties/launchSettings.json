@@ -2,7 +2,7 @@
   "profiles": {
     "GitHubPermissionSurveyor": {
       "commandName": "Project",
-      "commandLineArgs": "dotnet"
+      "commandLineArgs": "--org dotnet"
     }
   }
 }

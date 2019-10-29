@@ -2,7 +2,7 @@
   "profiles": {
     "GitHubPermissionPolicyChecker": {
       "commandName": "Project",
-      "commandLineArgs": "dotnet"
+      "commandLineArgs": "--org dotnet"
     }
   }
 }
