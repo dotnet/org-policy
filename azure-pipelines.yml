@@ -25,3 +25,5 @@ steps:
   inputs:
     solution: '$(sln)'
     msbuildArguments: '/p:OutDir=$(outDir)'
+- task: PublishBuildArtifacts@1
+  condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
