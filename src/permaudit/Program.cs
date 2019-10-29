@@ -1,9 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.Csv;
 using Microsoft.DotnetOrg.GitHubCaching;
+
+using Mono.Options;
 
 namespace Microsoft.DotnetOrg.PermissionAuditing
 {
@@ -11,32 +14,71 @@ namespace Microsoft.DotnetOrg.PermissionAuditing
     {
         private static async Task Main(string[] args)
         {
-            if (args.Length < 1 || 2 < args.Length)
+            string orgName = null;
+            string outputFileName = null;
+            string cacheLocation = null;
+            var help = false;
+
+            var options = new OptionSet()
+                .Add("org=", "The {name} of the GitHub organization", v => orgName = v)
+                .Add("o|output=", "The {path} where the output .csv file should be written to.", v => outputFileName = v)
+                .Add("cache-location=", "The {path} where the .json cache should be written to.", v => cacheLocation = v)
+                .Add("h|?|help", null, v => help = true, true)
+                .Add(new ResponseFileSource());
+
+
+            try
             {
-                var exeName = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
-                Console.Error.WriteLine("error: wrong number of arguments");
-                Console.Error.WriteLine($"usage {exeName} <org-name> [output-path]");
+                var unprocessed = options.Parse(args);
+
+                if (help)
+                {
+                    var exeName = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
+                    Console.Error.WriteLine($"usage: {exeName} --org <org> [OPTIONS]+");
+                    options.WriteOptionDescriptions(Console.Error);
+                    return;
+                }
+
+                if (unprocessed.Count > 0)
+                {
+                    orgName = unprocessed[0];
+                    unprocessed.RemoveAt(0);
+                }
+
+                if (orgName == null)
+                {
+                    Console.Error.WriteLine($"error: --org must be specified");
+                    return;
+                }
+
+                if (unprocessed.Any())
+                {
+                    foreach (var option in unprocessed)
+                        Console.Error.WriteLine($"error: unrecognized argument {option}");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.ToString());
                 return;
             }
-
-            var orgName = args[0];
-            var outputFileName = args.Length < 2 ? null : args[1];
 
             if (outputFileName == null && !ExcelExtensions.IsExcelInstalled())
             {
-                Console.Error.WriteLine("error: you must specify and output path because you don't have Excel.");
+                Console.Error.WriteLine("error: you must specify an output path because you don't have Excel.");
                 return;
             }
 
-            await RunAsync(orgName, outputFileName);
+            await RunAsync(orgName, outputFileName, cacheLocation);
         }
 
-        private static async Task RunAsync(string orgName, string outputFileName)
+        private static async Task RunAsync(string orgName, string outputFileName, string cacheLocation)
         {
             var isForExcel = outputFileName == null;
 
             var client = await GitHubClientFactory.CreateAsync();
-            var loader = new CachedOrgLoader(client, Console.Out, forceUpdate: false);
+            var loader = new CachedOrgLoader(client, Console.Out, cacheLocation, forceUpdate: false);
             var cachedOrg = await loader.LoadAsync(orgName);
 
             var csvDocument = new CsvDocument("repo", "repo-state", "repo-last-pushed", "principal-kind", "principal", "permission", "via-team");

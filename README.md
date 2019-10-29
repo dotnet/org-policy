@@ -57,13 +57,3 @@ to specify a path for the `.csv` file with the report.
 ```
 $ .\permaudit.exe dotnet C:\work\permissions.csv
 ```
-
-### Caching
-
-During the first run, the tool will write a cache file, named `cached-org.json`
-which will be placed next to `permaudit.exe` so long you request
-the same org, the next time the tool runs it won't talk to GitHub.
-
-This is useful if you want to play with the format of the report. However, that
-also means that you will keep getting (potentially) stale data. So you might
-want to delete the file periodically.

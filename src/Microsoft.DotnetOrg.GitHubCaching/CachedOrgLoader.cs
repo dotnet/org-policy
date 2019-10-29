@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -27,8 +28,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         {
             if (string.IsNullOrEmpty(CacheLocation))
             {
-                var localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                var cachedDirectory = Path.Combine(localData, "GitHubPermissionSurveyor", "Cache");
+                var exePath = Environment.GetCommandLineArgs()[0];
+                var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
+                var cachedDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), fileInfo.CompanyName, fileInfo.ProductName, "Cache");
                 return Path.Combine(cachedDirectory, $"{orgName}.json");
             }
 

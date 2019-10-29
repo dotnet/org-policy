@@ -30,21 +30,22 @@ namespace Microsoft.DotnetOrg.Ospo
             return token;
         }
 
-        private static string GetProductName()
+        private static string GetExeName()
         {
             var exePath = Environment.GetCommandLineArgs()[0];
-            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
-            return fileInfo.ProductName;
+            return Path.GetFileNameWithoutExtension(exePath);
         }
 
         private static string GetTokenFileName()
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GetProductName(), "ospo-token.txt");
+            var exePath = Environment.GetCommandLineArgs()[0];
+            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), fileInfo.CompanyName, fileInfo.ProductName, "ospo-token.txt");
         }
 
         private static async Task<string> CreateTokenAsync()
         {
-            var productName = GetProductName();
+            var productName = GetExeName();
             var url = "https://ossmsft.visualstudio.com/_usersSettings/tokens";
 
             Console.WriteLine($"This is the first time you run {productName}.");

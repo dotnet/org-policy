@@ -13,7 +13,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
     {
         public static async Task<GitHubClient> CreateAsync(string token = null, string scopes = "public_repo, read:org")
         {
-            var productInformation = new ProductHeaderValue(GetProductName());
+            var productInformation = new ProductHeaderValue(GetExeName());
             var client = new GitHubClient(productInformation);
             if (string.IsNullOrEmpty(token))
                 token = await GetTokenAsync(scopes);
@@ -36,21 +36,22 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return token;
         }
 
-        private static string GetProductName()
+        private static string GetExeName()
         {
             var exePath = Environment.GetCommandLineArgs()[0];
-            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
-            return fileInfo.ProductName;
+            return Path.GetFileNameWithoutExtension(exePath);
         }
 
         private static string GetTokenFileName()
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GetProductName(), "github-token.txt");
+            var exePath = Environment.GetCommandLineArgs()[0];
+            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), fileInfo.CompanyName, fileInfo.ProductName, "github-token.txt");
         }
 
         private static async Task<string> CreateTokenAsync(string scopes, bool isRenewal)
         {
-            var header = new ProductHeaderValue(GetProductName());
+            var header = new ProductHeaderValue(GetExeName());
             var scopeList = scopes.Split(',').Select(s => s.Trim()).ToArray();
 
             Console.WriteLine($"This is the first time you run {header.Name}.");

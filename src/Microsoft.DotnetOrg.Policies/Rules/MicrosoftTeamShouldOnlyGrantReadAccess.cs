@@ -23,11 +23,11 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                     {
                         yield return new PolicyViolation(
                             Descriptor,
-                            title: $"Repo '{repo.Name}' should only grant '{teamAccess.Team.Name}' with 'read' permissions",
+                            title: $"Repo '{repo.Name}' should only grant '{teamAccess.Team.Name}' with 'pull' permissions",
                             body: $@"
-                                The {microsoftTeam.Markdown()} is only used to indicate ownership. It should only ever grant `read` permissions.
+                                The {microsoftTeam.Markdown()} is only used to indicate ownership. It should only ever grant `pull` permissions.
 
-                                Change the permissions for {microsoftTeam.Markdown()} in repo {repo.Markdown()} to `read`.
+                                Change the permissions for {microsoftTeam.Markdown()} in repo {repo.Markdown()} to `pull`.
                             ",
                             repo: repo,
                             team: teamAccess.Team
