@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using Terrajobst.GitHubCaching;
-
 namespace GitHubPermissionPolicyChecker.Rules
 {
     internal sealed class InactiveReposShouldBeArchived : PolicyRule
     {
         public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.InactiveReposShouldBeArchived;
-        
-        public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
+
+        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             var now = DateTimeOffset.Now;
             var threshold = TimeSpan.FromDays(365);
 
-            foreach (var repo in org.Repos)
+            foreach (var repo in context.Org.Repos)
             {
                 var inactivity = repo.LastPush - now;
                 if (inactivity > threshold)

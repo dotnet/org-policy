@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Terrajobst.GitHubCaching;
 
 namespace GitHubPermissionPolicyChecker.Rules
 {
@@ -7,11 +6,11 @@ namespace GitHubPermissionPolicyChecker.Rules
     {
         public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.TooManyTeamMaintainers;
 
-        public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
+        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             const int Threshold = 4;
 
-            foreach (var team in org.Teams)
+            foreach (var team in context.Org.Teams)
             {
                 var numberOfMaintainers = team.Maintainers.Count;
 
@@ -19,7 +18,7 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     yield return new PolicyViolation(
                         Descriptor,
-                        $"The team '{team.Name}' has more than {Threshold} maintainers ({numberOfMaintainers}). Reduce the number of maintainers.",
+                        $"The team '{team.Name}' has {numberOfMaintainers} maintainers. Reduce the number of maintainers to {Threshold} or less.",
                         team: team
                     );
                 }

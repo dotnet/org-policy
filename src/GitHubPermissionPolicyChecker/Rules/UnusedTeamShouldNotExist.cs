@@ -1,17 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using Terrajobst.GitHubCaching;
-
 namespace GitHubPermissionPolicyChecker.Rules
 {
     internal sealed class UnusedTeamShouldNotExist : PolicyRule
     {
         public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.UnusedTeamShouldBeRemoved;
 
-        public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
+        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
-            foreach (var team in org.Teams)
+            foreach (var team in context.Org.Teams)
             {
                 var hasChildren = team.Children.Any();
                 var hasRepos = team.Repos.Any();

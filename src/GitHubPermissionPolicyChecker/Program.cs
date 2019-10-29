@@ -4,10 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using GitHubPermissionPolicyChecker.Rules;
-
 using Terrajobst.Csv;
 using Terrajobst.GitHubCaching;
+using Terrajobst.Ospo;
 
 namespace GitHubPermissionPolicyChecker
 {
@@ -38,9 +37,12 @@ namespace GitHubPermissionPolicyChecker
         private static async Task RunAsync(string orgName, string outputFileName)
         {
             var isForExcel = outputFileName == null;
-            var client = await GitHubClientFactory.CreateAsync();
-            var loader = new CachedOrgLoader(client, Console.Out, forceUpdate: false);
+            var gitHubClient = await GitHubClientFactory.CreateAsync();
+            var ospoClient = await OspoClientFactory.CreateAsync();
+            var loader = new CachedOrgLoader(gitHubClient, Console.Out, forceUpdate: false);
             var cachedOrg = await loader.LoadAsync(orgName);
+            var userLinks = await MicrosoftUserLinks.LoadAsync(ospoClient);
+            var context = new PolicyAnalysisContext(cachedOrg, userLinks);
 
             var csvDocument = new CsvDocument("org", "rule", "fingerprint", "violation", "repo", "user", "team", "receivers");
             using (var writer = csvDocument.Append())
@@ -48,7 +50,7 @@ namespace GitHubPermissionPolicyChecker
                 var rules = GetRules();
                 foreach (var rule in rules)
                 {
-                    var violations = rule.GetViolations(cachedOrg);
+                    var violations = rule.GetViolations(context);
 
                     foreach (var violation in violations)
                     {

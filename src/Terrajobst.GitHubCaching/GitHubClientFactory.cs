@@ -41,16 +41,9 @@ namespace Terrajobst.GitHubCaching
             return fileInfo.ProductName;
         }
 
-        private static string GetCompanyName()
-        {
-            var exePath = Environment.GetCommandLineArgs()[0];
-            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
-            return fileInfo.CompanyName;
-        }
-
         private static string GetTokenFileName()
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GetCompanyName(), GetProductName());
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), GetProductName(), "github-token.txt");
         }
 
         private static async Task<string> CreateTokenAsync(string scopes, bool isRenewal)

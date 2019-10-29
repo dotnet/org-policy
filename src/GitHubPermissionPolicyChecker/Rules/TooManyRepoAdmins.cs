@@ -9,11 +9,11 @@ namespace GitHubPermissionPolicyChecker.Rules
     {
         public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.TooManyRepoAdmins;
 
-        public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
+        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             const int Threshold = 4;
 
-            foreach (var repo in org.Repos)
+            foreach (var repo in context.Org.Repos)
             {
                 var numberOfAdmins = repo.Users.Count(ua => ua.Permission == CachedPermission.Admin &&
                                                            !ua.Describe().IsOwner);
@@ -22,7 +22,7 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     yield return new PolicyViolation(
                         Descriptor,
-                        $"Repo '{repo.Name}' has more than {Threshold} admins ({numberOfAdmins}). Reduce the number of admins.",
+                        $"Repo '{repo.Name}' has {numberOfAdmins} admins. Reduce the number of admins to {Threshold} or less.",
                         repo: repo
                     );
                 }

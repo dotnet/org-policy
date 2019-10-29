@@ -9,25 +9,22 @@ namespace GitHubPermissionPolicyChecker.Rules
     {
         public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftTeamShouldBeMarkedAsOwnedByMicrosoft;
 
-        public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
+        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
-            foreach (var team in org.Teams)
-            {
-                if (!team.IsOwnedByMicrosoft())
-                {
-                    var numberOfEmployees = team.Members.Count(m => m.IsInMicrosoftTeam());
-                    var numberOfMembers = team.Members.Count;
-                    var shouldBeMicrosoft = numberOfEmployees == numberOfMembers ||
-                                            numberOfMembers > 2 && numberOfEmployees > numberOfMembers / 2;
+            var allowedPermission = CachedPermission.Pull;
 
-                    if (shouldBeMicrosoft)
-                    {
-                        yield return new PolicyViolation(
-                            Descriptor,
-                            $"Team '{team.Name}' has mostly Microsoft employees on it. It should probbably be owned by Microsoft.",
-                            team: team
-                        );
-                    }
+            foreach (var team in context.Org.Teams)
+            {
+                var isOwnedByMicrosoft = team.IsOwnedByMicrosoft();
+                var grantsWriteAccessToMicrosoftRepo = team.Repos.Any(r => r.Permission != allowedPermission && r.Repo.IsOwnedByMicrosoft()); ;
+
+                if (!isOwnedByMicrosoft && grantsWriteAccessToMicrosoftRepo)
+                {
+                    yield return new PolicyViolation(
+                        Descriptor,
+                        $"Team '{team.Name}' grants at least one Microsoft-owned repo more than '{allowedPermission.ToString().ToLower()}' permissions. The team must be owned by Microsoft.",
+                        team: team
+                    );
                 }
             }
         }

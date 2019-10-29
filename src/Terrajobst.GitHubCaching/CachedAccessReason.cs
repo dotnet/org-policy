@@ -4,7 +4,10 @@
     {
         public static CachedAccessReason FromOwner => new CachedAccessReason(isOwner: true, isCollaborator: false, null);
         public static CachedAccessReason FromCollaborator => new CachedAccessReason(isOwner: false, isCollaborator: true, null);
-        public static CachedAccessReason FromTeam(CachedTeam team) => new CachedAccessReason(isOwner: false, isCollaborator: false, team);
+        public static CachedAccessReason FromTeam(CachedTeam team)
+        {
+            return new CachedAccessReason(isOwner: false, isCollaborator: false, team);
+        }
 
         private CachedAccessReason(bool isOwner, bool isCollaborator, CachedTeam team)
         {

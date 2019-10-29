@@ -6,7 +6,7 @@
 
     internal enum PolicyDescriptor
     {
-        MicrosoftEmployeesShouldBeInMicrosoftTeam,
+        MicrosoftEmployeesShouldBeLinked,
         MicrosoftOwnedRepoShouldOnlyGrantReadAccessToExternals,
         MicrosoftOwnedTeamShouldOnlyContainEmployees,
         MicrosoftTeamShouldBeMarkedAsOwnedByMicrosoft,

@@ -8,13 +8,13 @@ namespace GitHubPermissionPolicyChecker.Rules
     {
         public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftTeamShouldOnlyGrantReadAccess;
 
-        public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
+        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
-            var microsoftTeam = org.GetMicrosoftTeam();
+            var microsoftTeam = context.Org.GetMicrosoftTeam();
             if (microsoftTeam == null)
                 yield break;
 
-            foreach (var repo in org.Repos)
+            foreach (var repo in context.Org.Repos)
             {
                 foreach (var teamAccess in repo.Teams)
                 {
@@ -23,7 +23,7 @@ namespace GitHubPermissionPolicyChecker.Rules
                     {
                         yield return new PolicyViolation(
                             Descriptor,
-                            $"Repo '{repo.Name}' shouldn't grant '{teamAccess.Team.Name}' '{teamAccess.Permission.ToString().ToLower()}' permissions.",
+                            $"Repo '{repo.Name}' should only grant '{teamAccess.Team.Name}' with 'read' permissions (but did grant '{teamAccess.Permission.ToString().ToLower()}').",
                             repo: repo,
                             team: teamAccess.Team
                         );

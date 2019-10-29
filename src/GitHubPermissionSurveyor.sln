@@ -9,9 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Terrajobst.Csv", "Terrajobs
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Terrajobst.Csv.Excel", "Terrajobst.Csv.Excel\Terrajobst.Csv.Excel.csproj", "{C245801A-88F8-415B-9D31-2123CF6B2DBD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terrajobst.GitHubCaching", "Terrajobst.GitHubCaching\Terrajobst.GitHubCaching.csproj", "{DA36972E-CBE7-4F5D-B0A1-00A98191039E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Terrajobst.GitHubCaching", "Terrajobst.GitHubCaching\Terrajobst.GitHubCaching.csproj", "{DA36972E-CBE7-4F5D-B0A1-00A98191039E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubPermissionPolicyChecker", "GitHubPermissionPolicyChecker\GitHubPermissionPolicyChecker.csproj", "{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GitHubPermissionPolicyChecker", "GitHubPermissionPolicyChecker\GitHubPermissionPolicyChecker.csproj", "{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Terrajobst.Ospo", "Terrajobst.Ospo\Terrajobst.Ospo.csproj", "{EFB69076-D1E6-4B48-B735-CE7FA2A71FE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A906FB6-F1DA-4789-9A1A-B5A0A45FA0A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFB69076-D1E6-4B48-B735-CE7FA2A71FE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFB69076-D1E6-4B48-B735-CE7FA2A71FE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFB69076-D1E6-4B48-B735-CE7FA2A71FE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFB69076-D1E6-4B48-B735-CE7FA2A71FE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -9,6 +9,7 @@
     <ProjectReference Include="..\Terrajobst.Csv.Excel\Terrajobst.Csv.Excel.csproj" />
     <ProjectReference Include="..\Terrajobst.Csv\Terrajobst.Csv.csproj" />
     <ProjectReference Include="..\Terrajobst.GitHubCaching\Terrajobst.GitHubCaching.csproj" />
+    <ProjectReference Include="..\Terrajobst.Ospo\Terrajobst.Ospo.csproj" />
   </ItemGroup>
 
 </Project>

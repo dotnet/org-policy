@@ -27,7 +27,7 @@ namespace GitHubPermissionPolicyChecker
                             ? team.Maintainers
                             : user != null
                               ? new[] { user }
-                              : (IReadOnlyList<CachedUser>) Array.Empty<CachedUser>();
+                              : (IReadOnlyList<CachedUser>)Array.Empty<CachedUser>();
         }
 
         public string DiagnosticId => $"PR{((int)Descriptor) + 1:00}";

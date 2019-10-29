@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 
-using Terrajobst.GitHubCaching;
-
 namespace GitHubPermissionPolicyChecker
 {
     internal abstract class PolicyRule
     {
-        public abstract IEnumerable<PolicyViolation> GetViolations(CachedOrg org);
+        public abstract IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context);
     }
 }

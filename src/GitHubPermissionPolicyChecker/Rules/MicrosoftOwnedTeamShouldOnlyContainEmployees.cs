@@ -1,24 +1,22 @@
 ﻿using System.Collections.Generic;
 
-using Terrajobst.GitHubCaching;
-
 namespace GitHubPermissionPolicyChecker.Rules
 {
     internal sealed class MicrosoftOwnedTeamShouldOnlyContainEmployees : PolicyRule
     {
         public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftOwnedTeamShouldOnlyContainEmployees;
 
-        public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
+        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
-            foreach (var team in org.Teams)
+            foreach (var team in context.Org.Teams)
             {
                 var isOwnedByMicrosoft = team.IsOwnedByMicrosoft();
                 if (isOwnedByMicrosoft)
                 {
                     foreach (var user in team.Members)
                     {
-                        var isEmployee = user.IsInMicrosoftTeam();
-                        if (!isEmployee)
+                        var isMicrosoftUser = context.IsMicrosoftUser(user);
+                        if (!isMicrosoftUser)
                         {
                             yield return new PolicyViolation(
                                 Descriptor,

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 using Terrajobst.GitHubCaching;
 
@@ -8,19 +9,17 @@ namespace GitHubPermissionPolicyChecker.Rules
     {
         public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftOwnedRepoShouldOnlyGrantReadAccessToExternals;
 
-        public override IEnumerable<PolicyViolation> GetViolations(CachedOrg org)
+        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
-            foreach (var repo in org.Repos)
+            foreach (var repo in context.Org.Repos)
             {
                 var isRepoOwnedByMicrosoft = repo.IsOwnedByMicrosoft();
                 if (isRepoOwnedByMicrosoft)
                 {
-                    foreach (var userAccess in repo.Users)
+                    foreach (var userAccess in repo.Users.Where(ua => ua.Describe().IsCollaborator))
                     {
-                        var userWorksForMicrosoft = userAccess.User.IsInMicrosoftTeam() ||
-                                                    userAccess.User.IsClaimingToBeWorkingForMicrosoft();
-                        var isKnownBot = userAccess.User.IsKnownBot();
-                        if (!userWorksForMicrosoft && !isKnownBot && userAccess.Permission != CachedPermission.Pull)
+                        var userWorksForMicrosoft = context.IsMicrosoftUser(userAccess.User);
+                        if (!userWorksForMicrosoft && userAccess.Permission != CachedPermission.Pull)
                         {
                             yield return new PolicyViolation(
                                 Descriptor,

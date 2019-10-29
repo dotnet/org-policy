@@ -10,7 +10,12 @@ namespace GitHubPermissionPolicyChecker
     {
         public static CachedTeam GetMicrosoftTeam(this CachedOrg org)
         {
-            return org.Teams.SingleOrDefault(t => t.Name == "Microsoft");
+            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft", StringComparison.OrdinalIgnoreCase));
+        }
+
+        public static CachedTeam GetMicrosoftBotsTeam(this CachedOrg org)
+        {
+            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft-bots", StringComparison.OrdinalIgnoreCase));
         }
 
         public static bool IsOwnedByMicrosoft(this CachedRepo repo)
@@ -25,15 +30,6 @@ namespace GitHubPermissionPolicyChecker
             return team.AncestorsAndSelf().Any(t => t == microsoftTeam);
         }
 
-        public static bool IsInMicrosoftTeam(this CachedUser user)
-        {
-            var microsoftTeam = user.Org.GetMicrosoftTeam();
-            if (microsoftTeam == null)
-                return false;
-
-            return microsoftTeam.Members.Contains(user);
-        }
-
         public static bool IsClaimingToBeWorkingForMicrosoft(this CachedUser user)
         {
             var companyContainsMicrosoft = user.Company != null &&
@@ -46,18 +42,21 @@ namespace GitHubPermissionPolicyChecker
                    emailContainsMicrosoft;
         }
 
-        public static bool IsKnownBot(this CachedUser user)
+        public static bool IsMicrosoftUser(this PolicyAnalysisContext context, CachedUser user)
         {
-            return user.Login == "dnfadmin" ||
-                   user.Login == "dnfgituser" ||
-                   user.Login == "dnfclas";
+            if (context.UserLinks.LinkByGitHubLogin.ContainsKey(user.Login))
+                return true;
+
+            var microsoftBotsTeam = user.Org.GetMicrosoftBotsTeam();
+            return microsoftBotsTeam != null && microsoftBotsTeam.Members.Contains(user);
         }
+
 
         public static IEnumerable<CachedUser> GetAdministrators(this CachedRepo repo)
         {
             return repo.Users
                        .Where(ua => ua.Permission == CachedPermission.Admin &&
-                                    !ua.Describe().IsOwner) 
+                                    !ua.Describe().IsOwner)
                        .Select(ua => ua.User);
         }
     }
