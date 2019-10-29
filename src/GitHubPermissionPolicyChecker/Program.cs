@@ -75,6 +75,12 @@ namespace GitHubPermissionPolicyChecker
                 return;
             }
 
+            Console.WriteLine($"orgName = {orgName}");
+            Console.WriteLine($"outputFileName = {outputFileName}");
+            Console.WriteLine($"cacheLocation = {cacheLocation}");
+            Console.WriteLine($"githubToken = {githubToken}");
+            Console.WriteLine($"ospoToken = {ospoToken}");
+
             await RunAsync(orgName, outputFileName, cacheLocation, githubToken, ospoToken);
         }
 
