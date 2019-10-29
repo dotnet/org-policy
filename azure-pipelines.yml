@@ -11,7 +11,7 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  sln: '**/*.sln'
+  sln: '$(Build.Repository.LocalPath)\src\GitHubPermissionSurveyor.sln'
   outDir: $(Build.ArtifactStagingDirectory)
 
 steps:
