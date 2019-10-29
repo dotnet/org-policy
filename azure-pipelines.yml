@@ -32,7 +32,7 @@ steps:
 - task: CmdLine@2
   inputs:
     script: |
-      $(policyChecker) dotnet -o $(output) --cache-location $(cachePath) --ospo-token %TOKENOSPO% --github-token %GITHUBTOKEN%
+      $(policyChecker) dotnet -o $(output) --cache-location $(cachePath) --ospo-token $(TokenOspo) --github-token $(GitHubToken)
   condition: and(succeeded(), eq(variables['system.pullrequest.isfork'], false))
 
 - task: PublishBuildArtifacts@1
