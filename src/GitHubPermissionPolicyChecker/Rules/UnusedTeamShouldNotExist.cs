@@ -19,7 +19,7 @@ namespace GitHubPermissionPolicyChecker.Rules
                 {
                     yield return new PolicyViolation(
                         Descriptor,
-                        title: $"Unsued team '{team.Name}' should be removed",
+                        title: $"Unused team '{team.Name}' should be removed",
                         body: $@"
                             Team {team.Markdown()} doesn't have any associated repos nor nested teams. It should either be used or removed.
                         ",
