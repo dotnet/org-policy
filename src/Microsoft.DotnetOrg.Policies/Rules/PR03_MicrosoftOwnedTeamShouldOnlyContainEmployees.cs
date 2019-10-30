@@ -2,10 +2,8 @@
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    internal sealed class MicrosoftOwnedTeamShouldOnlyContainEmployees : PolicyRule
+    internal sealed class PR03_MicrosoftOwnedTeamShouldOnlyContainEmployees : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftOwnedTeamShouldOnlyContainEmployees;
-
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             foreach (var team in context.Org.Teams)
@@ -19,7 +17,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         if (!isMicrosoftUser)
                         {
                             yield return new PolicyViolation(
-                                Descriptor,
+                                "PR03",
                                 title: $"Microsoft owned team '{team.Name}' shouldn't contain '{user.Login}'",
                                 body: $@"
                                     Microsoft owned team {team.Markdown()} shouldn't contain user {user.Markdown()} because they are not an employee.

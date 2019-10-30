@@ -5,10 +5,8 @@ using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    internal sealed class MicrosoftTeamShouldBeMarkedAsOwnedByMicrosoft : PolicyRule
+    internal sealed class PR04_MicrosoftTeamShouldBeMarkedAsOwnedByMicrosoft : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftTeamShouldBeMarkedAsOwnedByMicrosoft;
-
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             var allowedPermission = CachedPermission.Pull;
@@ -22,7 +20,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (!isOwnedByMicrosoft && grantsMoreThanPullAccessToMicrosoftRepo)
                 {
                     yield return new PolicyViolation(
-                        Descriptor,
+                        "PR04",
                         title: $"Team '{team.Name}' must be owned by Microsoft",
                         body: $@"
                             Team {team.Markdown()} grants at least one Microsoft-owned repo more than {allowedPermission.Markdown()} permissions. The team must be owned by Microsoft.

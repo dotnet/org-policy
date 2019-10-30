@@ -5,10 +5,8 @@ using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    internal sealed class TooManyRepoAdmins : PolicyRule
+    internal sealed class PR08_TooManyRepoAdmins : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.TooManyRepoAdmins;
-
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             const int Threshold = 4;
@@ -21,7 +19,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (numberOfAdmins > Threshold)
                 {
                     yield return new PolicyViolation(
-                        Descriptor,
+                        "PR08",
                         title: $"Repo '{repo.Name}' has too many admins",
                         body: $@"
                             The repo {repo.Markdown()} has {numberOfAdmins} admins. Reduce the number of admins to {Threshold} or less.

@@ -3,10 +3,8 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    internal sealed class InactiveReposShouldBeArchived : PolicyRule
+    internal sealed class PR06_InactiveReposShouldBeArchived : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.InactiveReposShouldBeArchived;
-
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             var now = DateTimeOffset.Now;
@@ -18,7 +16,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (inactivity > threshold)
                 {
                     yield return new PolicyViolation(
-                        Descriptor,
+                        "PR06",
                         title: $"Inactive repo '{repo.Name}' should be archived",
                         body: $@"
                             The last push to repo {repo.Markdown()} is more than {threshold.TotalDays:N0} days ago. It should be archived.

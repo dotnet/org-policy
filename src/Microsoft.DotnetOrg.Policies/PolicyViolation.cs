@@ -11,7 +11,7 @@ namespace Microsoft.DotnetOrg.Policies
 {
     public sealed class PolicyViolation
     {
-        public PolicyViolation(PolicyDescriptor descriptor,
+        public PolicyViolation(string diagnosticId,
                                string title,
                                string body,
                                CachedRepo repo = null,
@@ -19,8 +19,8 @@ namespace Microsoft.DotnetOrg.Policies
                                CachedTeam team = null,
                                IReadOnlyCollection<CachedUser> assignees = null)
         {
-            Descriptor = descriptor;
-            Fingerprint = ComputeFingerprint(descriptor, repo, user, team);
+            DiagnosticId = diagnosticId;
+            Fingerprint = ComputeFingerprint(diagnosticId, repo, user, team);
             Title = title;
             Body = UnindentAndTrim(body);
             Repo = repo;
@@ -37,8 +37,7 @@ namespace Microsoft.DotnetOrg.Policies
                               : (IReadOnlyList<CachedUser>)Array.Empty<CachedUser>();
         }
 
-        public string DiagnosticId => $"PR{((int)Descriptor) + 1:00}";
-        public PolicyDescriptor Descriptor { get; }
+        public string DiagnosticId { get; }
         public Guid Fingerprint { get; }
         public string Title { get; }
         public string Body { get; }
@@ -47,18 +46,14 @@ namespace Microsoft.DotnetOrg.Policies
         public CachedTeam Team { get; }
         public IReadOnlyCollection<CachedUser> Assignees { get; }
 
-        private static Guid ComputeFingerprint(PolicyDescriptor descriptor, CachedRepo repo, CachedUser user, CachedTeam team)
+        private static Guid ComputeFingerprint(string diagnosticId, CachedRepo repo, CachedUser user, CachedTeam team)
         {
             using (var fingerprintBytes = new MemoryStream())
             using (var md5 = MD5.Create())
             {
                 using (var writer = new StreamWriter(fingerprintBytes, Encoding.UTF8, 2048, leaveOpen: true))
                 {
-                    // NOTE: We want to be able to rename the enum without breaking fingerprinting.
-                    //       That's why we'll just use the enum's integer, rather than the numeric value.
-
-                    var ruleNumber = (int)descriptor;
-                    writer.WriteLine(ruleNumber);
+                    writer.WriteLine(diagnosticId);
                     writer.WriteLine(repo?.Org.Name);
                     writer.WriteLine(repo?.Name);
                     writer.WriteLine(user?.Login);

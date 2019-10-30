@@ -2,10 +2,8 @@
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    internal sealed class TooManyTeamMaintainers : PolicyRule
+    internal sealed class PR09_TooManyTeamMaintainers : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.TooManyTeamMaintainers;
-
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             const int Threshold = 4;
@@ -17,7 +15,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (numberOfMaintainers > Threshold)
                 {
                     yield return new PolicyViolation(
-                        Descriptor,
+                        "PR09",
                         title: $"Team '{team.Name}' has too many maintainers",
                         body: $@"
                             The team {team.Markdown()} has {numberOfMaintainers} maintainers. Reduce the number of maintainers to {Threshold} or less.

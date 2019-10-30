@@ -3,10 +3,8 @@ using System.Linq;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    internal sealed class UnusedTeamShouldNotExist : PolicyRule
+    internal sealed class PR07_UnusedTeamShouldNotExist : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.UnusedTeamShouldBeRemoved;
-
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             foreach (var team in context.Org.Teams)
@@ -18,7 +16,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (!isUsed)
                 {
                     yield return new PolicyViolation(
-                        Descriptor,
+                        "PR07",
                         title: $"Unused team '{team.Name}' should be removed",
                         body: $@"
                             Team {team.Markdown()} doesn't have any associated repos nor nested teams. It should either be used or removed.

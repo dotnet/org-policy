@@ -2,10 +2,8 @@
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    internal sealed class MicrosoftEmployeesShouldBeLinked : PolicyRule
+    internal sealed class PR01_MicrosoftEmployeesShouldBeLinked : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftEmployeesShouldBeLinked;
-
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             foreach (var user in context.Org.Users)
@@ -16,7 +14,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (userClaimsToBeWorkingForMicrosoft && !isMicrosoftUser)
                 {
                     yield return new PolicyViolation(
-                        Descriptor,
+                        "PR01",
                         title: $"Microsoft-user '{user.Login}' should be linked",
                         body: $@"
                             User {user.Markdown()} appears to be a Microsoft employee. They should be [linked](https://opensource.microsoft.com/link) to a Microsoft account.
