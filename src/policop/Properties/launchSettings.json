@@ -2,7 +2,7 @@
   "profiles": {
     "GitHubPermissionPolicyChecker": {
       "commandName": "Project",
-      "commandLineArgs": "--org dotnet --policy-repo terrajobst/policy-violations"
+      "commandLineArgs": "--org dotnet --policy-repo dotnet/org-policy-test"
     }
   }
 }
