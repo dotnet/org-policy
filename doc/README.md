@@ -12,3 +12,4 @@ Rule            | Severity | Title
 [PR08](PR08.md) | Error    | Too many repo admins
 [PR09](PR09.md) | Error    | Team should be owned by Microsoft
 [PR10](PR10.md) | Error    | Admins should be in teams
+[PR11](PR11.md) | Warning  | Repos should have a sufficient number of admins
