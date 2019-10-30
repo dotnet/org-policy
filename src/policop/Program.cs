@@ -154,7 +154,10 @@ namespace Microsoft.DotnetOrg.PolicyCop
             }
 
             await CreateLabelsAsync(client, orgName, policyRepo, violations);
-            await CreateIssuesAsync(client, orgName, policyRepo, violations);
+
+            var existingIssues = await GetIssuesAsync(client, orgName, policyRepo);
+            await CreateIssuesAsync(client, orgName, policyRepo, violations, existingIssues);
+            await CloseIssuesAsync(client, orgName, policyRepo, violations, existingIssues);
         }
 
         private static async Task CreateLabelsAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations)
@@ -177,7 +180,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             }
         }
 
-        private static async Task CreateIssuesAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations)
+        private static async Task<IReadOnlyList<Issue>> GetIssuesAsync(GitHubClient client, string orgName, string policyRepo)
         {
             await client.PrintProgressAsync(Console.Out, "Loading issue list");
             var issueRequest = new RepositoryIssueRequest
@@ -186,7 +189,11 @@ namespace Microsoft.DotnetOrg.PolicyCop
             };
             issueRequest.Labels.Add("violation");
             var existingIssues = await client.Issue.GetAllForRepository(orgName, policyRepo, issueRequest);
+            return existingIssues;
+        }
 
+        private static async Task CreateIssuesAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations, IReadOnlyList<Issue> existingIssues)
+        {
             var newViolations = violations.Where(v => !existingIssues.Any(e => e.Title.Contains(v.Fingerprint.ToString()))).ToList();
             var i = 0;
 
@@ -217,6 +224,49 @@ namespace Microsoft.DotnetOrg.PolicyCop
 
                 await client.Issue.Create(orgName, policyRepo, newIssue);
             }
+        }
+
+        private static async Task CloseIssuesAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations, IReadOnlyList<Issue> existingIssues)
+        {
+            var newFingerprints = new HashSet<Guid>(violations.Select(v => v.Fingerprint));
+
+            var solvedIssues = existingIssues.Select(issue => (Fingerprint: GetFingerprint(issue.Title), Issue: issue))
+                                              .Where(t => t.Fingerprint != null && !newFingerprints.Contains(t.Fingerprint.Value))
+                                              .Select(t => t.Issue)
+                                              .ToList();
+
+            var i = 0;
+
+            foreach (var solvedIssue in solvedIssues)
+            {
+                await client.PrintProgressAsync(Console.Out, "Closing issue", solvedIssue.Title, i++, solvedIssues.Count);
+
+                await client.Issue.Comment.Create(orgName, policyRepo, solvedIssue.Number, "The violation was addressed.");
+
+                var issueUpdate = new IssueUpdate();
+                issueUpdate.State = ItemState.Closed;
+                await client.Issue.Update(orgName, policyRepo, solvedIssue.Number, issueUpdate);
+            }
+        }
+
+        private static Guid? GetFingerprint(string issueTitle)
+        {
+            var openParenthesis = issueTitle.LastIndexOf('(');
+            var closeParenthesis = issueTitle.LastIndexOf(')');
+
+            if (openParenthesis < 0 || closeParenthesis < 0 ||
+                openParenthesis >= closeParenthesis ||
+                closeParenthesis != issueTitle.Length - 1)
+            {
+                return null;
+            }
+
+            var length = closeParenthesis - openParenthesis + 1;
+            var text = issueTitle.Substring(openParenthesis + 1, length - 2);
+            if (Guid.TryParse(text, out var result))
+                return result;
+
+            return null;
         }
     }
 }
