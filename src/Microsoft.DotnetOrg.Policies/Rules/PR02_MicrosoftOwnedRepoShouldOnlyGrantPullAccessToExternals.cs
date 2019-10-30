@@ -12,7 +12,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             "Microsoft-owned repo should only grant 'pull' to externals",
             PolicySeverity.Error
         );
-        
+
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             foreach (var repo in context.Org.Repos)

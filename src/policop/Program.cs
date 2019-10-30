@@ -195,9 +195,11 @@ namespace Microsoft.DotnetOrg.PolicyCop
                         : "fbca04";
                     description = descriptor.Title;
                 }
-                
-                var newLabel = new NewLabel(missingLabelName, color);
-                newLabel.Description = description;
+
+                var newLabel = new NewLabel(missingLabelName, color)
+                {
+                    Description = description
+                };
                 await client.Issue.Labels.Create(orgName, policyRepo, newLabel);
             }
         }
@@ -265,8 +267,10 @@ namespace Microsoft.DotnetOrg.PolicyCop
 
                 await client.Issue.Comment.Create(orgName, policyRepo, solvedIssue.Number, "The violation was addressed.");
 
-                var issueUpdate = new IssueUpdate();
-                issueUpdate.State = ItemState.Closed;
+                var issueUpdate = new IssueUpdate
+                {
+                    State = ItemState.Closed
+                };
                 await client.Issue.Update(orgName, policyRepo, solvedIssue.Number, issueUpdate);
             }
         }
