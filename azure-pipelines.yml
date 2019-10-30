@@ -40,7 +40,7 @@ jobs:
   - task: CmdLine@2
     inputs:
       script: |
-        $(policyChecker) --org dotnet --policy-repo dotnet/org-policies-test -o $(output) --cache-location $(cachePath) --ospo-token $(TokenOspo) --github-token $(GitHubToken)
+        $(policyChecker) --org dotnet --policy-repo terrajobst/org-policies-test -o $(output) --cache-location $(cachePath) --ospo-token $(TokenOspo) --github-token $(GitHubToken)
     condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual')))
   - task: PublishBuildArtifacts@1
     condition: eq(variables['system.pullrequest.isfork'], false)
