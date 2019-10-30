@@ -4,9 +4,9 @@ using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    internal sealed class MicrosoftTeamShouldOnlyGrantReadAccess : PolicyRule
+    internal sealed class MicrosoftTeamShouldOnlyGrantPullAccess : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftTeamShouldOnlyGrantReadAccess;
+        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftTeamShouldOnlyGrantPullAccess;
 
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {

@@ -5,9 +5,9 @@ using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    internal sealed class MicrosoftOwnedRepoShouldOnlyGrantReadAccessToExternals : PolicyRule
+    internal sealed class MicrosoftOwnedRepoShouldOnlyGrantPullAccessToExternals : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftOwnedRepoShouldOnlyGrantReadAccessToExternals;
+        public static PolicyDescriptor Descriptor { get; } = PolicyDescriptor.MicrosoftOwnedRepoShouldOnlyGrantPullAccessToExternals;
 
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {

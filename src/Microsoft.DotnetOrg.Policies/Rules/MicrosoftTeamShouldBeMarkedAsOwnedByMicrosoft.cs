@@ -17,9 +17,9 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             foreach (var team in context.Org.Teams)
             {
                 var isOwnedByMicrosoft = team.IsOwnedByMicrosoft();
-                var grantsWriteAccessToMicrosoftRepo = team.Repos.Any(r => r.Permission != allowedPermission && r.Repo.IsOwnedByMicrosoft()); ;
+                var grantsMoreThanPullAccessToMicrosoftRepo = team.Repos.Any(r => r.Permission != allowedPermission && r.Repo.IsOwnedByMicrosoft()); ;
 
-                if (!isOwnedByMicrosoft && grantsWriteAccessToMicrosoftRepo)
+                if (!isOwnedByMicrosoft && grantsMoreThanPullAccessToMicrosoftRepo)
                 {
                     yield return new PolicyViolation(
                         Descriptor,

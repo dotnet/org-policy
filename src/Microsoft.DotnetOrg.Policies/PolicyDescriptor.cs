@@ -7,10 +7,10 @@
     public enum PolicyDescriptor
     {
         MicrosoftEmployeesShouldBeLinked,
-        MicrosoftOwnedRepoShouldOnlyGrantReadAccessToExternals,
+        MicrosoftOwnedRepoShouldOnlyGrantPullAccessToExternals,
         MicrosoftOwnedTeamShouldOnlyContainEmployees,
         MicrosoftTeamShouldBeMarkedAsOwnedByMicrosoft,
-        MicrosoftTeamShouldOnlyGrantReadAccess,
+        MicrosoftTeamShouldOnlyGrantPullAccess,
         InactiveReposShouldBeArchived,
         UnusedTeamShouldBeRemoved,
         TooManyRepoAdmins,
