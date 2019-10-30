@@ -18,7 +18,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
             foreach (var repo in context.Org.Repos)
             {
-                var inactivity = repo.LastPush - now;
+                var inactivity = now - repo.LastPush;
                 if (inactivity > threshold)
                 {
                     yield return new PolicyViolation(
