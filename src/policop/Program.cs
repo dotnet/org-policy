@@ -101,6 +101,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
         }
 
         private static readonly string AreaViolationLabel = "area-violation";
+        private static readonly string PolicyOverrideLabel = "policy-override";
 
         private static void SaveVioloations(string orgName, string outputFileName, bool isForExcel, IReadOnlyList<PolicyViolation> violations)
         {
@@ -159,6 +160,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
 
             var existingIssues = await GetIssuesAsync(client, orgName, policyRepo);
             await CreateIssuesAsync(client, orgName, policyRepo, violations, existingIssues);
+            await ReopenIssuesAsync(client, orgName, policyRepo, violations, existingIssues);
             await CloseIssuesAsync(client, orgName, policyRepo, violations, existingIssues);
         }
 
@@ -168,7 +170,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             var existingLabels = await client.Issue.Labels.GetAllForRepository(orgName, policyRepo);
 
             var existingLabelNames = existingLabels.ToDictionary(l => l.Name);
-            var desiredLabelNames = violations.Select(v => v.Descriptor.DiagnosticId).Distinct().Concat(new[] { AreaViolationLabel }).ToArray();
+            var desiredLabelNames = violations.Select(v => v.Descriptor.DiagnosticId).Distinct().Concat(new[] { AreaViolationLabel, PolicyOverrideLabel }).ToArray();
             var missingLabelNames = desiredLabelNames.Where(di => !existingLabelNames.ContainsKey(di)).ToList();
 
             var descriptors = violations.Select(v => v.Descriptor).Distinct().ToDictionary(d => d.DiagnosticId);
@@ -186,6 +188,11 @@ namespace Microsoft.DotnetOrg.PolicyCop
                 {
                     color = "d4c5f9";
                     description = "Issues representing policy violations";
+                }
+                else if (missingLabelName == PolicyOverrideLabel)
+                {
+                    color = "3e820b";
+                    description = "Marks an issue as a deliberate policy violation";
                 }
                 else
                 {
@@ -247,6 +254,33 @@ namespace Microsoft.DotnetOrg.PolicyCop
                 //    newIssue.Assignees.Add(assignee.Login);
 
                 await client.Issue.Create(orgName, policyRepo, newIssue);
+            }
+        }
+
+        private static async Task ReopenIssuesAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations, IReadOnlyList<Issue> existingIssues)
+        {
+            var fingerprints = new HashSet<Guid>(violations.Select(v => v.Fingerprint));
+
+            var oldIssues = existingIssues.Where(issue => issue.State.Value == ItemState.Closed &&
+                                                              !issue.Labels.Any(l => l.Name == PolicyOverrideLabel))
+                                           .Select(issue => (Fingerprint: GetFingerprint(issue.Title), Issue: issue))
+                                           .Where(t => t.Fingerprint != null && fingerprints.Contains(t.Fingerprint.Value))
+                                           .Select(t => t.Issue)                                              
+                                           .ToList();
+
+            var i = 0;
+
+            foreach (var oldIssue in oldIssues)
+            {
+                await client.PrintProgressAsync(Console.Out, "Reopening issue", oldIssue.Title, i++, oldIssues.Count);
+
+                await client.Issue.Comment.Create(orgName, policyRepo, oldIssue.Number, "The violation still exists.");
+
+                var issueUpdate = new IssueUpdate
+                {
+                    State = ItemState.Open
+                };
+                await client.Issue.Update(orgName, policyRepo, oldIssue.Number, issueUpdate);
             }
         }
 
