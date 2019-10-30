@@ -8,6 +8,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
     {
         public string Name { get; set; }
         public bool IsPrivate { get; set; }
+        public bool IsArchived { get; set; }
         public DateTimeOffset LastPush { get; set; }
 
         [JsonIgnore]
