@@ -78,8 +78,7 @@ namespace Microsoft.DotnetOrg.PermissionAuditing
             var isForExcel = outputFileName == null;
 
             var client = await GitHubClientFactory.CreateAsync();
-            var loader = new CachedOrgLoader(client, Console.Out, cacheLocation, forceUpdate: false);
-            var cachedOrg = await loader.LoadAsync(orgName);
+            var cachedOrg = await CachedOrg.LoadAsync(client, orgName, Console.Out, cacheLocation, forceUpdate: false);
 
             var csvDocument = new CsvDocument("repo", "repo-state", "repo-last-pushed", "principal-kind", "principal", "permission", "via-team");
             using (var writer = csvDocument.Append())

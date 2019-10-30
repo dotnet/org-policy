@@ -1,98 +1,23 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Octokit;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
-    public sealed class CachedOrgLoader
+    internal sealed class CacheLoader
     {
-        public CachedOrgLoader(GitHubClient gitHubClient, TextWriter logWriter = null, string cacheLocation = null, bool forceUpdate = false)
+        public CacheLoader(GitHubClient gitHubClient, TextWriter logWriter = null)
         {
             GitHubClient = gitHubClient;
             Log = logWriter ?? Console.Out;
-            CacheLocation = cacheLocation;
-            ForceUpdate = forceUpdate;
         }
 
         public GitHubClient GitHubClient { get; }
         public TextWriter Log { get; }
-        public string CacheLocation { get; }
-        public bool ForceUpdate { get; }
-
-        private string GetCachedPath(string orgName)
-        {
-            if (string.IsNullOrEmpty(CacheLocation))
-            {
-                var exePath = Environment.GetCommandLineArgs()[0];
-                var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
-                var cachedDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), fileInfo.CompanyName, fileInfo.ProductName, "Cache");
-                return Path.Combine(cachedDirectory, $"{orgName}.json");
-            }
-
-            return CacheLocation;
-        }
 
         public async Task<CachedOrg> LoadAsync(string orgName)
-        {
-            var cachedOrg = ForceUpdate
-                                ? null
-                                : await LoadFromCacheAsync(orgName);
-
-            if (cachedOrg == null || cachedOrg.Version != CachedOrg.CurrentVersion)
-            {
-                cachedOrg = await LoadFromGitHubAsync(orgName);
-                await SaveToCacheAsync(cachedOrg);
-            }
-
-            return cachedOrg;
-        }
-
-        private async Task<CachedOrg> LoadFromCacheAsync(string orgName)
-        {
-            var path = GetCachedPath(orgName);
-            if (!File.Exists(path))
-                return null;
-
-            using (var stream = File.OpenRead(path))
-            {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-                options.Converters.Add(new JsonStringEnumConverter());
-                var orgData = await JsonSerializer.DeserializeAsync<CachedOrg>(stream, options);
-                orgData.Initialize();
-
-                if (orgData.Name != orgName)
-                    return null;
-
-                return orgData;
-            }
-        }
-
-        private async Task SaveToCacheAsync(CachedOrg cachedOrg)
-        {
-            var path = GetCachedPath(cachedOrg.Name);
-            var cacheDirectory = Path.GetDirectoryName(path);
-            Directory.CreateDirectory(cacheDirectory);
-
-            using (var stream = File.Create(path))
-            {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-                options.Converters.Add(new JsonStringEnumConverter());
-                await JsonSerializer.SerializeAsync(stream, cachedOrg, options);
-            }
-        }
-
-        private async Task<CachedOrg> LoadFromGitHubAsync(string orgName)
         {
             var start = DateTimeOffset.Now;
 

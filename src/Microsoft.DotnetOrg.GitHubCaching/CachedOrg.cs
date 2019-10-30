@@ -1,6 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+
+using Octokit;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
@@ -118,6 +122,41 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public static string GetUserUrl(string login)
         {
             return $"https://github.com/{login}";
+        }
+
+        public static async Task<CachedOrg> LoadAsync(GitHubClient gitHubClient,
+                                                      string orgName,
+                                                      TextWriter logWriter = null,
+                                                      string cacheLocation = null,
+                                                      bool forceUpdate = false)
+        {
+            var cachedOrg = forceUpdate
+                    ? null
+                    : await LoadFromCacheAsync(orgName, cacheLocation);
+
+            if (cachedOrg == null)
+            {
+                var loader = new CacheLoader(gitHubClient, logWriter);
+                cachedOrg = await loader.LoadAsync(orgName);
+                await CachePersistence.SaveAsync(cachedOrg, cacheLocation);
+            }
+
+            return cachedOrg;
+        }
+
+        public static async Task<CachedOrg> LoadFromCacheAsync(string orgName, string cacheLocation = null)
+        {
+            var path = string.IsNullOrEmpty(cacheLocation)
+                        ? CachePersistence.GetPath(orgName)
+                        : cacheLocation;
+
+            var cachedOrg = await CachePersistence.LoadAsync(path);
+
+            var cacheIsValid = cachedOrg != null &&
+                               cachedOrg.Name == orgName &&
+                               cachedOrg.Version == CurrentVersion;
+
+            return cacheIsValid ? cachedOrg : null;
         }
     }
 }

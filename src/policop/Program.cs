@@ -88,8 +88,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             var isForExcel = outputFileName == null;
             var gitHubClient = await GitHubClientFactory.CreateAsync(githubToken);
             var ospoClient = await OspoClientFactory.CreateAsync(ospoToken);
-            var loader = new CachedOrgLoader(gitHubClient, Console.Out, cacheLocation, forceUpdate: false);
-            var cachedOrg = await loader.LoadAsync(orgName);
+            var cachedOrg = await CachedOrg.LoadAsync(gitHubClient, orgName, Console.Out, cacheLocation, forceUpdate: false);
             var userLinks = await MicrosoftUserLinks.LoadAsync(ospoClient);
             var context = new PolicyAnalysisContext(cachedOrg, userLinks);
             var violations = PolicyRunner.Run(context);
@@ -279,7 +278,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
                                                               !issue.Labels.Any(l => l.Name == PolicyOverrideLabel))
                                            .Select(issue => (Fingerprint: GetFingerprint(issue.Title), Issue: issue))
                                            .Where(t => t.Fingerprint != null && fingerprints.Contains(t.Fingerprint.Value))
-                                           .Select(t => t.Issue)                                              
+                                           .Select(t => t.Issue)
                                            .ToList();
 
             var i = 0;
