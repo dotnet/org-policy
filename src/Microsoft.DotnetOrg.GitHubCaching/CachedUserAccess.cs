@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
@@ -34,6 +36,55 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return User.IsOwner
                     ? CachedAccessReason.FromOwner
                     : CachedAccessReason.FromCollaborator;
+        }
+
+        public CachedWhatIfPermission WhatIfRemovedFromTeam(CachedTeam team)
+        {
+            if (User.IsOwner)
+                return new CachedWhatIfPermission(this, CachedPermission.Admin);
+
+            // Let's start by computing what we're getting from the repo directly.
+            //
+            // NOTE: This currently won't work because the GitHub API has no way to tell us
+            //       direct repo permissions. For detais, see:
+            //
+            //              https://github.com/octokit/octokit.net/issues/2036)
+            //
+            //       Rather, it only gives us effective permissions. This means that if a user
+            //       has 'admin' permissions through a team, but 'push' permissions by directly
+            //       being added to a repo, running what-if for this repo/team will (incorrectly)
+            //       conclude that the user was downgraded to 'pull' or lost access (if the repo
+            //       is private).
+            //
+            //       However, the current code will work for cases where the permissions granted
+            //       through the team is less than what was given via the repo directly.
+
+            var maximumLevel = Repo.Users.Where(ua => ua.User == (CachedUser)User && ua.Describe().IsCollaborator)
+                                          .Select(ua => (int)ua.Permission)
+                                          .DefaultIfEmpty()
+                                          .Max();
+
+            foreach (var teamAccess in Repo.Teams)
+            {
+                var teamAccessLevel = (int)teamAccess.Permission;
+
+                foreach (var innerTeam in teamAccess.Team.DescendentsAndSelf())
+                {
+                    if (innerTeam == team)
+                        continue;
+
+                    if (!innerTeam.Members.Contains(User))
+                        continue;
+
+                    maximumLevel = Math.Max(maximumLevel, teamAccessLevel);
+                }
+            }
+
+            if (maximumLevel == 0)
+                return new CachedWhatIfPermission(this, Repo.IsPrivate ? null : (CachedPermission?)CachedPermission.Pull);
+
+            var maximumPermission = (CachedPermission)maximumLevel;
+            return new CachedWhatIfPermission(this, maximumPermission);
         }
     }
 }
