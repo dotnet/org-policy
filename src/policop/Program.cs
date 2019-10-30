@@ -100,6 +100,8 @@ namespace Microsoft.DotnetOrg.PolicyCop
                 await FilePolicyViolationsAsync(gitHubClient, orgName, policyRepo, violations);
         }
 
+        private static readonly string AreaViolationLabel = "area-violation";
+
         private static void SaveVioloations(string orgName, string outputFileName, bool isForExcel, IReadOnlyList<PolicyViolation> violations)
         {
             var csvDocument = new CsvDocument("org", "rule", "fingerprint", "violation", "repo", "user", "team", "receivers");
@@ -166,7 +168,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             var existingLabels = await client.Issue.Labels.GetAllForRepository(orgName, policyRepo);
 
             var existingLabelNames = existingLabels.ToDictionary(l => l.Name);
-            var desiredLabelNames = violations.Select(v => v.DiagnosticId).Distinct().Concat(new[] { "violation" }).ToArray();
+            var desiredLabelNames = violations.Select(v => v.DiagnosticId).Distinct().Concat(new[] { AreaViolationLabel }).ToArray();
             var missingLabelNames = desiredLabelNames.Where(di => !existingLabelNames.ContainsKey(di)).ToList();
 
             var i = 0;
@@ -187,7 +189,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             {
                 State = ItemStateFilter.All
             };
-            issueRequest.Labels.Add("violation");
+            issueRequest.Labels.Add(AreaViolationLabel);
             var existingIssues = await client.Issue.GetAllForRepository(orgName, policyRepo, issueRequest);
             return existingIssues;
         }
@@ -215,7 +217,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
                     Labels =
                     {
                         newViolation.DiagnosticId,
-                        "violation"
+                        AreaViolationLabel
                     }
                 };
 
