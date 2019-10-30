@@ -18,9 +18,10 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             const int Threshold = 2;
             foreach (var repo in context.Org.Repos)
             {
+                var isArchived = repo.IsArchived;
                 var numberOfAdmins = repo.Users.Count(ua => ua.Permission == CachedPermission.Admin &&
                                                             !ua.Describe().IsOwner);
-                if (numberOfAdmins < Threshold)
+                if (!isArchived && numberOfAdmins < Threshold)
                 {
                     yield return new PolicyViolation(
                         Descriptor,
