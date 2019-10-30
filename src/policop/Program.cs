@@ -253,7 +253,21 @@ namespace Microsoft.DotnetOrg.PolicyCop
                 //foreach (var assignee in violation.Assignees)
                 //    newIssue.Assignees.Add(assignee.Login);
 
-                await client.Issue.Create(orgName, policyRepo, newIssue);
+                while (true)
+                {
+                    try
+                    {
+                        await client.Issue.Create(orgName, policyRepo, newIssue);
+                    }
+                    catch (AbuseException ex)
+                    {
+                        var retrySeconds = ex.RetryAfterSeconds ?? 120;
+                        Console.WriteLine($"Abuse detection triggered. Waiting for {retrySeconds} seconds before retrying.");
+
+                        var delay = TimeSpan.FromSeconds(retrySeconds);
+                        await Task.Delay(delay);
+                    }
+                }
             }
         }
 
