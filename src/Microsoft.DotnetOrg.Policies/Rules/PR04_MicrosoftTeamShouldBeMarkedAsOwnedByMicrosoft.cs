@@ -7,6 +7,12 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR04_MicrosoftTeamShouldBeMarkedAsOwnedByMicrosoft : PolicyRule
     {
+        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+            "PR04",
+            "Team should be owned by Microsoft",
+            PolicySeverity.Error
+        );
+
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             var allowedPermission = CachedPermission.Pull;
@@ -20,7 +26,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (!isOwnedByMicrosoft && grantsMoreThanPullAccessToMicrosoftRepo)
                 {
                     yield return new PolicyViolation(
-                        "PR04",
+                        Descriptor,
                         title: $"Team '{team.Name}' must be owned by Microsoft",
                         body: $@"
                             Team {team.Markdown()} grants at least one Microsoft-owned repo more than {allowedPermission.Markdown()} permissions. The team must be owned by Microsoft.

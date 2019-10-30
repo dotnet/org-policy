@@ -7,6 +7,12 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR02_MicrosoftOwnedRepoShouldOnlyGrantPullAccessToExternals : PolicyRule
     {
+        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+            "PR02",
+            "Microsoft-owned repo should only grant 'pull' to externals",
+            PolicySeverity.Error
+        );
+        
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             foreach (var repo in context.Org.Repos)
@@ -22,7 +28,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         if (!userWorksForMicrosoft && permission != CachedPermission.Pull)
                         {
                             yield return new PolicyViolation(
-                                "PR02",
+                                Descriptor,
                                 title: $"Non-Microsoft contributor '{user.Login}' should only have 'pull' permission for '{repo.Name}'",
                                 body: $@"
                                     The non-Microsoft contributor {user.Markdown()} was granted {permission.Markdown()} for the Microsoft-owned repo {repo.Markdown()}.

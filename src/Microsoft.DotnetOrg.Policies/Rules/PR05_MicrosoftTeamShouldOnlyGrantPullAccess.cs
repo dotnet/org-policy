@@ -6,6 +6,12 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR05_MicrosoftTeamShouldOnlyGrantPullAccess : PolicyRule
     {
+        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+            "PR05",
+            "The team 'Microsoft' should only grant 'pull' access",
+            PolicySeverity.Error
+        );
+
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             var microsoftTeam = context.Org.GetMicrosoftTeam();
@@ -20,7 +26,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         teamAccess.Permission != CachedPermission.Pull)
                     {
                         yield return new PolicyViolation(
-                            "PR05",
+                            Descriptor,
                             title: $"Repo '{repo.Name}' should only grant '{teamAccess.Team.Name}' with 'pull' permissions",
                             body: $@"
                                 The {microsoftTeam.Markdown()} is only used to indicate ownership. It should only ever grant `pull` permissions.

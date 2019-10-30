@@ -7,6 +7,12 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR08_TooManyRepoAdmins : PolicyRule
     {
+        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+            "PR08",
+            "Too many repo admins",
+            PolicySeverity.Error
+        );
+
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
             const int Threshold = 4;
@@ -19,7 +25,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (numberOfAdmins > Threshold)
                 {
                     yield return new PolicyViolation(
-                        "PR08",
+                        Descriptor,
                         title: $"Repo '{repo.Name}' has too many admins",
                         body: $@"
                             The repo {repo.Markdown()} has {numberOfAdmins} admins. Reduce the number of admins to {Threshold} or less.

@@ -11,7 +11,7 @@ namespace Microsoft.DotnetOrg.Policies
 {
     public sealed class PolicyViolation
     {
-        public PolicyViolation(string diagnosticId,
+        public PolicyViolation(PolicyDescriptor descriptor,
                                string title,
                                string body,
                                CachedRepo repo = null,
@@ -19,8 +19,8 @@ namespace Microsoft.DotnetOrg.Policies
                                CachedTeam team = null,
                                IReadOnlyCollection<CachedUser> assignees = null)
         {
-            DiagnosticId = diagnosticId;
-            Fingerprint = ComputeFingerprint(diagnosticId, repo, user, team);
+            Descriptor = descriptor;
+            Fingerprint = ComputeFingerprint(descriptor.DiagnosticId, repo, user, team);
             Title = title;
             Body = UnindentAndTrim(body);
             Repo = repo;
@@ -38,6 +38,7 @@ namespace Microsoft.DotnetOrg.Policies
         }
 
         public string DiagnosticId { get; }
+        public PolicyDescriptor Descriptor { get; }
         public Guid Fingerprint { get; }
         public string Title { get; }
         public string Body { get; }

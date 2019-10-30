@@ -110,7 +110,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
                 foreach (var violation in violations)
                 {
                     writer.Write(orgName);
-                    writer.Write(violation.DiagnosticId);
+                    writer.Write(violation.Descriptor.DiagnosticId);
                     writer.Write(violation.Fingerprint.ToString());
                     writer.Write(violation.Title);
 
@@ -168,8 +168,10 @@ namespace Microsoft.DotnetOrg.PolicyCop
             var existingLabels = await client.Issue.Labels.GetAllForRepository(orgName, policyRepo);
 
             var existingLabelNames = existingLabels.ToDictionary(l => l.Name);
-            var desiredLabelNames = violations.Select(v => v.DiagnosticId).Distinct().Concat(new[] { AreaViolationLabel }).ToArray();
+            var desiredLabelNames = violations.Select(v => v.Descriptor.DiagnosticId).Distinct().Concat(new[] { AreaViolationLabel }).ToArray();
             var missingLabelNames = desiredLabelNames.Where(di => !existingLabelNames.ContainsKey(di)).ToList();
+
+            var descriptors = violations.Select(v => v.Descriptor).Distinct().ToDictionary(d => d.DiagnosticId);
 
             var i = 0;
 
@@ -177,7 +179,25 @@ namespace Microsoft.DotnetOrg.PolicyCop
             {
                 await client.PrintProgressAsync(Console.Out, "Create label", missingLabelName, i++, missingLabelNames.Count);
 
-                var newLabel = new NewLabel(missingLabelName, "cfd3d7");
+                string color;
+                string description;
+
+                if (missingLabelName == AreaViolationLabel)
+                {
+                    color = "d4c5f9";
+                    description = "Issues representing policy violations";
+                }
+                else
+                {
+                    var descriptor = descriptors[missingLabelName];
+                    color = descriptor.Severity == PolicySeverity.Error
+                        ? "e11d21"
+                        : "fbca04";
+                    description = descriptor.Title;
+                }
+                
+                var newLabel = new NewLabel(missingLabelName, color);
+                newLabel.Description = description;
                 await client.Issue.Labels.Create(orgName, policyRepo, newLabel);
             }
         }
@@ -216,7 +236,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
                     Body = body,
                     Labels =
                     {
-                        newViolation.DiagnosticId,
+                        newViolation.Descriptor.DiagnosticId,
                         AreaViolationLabel
                     }
                 };
