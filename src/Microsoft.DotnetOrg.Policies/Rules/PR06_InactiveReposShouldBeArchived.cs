@@ -18,8 +18,9 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
             foreach (var repo in context.Org.Repos)
             {
+                var alreadyArchived = repo.IsArchived;
                 var inactivity = now - repo.LastPush;
-                if (inactivity > threshold)
+                if (!alreadyArchived && inactivity > threshold)
                 {
                     yield return new PolicyViolation(
                         Descriptor,
