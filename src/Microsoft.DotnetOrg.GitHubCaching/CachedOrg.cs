@@ -91,26 +91,6 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
         }
 
-        public string DescribeAccess(CachedUserAccess userAccess)
-        {
-            if (userAccess.User.IsOwner)
-                return "(Owner)";
-
-            foreach (var teamAccess in userAccess.Repo.Teams)
-            {
-                if (teamAccess.Permission == userAccess.Permission)
-                {
-                    foreach (var team in teamAccess.Team.DescendentsAndSelf())
-                    {
-                        if (team.Members.Contains(userAccess.User))
-                            return team.GetFullName();
-                    }
-                }
-            }
-
-            return "(Collaborator)";
-        }
-
         public static string GetRepoUrl(string orgName, string repoName)
         {
             return $"https://github.com/{orgName}/{repoName}";
