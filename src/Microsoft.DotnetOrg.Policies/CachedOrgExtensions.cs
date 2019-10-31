@@ -23,6 +23,14 @@ namespace Microsoft.DotnetOrg.Policies
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "bots", StringComparison.OrdinalIgnoreCase));
         }
 
+        public static bool IsMarkerTeam(this CachedTeam team)
+        {
+            var org = team.Org;
+            return team == org.GetMicrosoftTeam() ||
+                   team == org.GetMicrosoftBotsTeam() ||
+                   team == org.GetBotsTeam();
+        }
+
         public static bool IsOwnedByMicrosoft(this CachedRepo repo)
         {
             var microsoftTeam = repo.Org.GetMicrosoftTeam();
