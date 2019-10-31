@@ -120,30 +120,29 @@ namespace Microsoft.DotnetOrg.PermissionImpact
 
             using (var writer = csvDocument.Append())
             {
-                foreach (var team in cachedOrg.Teams)
+                foreach (var userAccess in cachedOrg.Collaborators)
                 {
-                    if (teamFilter(team))
-                        continue;
+                    var user = userAccess.User;
+                    var repo = userAccess.Repo;
 
-                    foreach (var repo in cachedOrg.Repos)
+                    foreach (var team in cachedOrg.Teams)
                     {
-                        foreach (var userAccess in repo.Users)
-                        {
-                            var user = userAccess.User;
-                            var whatIfRemoved = userAccess.WhatIfRemovedFromTeam(team);
-                            var change = whatIfRemoved.ToString();
+                        if (!teamFilter(team))
+                            continue;
 
-                            if (whatIfRemoved.IsUnchanged)
-                                continue;
+                        var whatIfRemoved = userAccess.WhatIfRemovedFromTeam(team);
+                        var change = whatIfRemoved.ToString();
 
-                            writer.WriteHyperlink(team.Url, team.Name, isForExcel);
-                            writer.WriteHyperlink(repo.Url, repo.Name, isForExcel);
-                            writer.WriteHyperlink(user.Url, user.Login, isForExcel);
-                            writer.Write(nameByUser[user]);
-                            writer.Write(emailByUser[user]);
-                            writer.Write(change);
-                            writer.WriteLine();
-                        }
+                        if (whatIfRemoved.IsUnchanged)
+                            continue;
+
+                        writer.WriteHyperlink(team.Url, team.Name, isForExcel);
+                        writer.WriteHyperlink(repo.Url, repo.Name, isForExcel);
+                        writer.WriteHyperlink(user.Url, user.Login, isForExcel);
+                        writer.Write(nameByUser[user]);
+                        writer.Write(emailByUser[user]);
+                        writer.Write(change);
+                        writer.WriteLine();
                     }
                 }
             }
