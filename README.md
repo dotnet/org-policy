@@ -2,6 +2,10 @@
 
 This repo contains tools and tracks policy violations.
 
+## Policies and process
+
+For details on policies, see [the docs](doc/README.md).
+
 ## `policop`
 
 This tool helps with enforcing [the policies] we're using in this organization.
