@@ -28,7 +28,7 @@ the appropriate user:
   it will assign the org owners.
 * For issues with a specific user account, it will assign the user.
 
-If an issue already exists but was close, it will reopen the issue. If the
+If an issue already exists but was closed, it will reopen the issue. If the
 assignees believe the policy violation is necessary, they should loop in the
 [@policy-cops] team.
 
