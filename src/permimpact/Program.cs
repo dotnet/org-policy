@@ -107,9 +107,12 @@ namespace Microsoft.DotnetOrg.PermissionImpact
 
                 if (microsoftLink.TryGetValue(user.Login, out var link))
                 {
-                    emailByUser[user] = link.MicrosoftInfo.EmailAddress;
-                    nameByUser[user] = link.MicrosoftInfo.PreferredName;
-                }
+                    if (!string.IsNullOrEmpty(link.MicrosoftInfo.EmailAddress))
+                        emailByUser[user] = link.MicrosoftInfo.EmailAddress;
+
+                    if (!string.IsNullOrEmpty(link.MicrosoftInfo.PreferredName))
+                        nameByUser[user] = link.MicrosoftInfo.PreferredName;
+                }                
             }
 
             var isForExcel = outputFileName == null;

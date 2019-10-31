@@ -29,14 +29,39 @@ namespace Microsoft.DotnetOrg.Ospo
             _httpClient.Dispose();
         }
 
-        public Task<UserLink> GetAsync(string gitHubLogin)
+        public async Task<UserLink> GetAsync(string gitHubLogin)
         {
-            return GetAsJsonAsync<UserLink>($"people/links/github/{gitHubLogin}");
+            var result = await GetAsJsonAsync<UserLink>($"people/links/github/{gitHubLogin}");
+            if (result != null)
+                FixUpEmail(result);
+
+            return result;
         }
 
-        public Task<IReadOnlyList<UserLink>> GetAllAsync()
+        public async Task<IReadOnlyList<UserLink>> GetAllAsync()
         {
-            return GetAsJsonAsync<IReadOnlyList<UserLink>>($"people/links");
+            var result = await GetAsJsonAsync<IReadOnlyList<UserLink>>($"people/links");
+            foreach (var link in result)
+                FixUpEmail(link);
+
+            return result;
+        }
+
+        private static void FixUpEmail(UserLink link)
+        {
+            // For some interesting reason, some people have their
+            // email in the PreferredName field...
+
+            var ms = link.MicrosoftInfo;
+
+            if (ms.PreferredName != null && ms.PreferredName.Contains("@"))
+            {
+                if (string.IsNullOrEmpty(ms.EmailAddress))
+                {
+                    ms.EmailAddress = ms.PreferredName;
+                    ms.PreferredName = null;
+                }
+            }
         }
 
         private async Task<T> GetAsJsonAsync<T>(string requestUri)
