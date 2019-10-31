@@ -13,6 +13,7 @@ Rule            | Severity | Title
 [PR09](PR09.md) | Error    | Team should be owned by Microsoft
 [PR10](PR10.md) | Error    | Admins should be in teams
 [PR11](PR11.md) | Warning  | Repos should have a sufficient number of admins
+[PR12](PR12.md) | Warning  | Bots should be in the 'bots' team
 
 ## Process
 

@@ -62,6 +62,11 @@ namespace Microsoft.DotnetOrg.Policies
             return team != null && team.Members.Contains(user);
         }
 
+        public static bool IsPotentiallyABot(this CachedUser user)
+        {
+            return user.Login.IndexOf("bot", StringComparison.OrdinalIgnoreCase) > 0;
+        }
+
         public static IEnumerable<CachedUser> GetOwners(this CachedOrg org)
         {
             return org.Users.Where(u => u.IsOwner && !u.IsBot());
