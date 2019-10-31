@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "permimpact": {
+      "commandName": "Project",
+      "commandLineArgs": "--org dotnet --team core"
+    }
+  }
+}
