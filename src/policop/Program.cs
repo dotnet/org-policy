@@ -104,13 +104,15 @@ namespace Microsoft.DotnetOrg.PolicyCop
 
         private static void SaveVioloations(string orgName, string outputFileName, bool isForExcel, IReadOnlyList<PolicyViolation> violations)
         {
-            var csvDocument = new CsvDocument("org", "rule", "fingerprint", "violation", "repo", "user", "team", "assignees");
+            var csvDocument = new CsvDocument("org", "severity", "rule", "rule-title", "fingerprint", "violation", "repo", "user", "team", "assignees");
             using (var writer = csvDocument.Append())
             {
                 foreach (var violation in violations)
                 {
                     writer.Write(orgName);
+                    writer.Write(violation.Descriptor.Severity.ToString());
                     writer.Write(violation.Descriptor.DiagnosticId);
+                    writer.Write(violation.Descriptor.Title);
                     writer.Write(violation.Fingerprint.ToString());
                     writer.Write(violation.Title);
 
