@@ -10,7 +10,7 @@ Rule            | Severity | Title
 [PR06](PR06.md) | Warning  | Inactive repos should be archived
 [PR07](PR07.md) | Warning  | Unused team should be removed
 [PR08](PR08.md) | Error    | Too many repo admins
-[PR09](PR09.md) | Error    | Team should be owned by Microsoft
+[PR09](PR09.md) | Error    | Too many team maintainers
 [PR10](PR10.md) | Error    | Admins should be in teams
 [PR11](PR11.md) | Warning  | Repos should have a sufficient number of admins
 [PR12](PR12.md) | Warning  | Bots should be in the 'bots' team
