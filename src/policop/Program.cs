@@ -104,7 +104,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
 
         private static void SaveVioloations(string orgName, string outputFileName, bool isForExcel, IReadOnlyList<PolicyViolation> violations)
         {
-            var csvDocument = new CsvDocument("org", "rule", "fingerprint", "violation", "repo", "user", "team", "receivers");
+            var csvDocument = new CsvDocument("org", "rule", "fingerprint", "violation", "repo", "user", "team", "assignees");
             using (var writer = csvDocument.Append())
             {
                 foreach (var violation in violations)
@@ -129,8 +129,8 @@ namespace Microsoft.DotnetOrg.PolicyCop
                     else
                         writer.WriteHyperlink(violation.Team.Url, violation.Team.Name, isForExcel);
 
-                    var receivers = string.Join(", ", violation.Assignees.Select(r => r.Login));
-                    writer.Write(receivers);
+                    var assignees = string.Join(", ", violation.Assignees.Select(r => r.Login));
+                    writer.Write(assignees);
 
                     writer.WriteLine();
                 }
