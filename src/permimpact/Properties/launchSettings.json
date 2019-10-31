@@ -2,7 +2,7 @@
   "profiles": {
     "permimpact": {
       "commandName": "Project",
-      "commandLineArgs": "--org dotnet --team core"
+      "commandLineArgs": "--org dotnet -r standard -r corefx -t microsoft"
     }
   }
 }

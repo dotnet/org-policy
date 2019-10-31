@@ -14,6 +14,7 @@
     <ProjectReference Include="..\Microsoft.Csv.Excel\Microsoft.Csv.Excel.csproj" />
     <ProjectReference Include="..\Microsoft.DotnetOrg.GitHubCaching\Microsoft.DotnetOrg.GitHubCaching.csproj" />
     <ProjectReference Include="..\Microsoft.DotnetOrg.Ospo\Microsoft.DotnetOrg.Ospo.csproj" />
+    <ProjectReference Include="..\Microsoft.DotnetOrg.Policies\Microsoft.DotnetOrg.Policies.csproj" />
   </ItemGroup>
 
 </Project>
