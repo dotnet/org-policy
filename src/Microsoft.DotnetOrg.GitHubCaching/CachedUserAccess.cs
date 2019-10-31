@@ -59,28 +59,28 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             //       However, the current code will work for cases where the permissions granted
             //       through the team is less than what was given via the repo directly.
 
-            var maximumLevel = Repo.Users.Where(ua => ua.User == (CachedUser)User && ua.Describe().IsCollaborator)
+            var maximumLevel = Repo.Users.Where(ua => ua.User == User && ua.Describe().IsCollaborator)
                                           .Select(ua => (int)ua.Permission)
-                                          .DefaultIfEmpty()
+                                          .DefaultIfEmpty(-1)
                                           .Max();
 
             foreach (var teamAccess in Repo.Teams)
             {
                 var teamAccessLevel = (int)teamAccess.Permission;
 
-                foreach (var innerTeam in teamAccess.Team.DescendentsAndSelf())
+                foreach (var nestedTeam in teamAccess.Team.DescendentsAndSelf())
                 {
-                    if (innerTeam == team)
+                    if (nestedTeam == team)
                         continue;
 
-                    if (!innerTeam.Members.Contains(User))
+                    if (!nestedTeam.Members.Contains(User))
                         continue;
 
                     maximumLevel = Math.Max(maximumLevel, teamAccessLevel);
                 }
             }
 
-            if (maximumLevel == 0)
+            if (maximumLevel == -1)
                 return new CachedWhatIfPermission(this, Repo.IsPrivate ? null : (CachedPermission?)CachedPermission.Pull);
 
             var maximumPermission = (CachedPermission)maximumLevel;
