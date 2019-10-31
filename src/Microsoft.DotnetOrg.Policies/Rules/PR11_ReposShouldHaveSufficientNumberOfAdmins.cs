@@ -29,6 +29,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         body: $@"
                             The repo {repo.Markdown()} has {numberOfAdmins} admins (excluding organization owners). It is recommended to have at least {Threshold} admins.
                         ",
+                        org: context.Org,
                         repo: repo
                     );
                 }

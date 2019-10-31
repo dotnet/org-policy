@@ -27,6 +27,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                             For more details, see [documentation](https://docs.opensource.microsoft.com/tools/github/accounts/linking.html).
                         ",
+                        org: context.Org,
                         user: user
                     );
                 }

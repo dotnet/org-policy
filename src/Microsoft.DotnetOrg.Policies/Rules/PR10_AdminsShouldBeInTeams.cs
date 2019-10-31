@@ -46,6 +46,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                                 {recommendation}
                             ",
+                            org: context.Org,
                             repo: repo,
                             user: user
                         );

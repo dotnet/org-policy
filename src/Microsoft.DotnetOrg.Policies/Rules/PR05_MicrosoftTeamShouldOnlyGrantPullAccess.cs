@@ -33,6 +33,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                                 Change the permissions for {microsoftTeam.Markdown()} in repo {repo.Markdown()} to `pull`.
                             ",
+                            org: context.Org,
                             repo: repo,
                             team: teamAccess.Team
                         );

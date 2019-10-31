@@ -30,6 +30,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         body: $@"
                             The repo {repo.Markdown()} has {numberOfAdmins} admins. Reduce the number of admins to {Threshold} or less.
                         ",
+                        org: context.Org,
                         repo: repo
                     );
                 }

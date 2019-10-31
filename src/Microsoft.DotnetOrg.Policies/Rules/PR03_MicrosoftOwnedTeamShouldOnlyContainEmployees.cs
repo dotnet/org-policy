@@ -32,6 +32,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                                     * If this team is supposed to represent Microsoft and non-Microsoft, the team shouldn't be owned by Microsoft
                                     * If this isn't a Microsoft user, they need to be removed from this team.
                                 ",
+                                org: context.Org,
                                 team: team,
                                 user: user
                             );

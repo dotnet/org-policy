@@ -33,6 +33,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                             To indicate that the team is owned by Microsoft, ensure that one of the parent teams is {microsoftTeam.Markdown()}.
                         ",
+                        org: context.Org,
                         team: team
                     );
                 }

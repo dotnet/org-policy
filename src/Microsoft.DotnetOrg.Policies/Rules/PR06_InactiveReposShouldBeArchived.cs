@@ -28,6 +28,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         body: $@"
                             The last push to repo {repo.Markdown()} is more than {threshold.TotalDays:N0} days ago. It should be archived.
                         ",
+                        org: context.Org,
                         repo: repo
                     );
                 }

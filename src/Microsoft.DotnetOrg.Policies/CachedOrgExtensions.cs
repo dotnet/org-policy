@@ -18,6 +18,11 @@ namespace Microsoft.DotnetOrg.Policies
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft-bots", StringComparison.OrdinalIgnoreCase));
         }
 
+        public static CachedTeam GetBotsTeam(this CachedOrg org)
+        {
+            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "bots", StringComparison.OrdinalIgnoreCase));
+        }
+
         public static bool IsOwnedByMicrosoft(this CachedRepo repo)
         {
             var microsoftTeam = repo.Org.GetMicrosoftTeam();
@@ -51,12 +56,39 @@ namespace Microsoft.DotnetOrg.Policies
             return microsoftBotsTeam != null && microsoftBotsTeam.Members.Contains(user);
         }
 
+        public static bool IsBot(this CachedUser user)
+        {
+            var team = user.Org.GetBotsTeam();
+            return team != null && team.Members.Contains(user);
+        }
+
+        public static IEnumerable<CachedUser> GetOwners(this CachedOrg org)
+        {
+            return org.Users.Where(u => u.IsOwner && !u.IsBot());
+        }
+
         public static IEnumerable<CachedUser> GetAdministrators(this CachedRepo repo)
         {
-            return repo.Users
-                       .Where(ua => ua.Permission == CachedPermission.Admin &&
-                                    !ua.Describe().IsOwner)
-                       .Select(ua => ua.User);
+            var result = repo.Users
+                             .Where(ua => ua.Permission == CachedPermission.Admin &&
+                                          !ua.User.IsBot() &&
+                                          !ua.Describe().IsOwner)
+                             .Select(ua => ua.User);
+
+            if (!result.Any())
+                return repo.Org.GetOwners();
+
+            return result;
+        }
+
+        public static IEnumerable<CachedUser> GetMaintainers(this CachedTeam team)
+        {
+            var result = team.Maintainers.Where(u => !u.IsBot());
+
+            if (!result.Any())
+                return team.Org.GetOwners();
+
+            return result;
         }
 
         public static string Markdown(this CachedRepo repo)

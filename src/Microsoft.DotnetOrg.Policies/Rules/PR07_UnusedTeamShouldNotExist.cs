@@ -27,6 +27,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         body: $@"
                             Team {team.Markdown()} doesn't have any associated repos nor nested teams. It should either be used or removed.
                         ",
+                        org: context.Org,
                         team: team
                     );
                 }

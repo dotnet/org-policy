@@ -14,38 +14,50 @@ namespace Microsoft.DotnetOrg.Policies
         public PolicyViolation(PolicyDescriptor descriptor,
                                string title,
                                string body,
+                               CachedOrg org,
                                CachedRepo repo = null,
-                               CachedUser user = null,
                                CachedTeam team = null,
+                               CachedUser user = null,
                                IReadOnlyCollection<CachedUser> assignees = null)
         {
             Descriptor = descriptor;
             Fingerprint = ComputeFingerprint(descriptor.DiagnosticId, repo, user, team);
             Title = title;
             Body = UnindentAndTrim(body);
+            Org = org;
             Repo = repo;
-            User = user;
             Team = team;
-            Assignees = assignees != null
-                        ? assignees
-                        : repo != null
-                          ? repo.GetAdministrators().ToArray()
-                          : team != null
-                            ? team.Maintainers
-                            : user != null
-                              ? new[] { user }
-                              : (IReadOnlyList<CachedUser>)Array.Empty<CachedUser>();
+            User = user;
+            Assignees = ComputeAssignees(org, repo, team, user, assignees);
         }
 
         public string DiagnosticId { get; }
         public PolicyDescriptor Descriptor { get; }
         public Guid Fingerprint { get; }
         public string Title { get; }
+        public CachedOrg Org { get; }
         public string Body { get; }
         public CachedRepo Repo { get; }
-        public CachedUser User { get; }
         public CachedTeam Team { get; }
+        public CachedUser User { get; }
         public IReadOnlyCollection<CachedUser> Assignees { get; }
+
+        private static IReadOnlyCollection<CachedUser> ComputeAssignees(CachedOrg org, CachedRepo repo, CachedTeam team, CachedUser user, IReadOnlyCollection<CachedUser> assignees)
+        {
+            if (assignees != null && assignees.Count > 0)
+                return assignees;
+
+            if (repo != null)
+                return repo.GetAdministrators().ToArray();
+
+            if (team != null)
+                return team.GetMaintainers().ToArray();
+
+            if (user != null)
+                return new[] { user };
+
+            return org.GetOwners().ToArray();
+        }
 
         private static Guid ComputeFingerprint(string diagnosticId, CachedRepo repo, CachedUser user, CachedTeam team)
         {

@@ -38,6 +38,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                                     * If this is a Microsoft user, they need to [link](https://docs.opensource.microsoft.com/tools/github/accounts/linking.html) their account.
                                     * If this isn't a Microsoft user, their permission needs to be changed to `pull`.
                                 ",
+                                org: context.Org,
                                 repo: repo,
                                 user: user
                             );

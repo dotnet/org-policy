@@ -26,6 +26,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         body: $@"
                             The team {team.Markdown()} has {numberOfMaintainers} maintainers. Reduce the number of maintainers to {Threshold} or less.
                         ",
+                        org: context.Org,
                         team: team
                     );
                 }
