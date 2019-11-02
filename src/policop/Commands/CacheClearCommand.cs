@@ -18,7 +18,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override string Name => "cache-clear";
 
-        public override string Description => "Clears the cache the cache";
+        public override string Description => "Clears the cached org and link data";
 
         public override void AddOptions(OptionSet options)
         {
