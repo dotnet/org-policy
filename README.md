@@ -6,14 +6,14 @@ This repo contains tools and tracks policy violations.
 
 For details on policies, see [the docs](doc/README.md).
 
-## `policop`
+## `policop check`
 
 This tool helps with enforcing [the policies] we're using in this organization.
 
 [the policies]: doc/README.md
 
 ```
-usage: policop --org <org> [OPTIONS]+
+usage: policop check [OPTIONS]+
       --org=name             The name of the GitHub organization
   -o, --output=path          The path where the output .csv file should be written to.
       --cache-location=path  The path where the .json cache should be written to.
@@ -26,10 +26,10 @@ usage: policop --org <org> [OPTIONS]+
 Example:
 
 ```
-$ .\policop.exe --org dotnet -o D:\violations.csv
+$ .\policop check --org dotnet -o D:\violations.csv
 ```
 
-## `permaudit`
+## `policop audit`
 
 This tool helps to audit GitHub organizations by producing a report like this:
 
@@ -45,24 +45,25 @@ This tool helps to audit GitHub organizations by producing a report like this:
 | Another repo | public     | 10/23/2019 3:30  | user           | Another External User | push       | (Collaborator)             |
 
 ```
-usage: permaudit --org <org> [OPTIONS]+
+usage: policop audit [OPTIONS]+
       --org=name             The name of the GitHub organization
   -o, --output=path          The path where the output .csv file should be written to.
       --cache-location=path  The path where the .json cache should be written to.
+      --excel                Shows the results in Excel
   @file                      Read response file for more options.
 ```
 
-`permaudit` will prompt for log in information on first run so it can create a
+`policop audit` will prompt for log in information on first run so it can create a
 personal access token (PAT). It needs read-only access to repos and orgs.
 
 ```
-$ .\permaudit.exe --org <org-name> [-o <output-file>]
+$ .\policop audit --org <org-name> [-o <output-file>]
 ```
 
-If you don't specify an output file, the app will show the results in Excel. In
-case you don't have Excel, you'll get an error before the tool runs and you need
-to specify a path for the `.csv` file with the report.
+If you don't specify an output file, the app will print the results to the
+console. Alternatively, you can show the results in Excel by specifying
+`--excel`.
 
 ```
-$ .\permaudit.exe --org dotnet -o C:\work\permissions.csv
+$ .\policop audit --org dotnet -o C:\work\permissions.csv
 ```
