@@ -17,7 +17,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private readonly List<string> _teamNames = new List<string>();
         private readonly List<string> _userNames = new List<string>();
         private string _outputFileName;
-        private string _cacheLocation;
         private bool _viewInExcel;
 
         public override string Name => "what-if";
@@ -31,8 +30,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("t|team=", "The {name} of the team to analyze impact for", v => _teamNames.Add(v))
                    .Add("u|user=", "The {name} of the user to analyze impact for", v => _userNames.Add(v))
                    .Add("o|output=", "The {path} where the output .csv file should be written to.", v => _outputFileName = v)
-                   .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
-                   .AddCacheLocation(v => _cacheLocation = v);
+                   .Add("excel", "Shows the results in Excel", v => _viewInExcel = true);
         }
 
         public override async Task ExecuteAsync()
@@ -49,16 +47,17 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var cachedOrg = await CachedOrg.LoadFromCacheAsync(_orgName, _cacheLocation);
-            if (cachedOrg == null)
+            var org = await CachedOrg.LoadFromCacheAsync(_orgName);
+
+            if (org == null)
             {
-                Console.Error.WriteLine("The org wasn't loaded yet or the cache isn't valid anymore.");
+                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-org first.");
                 return;
             }
 
-            var repoFilter = CreateRepoFilter(cachedOrg, _repoNames);
-            var teamFilter = CreateTeamFilter(cachedOrg, _teamNames);
-            var userFilter = CreateUserFilter(cachedOrg, _userNames);
+            var repoFilter = CreateRepoFilter(org, _repoNames);
+            var teamFilter = CreateTeamFilter(org, _teamNames);
+            var userFilter = CreateUserFilter(org, _userNames);
 
             var emailByUser = new Dictionary<CachedUser, string>();
             var nameByUser = new Dictionary<CachedUser, string>();
@@ -67,7 +66,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             using (var writer = csvDocument.Append())
             {
-                foreach (var userAccess in cachedOrg.Collaborators)
+                foreach (var userAccess in org.Collaborators)
                 {
                     var repo = userAccess.Repo;
                     var user = userAccess.User;
@@ -75,7 +74,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     if (!repoFilter(repo) || !userFilter(user))
                         continue;
 
-                    foreach (var team in cachedOrg.Teams)
+                    foreach (var team in org.Teams)
                     {
                         if (!teamFilter(team))
                             continue;

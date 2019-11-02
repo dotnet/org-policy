@@ -22,8 +22,8 @@ variables:
   sln: '$(Build.Repository.LocalPath)\src\Microsoft.DotnetOrg.Policies.sln'
   outDir: '$(Build.ArtifactStagingDirectory)\'
   policop: '$(Build.ArtifactStagingDirectory)\policop.exe'
-  cachePath: '$(Build.ArtifactStagingDirectory)\dotnet.json'
-  output: '$(Build.ArtifactStagingDirectory)\dotnet.csv'
+  cachePath: '$(Build.ArtifactStagingDirectory)'
+  violationsPath: '$(Build.ArtifactStagingDirectory)\dotnet.csv'
 
 jobs:
 - job:
@@ -40,7 +40,11 @@ jobs:
   - task: CmdLine@2
     inputs:
       script: |
-        $(policop) check --org dotnet --policy-repo terrajobst/org-policy-violations -o $(output) --cache-location $(cachePath) --ospo-token $(TokenOspo) --github-token $(GitHubToken)
+        $(policop) cache-org --org dotnet --token $(GitHubToken)
+        $(policop) cache-links --token $(TokenOspo)
+        $(policop) cache-export -o $(cachePath)
+        $(policop) check --org dotnet -o $(violationsPath) --policy-repo terrajobst/org-policy-violations --github-token $(GitHubToken)
+        $(policop) cache-clear -f
     condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual')))
   - task: PublishBuildArtifacts@1
     condition: eq(variables['system.pullrequest.isfork'], false)

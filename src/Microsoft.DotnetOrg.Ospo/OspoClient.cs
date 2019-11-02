@@ -29,25 +29,27 @@ namespace Microsoft.DotnetOrg.Ospo
             _httpClient.Dispose();
         }
 
-        public async Task<UserLink> GetAsync(string gitHubLogin)
+        public async Task<OspoLink> GetAsync(string gitHubLogin)
         {
-            var result = await GetAsJsonAsync<UserLink>($"people/links/github/{gitHubLogin}");
+            var result = await GetAsJsonAsync<OspoLink>($"people/links/github/{gitHubLogin}");
             if (result != null)
                 FixUpEmail(result);
 
             return result;
         }
 
-        public async Task<IReadOnlyList<UserLink>> GetAllAsync()
+        public async Task<OspoLinkSet> GetAllAsync()
         {
-            var result = await GetAsJsonAsync<IReadOnlyList<UserLink>>($"people/links");
-            foreach (var link in result)
-                FixUpEmail(link);
+            var linkSet = new OspoLinkSet
+            {
+                Links = await GetAsJsonAsync<IReadOnlyList<OspoLink>>($"people/links")
+            };
 
-            return result;
+            linkSet.Initialize();
+            return linkSet;
         }
 
-        private static void FixUpEmail(UserLink link)
+        private static void FixUpEmail(OspoLink link)
         {
             // For some interesting reason, some people have their
             // email in the PreferredName field...

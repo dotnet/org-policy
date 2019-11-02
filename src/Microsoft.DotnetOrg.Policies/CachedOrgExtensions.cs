@@ -57,7 +57,7 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool IsMicrosoftUser(this PolicyAnalysisContext context, CachedUser user)
         {
-            if (context.UserLinks.LinkByGitHubLogin.ContainsKey(user.Login))
+            if (context.LinkSet.LinkByLogin.ContainsKey(user.Login))
                 return true;
 
             var microsoftBotsTeam = user.Org.GetMicrosoftBotsTeam();
