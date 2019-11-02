@@ -12,7 +12,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override string Name => "cache-links";
 
-        public override string Description => "Downloads the Microsoft link data from the Open Source Program Office (OSPO)";
+        public override string Description => "Downloads the user link data from the Open Source Program Office (OSPO)";
 
         public override void AddOptions(OptionSet options)
         {
