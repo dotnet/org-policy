@@ -144,7 +144,10 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return cachedOrg;
         }
 
-        public static string GetCacheLocation(string orgName) => CachePersistence.GetPath(orgName);
+        public static string GetCacheLocation(string orgName)
+        {
+            return CachePersistence.GetPath(orgName);
+        }
 
         public static async Task<CachedOrg> LoadFromCacheAsync(string orgName, string cacheLocation = null)
         {

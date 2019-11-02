@@ -38,8 +38,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                            .Where(f => f != ospoPath)
                                            .ToArray();
 
-            var files = new List<string>();
-            files.Add(ospoPath);
+            var files = new List<string>
+            {
+                ospoPath
+            };
             files.AddRange(cachedOrgPaths);
 
             _outputDirectory = Path.GetFullPath(_outputDirectory);
@@ -54,7 +56,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     var destinationDirectoryPath = Path.GetDirectoryName(destinationPath);
                     Directory.CreateDirectory(destinationDirectoryPath);
                 }
-             
+
                 File.Copy(sourcePath, destinationPath, true);
             }
 

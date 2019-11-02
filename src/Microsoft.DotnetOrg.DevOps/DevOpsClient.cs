@@ -59,9 +59,11 @@ namespace Microsoft.DotnetOrg.DevOps
             var itemPath = WebUtility.UrlEncode(artifact.Name + "/" + fileName);
             var uri = $"https://{Organization}.visualstudio.com/_apis/resources/Containers/{containerId}?itemPath={itemPath}";
 
-            var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Get;
-            request.RequestUri = new Uri(uri);
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri(uri)
+            };
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
 
             var response = await _httpClient.SendAsync(request);

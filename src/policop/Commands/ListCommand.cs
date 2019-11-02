@@ -76,7 +76,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     return;
                 case 1:
                     if (_listRepos)
+                    {
                         ListRepos(org);
+                    }
                     else if (_listTeams)
                     {
                         ListTeams(org);
@@ -88,7 +90,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     return;
                 case 2:
                     if (_listRepos && _listTeams)
+                    {
                         ListTeamAccess(org);
+                    }
                     else if (_listRepos && _listUsers)
                     {
                         ListUserAccess(org);
@@ -110,7 +114,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var rows = org.Repos
                           .Where(repoFilter)
                           .OrderBy(r => r.Name)
-                          .Select(r => (r.Name, r.IsPrivate ? "Private": "Public", r.IsArchived ? "Yes" : "No", r.LastPush))
+                          .Select(r => (r.Name, r.IsPrivate ? "Private" : "Public", r.IsArchived ? "Yes" : "No", r.LastPush))
                           .ToArray();
 
             OutputTable(rows, "repo", "visibility", "archived", "last-push");
@@ -260,7 +264,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     bool result;
 
                     if (wildcardAtStart && wildcardAtEnd)
+                    {
                         result = text.IndexOf(actualTerm, StringComparison.OrdinalIgnoreCase) >= 0;
+                    }
                     else if (wildcardAtStart)
                     {
                         result = text.EndsWith(actualTerm, StringComparison.OrdinalIgnoreCase);

@@ -61,11 +61,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                         var teamName = teamAccess.Team.Name;
                         var teamUrl = teamAccess.Team.Url;
 
-                        writer.WriteHyperlink(repo.Url, repo.Name, (bool)_viewInExcel);
+                        writer.WriteHyperlink(repo.Url, repo.Name, _viewInExcel);
                         writer.Write(publicPrivate);
                         writer.Write(lastPush);
                         writer.Write("team");
-                        writer.WriteHyperlink(teamUrl, teamName, (bool)_viewInExcel);
+                        writer.WriteHyperlink(teamUrl, teamName, _viewInExcel);
                         writer.Write(permissions);
                         writer.Write(teamName);
                         writer.WriteLine();
@@ -77,11 +77,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                         var userUrl = CachedOrg.GetUserUrl(userAccess.UserLogin);
                         var permissions = userAccess.Permission.ToString().ToLower();
 
-                        writer.WriteHyperlink(repo.Url, repo.Name, (bool)_viewInExcel);
+                        writer.WriteHyperlink(repo.Url, repo.Name, _viewInExcel);
                         writer.Write(publicPrivate);
                         writer.Write(lastPush);
                         writer.Write("user");
-                        writer.WriteHyperlink(userUrl, userAccess.UserLogin, (bool)_viewInExcel);
+                        writer.WriteHyperlink(userUrl, userAccess.UserLogin, _viewInExcel);
                         writer.Write(permissions);
                         writer.Write(via);
                         writer.WriteLine();
