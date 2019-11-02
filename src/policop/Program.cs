@@ -24,7 +24,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
                 Console.Error.WriteLine($"usage: {exeName} <command> [OPTIONS]+");
                 Console.Error.WriteLine();
 
-                var commandNameWidth = commands.Max(c => c.Name.Length) + 3;                
+                var commandNameWidth = commands.Max(c => c.Name.Length) + 3;
                 foreach (var c in commands)
                     Console.Error.WriteLine($"  {c.Name.PadRight(commandNameWidth)}{c.Description}");
                 return;
@@ -43,7 +43,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             command.AddOptions(options);
             options.Add("h|?|help", null, v => help = true, true);
             options.Add(new ResponseFileSource());
-            
+
             try
             {
                 var unprocessed = options.Parse(args.Skip(1));
