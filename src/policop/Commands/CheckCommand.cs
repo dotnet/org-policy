@@ -18,10 +18,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     {
         private string _orgName;
         private string _outputFileName;
-        private string _cacheLocation;
         private string _gitHubToken;
-        private string _ospoToken;
         private string _policyRepo;
+        private bool _viewInExcel;
 
         public override string Name => "check";
 
@@ -31,9 +30,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         {
             options.AddOrg(v => _orgName = v)
                    .Add("o|output=", "The {path} where the output .csv file should be written to.", v => _outputFileName = v)
-                   .AddCacheLocation(v => _cacheLocation = v)
+                   .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
                    .Add("github-token=", "The GitHub API {token} to be used.", v => _gitHubToken = v)
-                   .Add("ospo-token=", "The OSPO API {token} to be used.", v => _ospoToken = v)
                    .Add("policy-repo=", "The GitHub {repo} policy violations should be file in.", v => _policyRepo = v);
         }
 
@@ -45,24 +43,44 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var isForExcel = _outputFileName == null;
-            var gitHubClient = await GitHubClientFactory.CreateAsync(_gitHubToken);
-            var ospoClient = await OspoClientFactory.CreateAsync(_ospoToken);
-            var cachedOrg = await CachedOrg.LoadAsync(gitHubClient, _orgName, Console.Out, _cacheLocation, forceUpdate: false);
-            var userLinks = await MicrosoftUserLinks.LoadAsync(ospoClient);
-            var context = new PolicyAnalysisContext(cachedOrg, userLinks);
+            if (_viewInExcel && !ExcelExtensions.IsExcelInstalled())
+            {
+                Console.Error.WriteLine("error: --excel is only valid if Excel is installed.");
+                return;
+            }
+
+            var org = await CachedOrg.LoadFromCacheAsync(_orgName);
+
+            if (org == null)
+            {
+                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-org first.");
+                return;
+            }
+
+            var linkSet = await OspoLinkSet.LoadFromCacheAsync();
+
+            if (linkSet == null)
+            {
+                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-links first.");
+                return;
+            }
+
+            var context = new PolicyAnalysisContext(org, linkSet);
             var violations = PolicyRunner.Run(context);
 
-            SaveVioloations(_orgName, _outputFileName, isForExcel, violations);
+            SaveVioloations(_orgName, _outputFileName, _viewInExcel, violations);
 
             if (!string.IsNullOrEmpty(_policyRepo))
+            {
+                var gitHubClient = await GitHubClientFactory.CreateAsync(_gitHubToken);
                 await FilePolicyViolationsAsync(gitHubClient, _orgName, _policyRepo, violations);
+            }
         }
 
         private static readonly string AreaViolationLabel = "area-violation";
         private static readonly string PolicyOverrideLabel = "policy-override";
 
-        private static void SaveVioloations(string orgName, string outputFileName, bool isForExcel, IReadOnlyList<PolicyViolation> violations)
+        private static void SaveVioloations(string orgName, string outputFileName, bool viewInExcel, IReadOnlyList<PolicyViolation> violations)
         {
             var csvDocument = new CsvDocument("org", "severity", "rule", "rule-title", "fingerprint", "violation", "repo", "user", "team", "assignees");
             using (var writer = csvDocument.Append())
@@ -79,17 +97,17 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     if (violation.Repo == null)
                         writer.Write(string.Empty);
                     else
-                        writer.WriteHyperlink(violation.Repo.Url, violation.Repo.Name, isForExcel);
+                        writer.WriteHyperlink(violation.Repo.Url, violation.Repo.Name, viewInExcel);
 
                     if (violation.User == null)
                         writer.Write(string.Empty);
                     else
-                        writer.WriteHyperlink(violation.User.Url, violation.User.Login, isForExcel);
+                        writer.WriteHyperlink(violation.User.Url, violation.User.Login, viewInExcel);
 
                     if (violation.Team == null)
                         writer.Write(string.Empty);
                     else
-                        writer.WriteHyperlink(violation.Team.Url, violation.Team.Name, isForExcel);
+                        writer.WriteHyperlink(violation.Team.Url, violation.Team.Name, viewInExcel);
 
                     var assignees = string.Join(", ", violation.Assignees.Select(r => r.Login));
                     writer.Write(assignees);
@@ -98,14 +116,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 }
             }
 
-            if (outputFileName == null)
-            {
-                csvDocument.ViewInExcel();
-            }
-            else
-            {
+            if (!string.IsNullOrEmpty(outputFileName))
                 csvDocument.Save(outputFileName);
-            }
+
+            if (viewInExcel)
+                csvDocument.ViewInExcel();
         }
 
         private static async Task FilePolicyViolationsAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations)

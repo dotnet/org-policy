@@ -12,7 +12,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     {
         private string _orgName;
         private string _outputFileName;
-        private string _cacheLocation;
         private bool _viewInExcel;
 
         public override string Name => "audit";
@@ -23,7 +22,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         {
             options.AddOrg(v => _orgName = v)
                    .Add("o|output=", "The {path} where the output .csv file should be written to.", v => _outputFileName = v)
-                   .AddCacheLocation(v => _cacheLocation = v)
                    .Add("excel", "Shows the results in Excel", v => _viewInExcel = true);
         }
 
@@ -41,13 +39,18 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var client = await GitHubClientFactory.CreateAsync();
-            var cachedOrg = await CachedOrg.LoadAsync(client, _orgName, Console.Out, _cacheLocation, forceUpdate: false);
+            var org = await CachedOrg.LoadFromCacheAsync(_orgName);
+
+            if (org == null)
+            {
+                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-org first.");
+                return;
+            }
 
             var csvDocument = new CsvDocument("repo", "repo-state", "repo-last-pushed", "principal-kind", "principal", "permission", "via-team");
             using (var writer = csvDocument.Append())
             {
-                foreach (var repo in cachedOrg.Repos)
+                foreach (var repo in org.Repos)
                 {
                     var publicPrivate = repo.IsPrivate ? "private" : "public";
                     var lastPush = repo.LastPush.ToLocalTime().DateTime.ToString();

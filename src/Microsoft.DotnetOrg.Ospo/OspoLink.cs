@@ -2,7 +2,7 @@
 
 namespace Microsoft.DotnetOrg.Ospo
 {
-    public class UserLink
+    public class OspoLink
     {
         [JsonPropertyName("github")]
         public GitHubInfo GitHubInfo { get; set; }

@@ -144,6 +144,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return cachedOrg;
         }
 
+        public static string GetCacheLocation(string orgName) => CachePersistence.GetPath(orgName);
+
         public static async Task<CachedOrg> LoadFromCacheAsync(string orgName, string cacheLocation = null)
         {
             var path = string.IsNullOrEmpty(cacheLocation)
@@ -157,6 +159,26 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                                cachedOrg.Version == CurrentVersion;
 
             return cacheIsValid ? cachedOrg : null;
+        }
+
+        public static Task<CachedOrg> LoadAsync(Stream stream)
+        {
+            return CachePersistence.LoadAsync(stream);
+        }
+
+        public static Task<CachedOrg> LoadAsync(string fileName)
+        {
+            return CachePersistence.LoadAsync(fileName);
+        }
+
+        public Task SaveAsync(Stream stream)
+        {
+            return CachePersistence.SaveAsync(this, stream);
+        }
+
+        public Task SaveAsync(string fileName)
+        {
+            return CachePersistence.SaveAsync(this, fileName);
         }
     }
 }

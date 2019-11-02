@@ -24,16 +24,19 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 return null;
 
             using (var stream = File.OpenRead(path))
+                return await LoadAsync(stream);
+        }
+
+        public static async Task<CachedOrg> LoadAsync(Stream stream)
+        {
+            var options = new JsonSerializerOptions
             {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-                options.Converters.Add(new JsonStringEnumConverter());
-                var orgData = await JsonSerializer.DeserializeAsync<CachedOrg>(stream, options);
-                orgData.Initialize();
-                return orgData;
-            }
+                WriteIndented = true
+            };
+            options.Converters.Add(new JsonStringEnumConverter());
+            var orgData = await JsonSerializer.DeserializeAsync<CachedOrg>(stream, options);
+            orgData.Initialize();
+            return orgData;
         }
 
         public static async Task SaveAsync(CachedOrg cachedOrg, string path)
@@ -42,14 +45,17 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             Directory.CreateDirectory(cacheDirectory);
 
             using (var stream = File.Create(path))
+                await SaveAsync(cachedOrg, stream);
+        }
+
+        public static async Task SaveAsync(CachedOrg cachedOrg, Stream stream)
+        {
+            var options = new JsonSerializerOptions
             {
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-                options.Converters.Add(new JsonStringEnumConverter());
-                await JsonSerializer.SerializeAsync(stream, cachedOrg, options);
-            }
+                WriteIndented = true
+            };
+            options.Converters.Add(new JsonStringEnumConverter());
+            await JsonSerializer.SerializeAsync(stream, cachedOrg, options);
         }
     }
 }

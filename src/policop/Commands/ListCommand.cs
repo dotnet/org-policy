@@ -15,7 +15,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     internal sealed class ListCommand : ToolCommand
     {
         private string _orgName;
-        private string _cacheLocation;
         private bool _listRepos;
         private bool _listTeams;
         private bool _listUsers;
@@ -32,7 +31,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         public override void AddOptions(OptionSet options)
         {
             options.AddOrg(v => _orgName = v)
-                   .AddCacheLocation(v => _cacheLocation = v)
                    .Add("r", "Lists repos", v => { _listRepos = true; _activeTerms = _repoTerms; })
                    .Add("t", "Lists teams", v => { _listTeams = true; _activeTerms = _teamTerms; })
                    .Add("u", "Lists user", v => { _listUsers = true; _activeTerms = _userTerms; })
@@ -54,11 +52,19 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var org = await CachedOrg.LoadFromCacheAsync(_orgName, _cacheLocation);
+            var org = await CachedOrg.LoadFromCacheAsync(_orgName);
 
             if (org == null)
             {
-                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet.");
+                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-org first.");
+                return;
+            }
+
+            var linkSet = await OspoLinkSet.LoadFromCacheAsync();
+
+            if (linkSet == null)
+            {
+                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-links first.");
                 return;
             }
 
@@ -77,7 +83,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     }
                     else if (_listUsers)
                     {
-                        await ListUsers(org);
+                        ListUsers(org, linkSet);
                     }
                     return;
                 case 2:
@@ -122,13 +128,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             OutputTable(rows, "team");
         }
 
-        private async Task ListUsers(CachedOrg org)
+        private void ListUsers(CachedOrg org, OspoLinkSet linkSet)
         {
-            var ospoClient = await OspoClientFactory.CreateAsync();
-            var data = await ospoClient.GetAllAsync();
-            var linkByLogin = data.ToDictionary(l => l.GitHubInfo.Login);
             var userFilter = CreateUserFilter();
-
             var rows = org.Users
                           .Where(userFilter)
                           .OrderBy(u => u.Login)
@@ -140,12 +142,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                               ? "Owner"
                                               : "Member";
 
-                              if (linkByLogin.TryGetValue(u.Login, out var link))
+                              if (linkSet.LinkByLogin.TryGetValue(u.Login, out var link))
                                   return (User: u, Kind: kind, Linked: true, Email: link.MicrosoftInfo.EmailAddress, Name: link.MicrosoftInfo.PreferredName);
                               else
-                              {
                                   return (User: u, Kind: kind, Linked: false, u.Email, u.Name);
-                              }
                           })
                           .Select(t => (t.User.Login, t.Kind, t.Linked ? "Yes" : "No", t.Email, t.Name))
                           .ToArray();
@@ -215,7 +215,16 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private Func<CachedTeam, bool> CreateTeamFilter()
         {
-            return CreateFilter<CachedTeam>(t => t.Name, _teamTerms);
+            if (_teamTerms.Count == 0)
+                return _ => true;
+
+            var filters = new[]
+            {
+                CreateFilter<CachedTeam>(t => t.Name, _teamTerms),
+                CreateFilter<CachedTeam>(t => t.GetFullName(), _teamTerms)
+            };
+
+            return t => filters.Any(f => f(t));
         }
 
         private Func<CachedUser, bool> CreateUserFilter()
