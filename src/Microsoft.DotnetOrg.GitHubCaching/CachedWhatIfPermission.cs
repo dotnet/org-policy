@@ -15,17 +15,12 @@
 
         public override string ToString()
         {
-            var currentPermission = UserAccess.Permission.ToString().ToLower();
-            var newPermissions = NewPermissions == null
-                                    ? "no access"
-                                    : NewPermissions.Value.ToString().ToLower();
+            if (UserAccess.Permission == NewPermissions)
+                return "(unchanged)";
 
-            if (NewPermissions == null || UserAccess.Permission > NewPermissions.Value)
-                return $"Downgraded from '{currentPermission}' to '{newPermissions}'";
-            else if (UserAccess.Permission == NewPermissions.Value)
-                return "Unchanged";
-            else
-                return $"Upgraded from '{currentPermission}' to '{newPermissions}'";
+            var oldPermission = UserAccess.Permission.ToString().ToLower();
+            var newPermission = NewPermissions?.ToString().ToLower() ?? "(no access)";
+            return $"{oldPermission} -> {newPermission}";
         }
     }
 
