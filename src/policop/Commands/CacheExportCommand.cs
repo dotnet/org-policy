@@ -4,9 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
-
 using Mono.Options;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Commands
@@ -32,32 +29,28 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return Task.CompletedTask;
             }
 
-            var ospoPath = OspoLinkSet.GetCacheLocation();
-            var orgDirectory = Path.GetDirectoryName(CachedOrg.GetCacheLocation("dummy"));
-            var cachedOrgPaths = Directory.EnumerateFiles(orgDirectory, "*.json")
-                                           .Where(f => f != ospoPath)
-                                           .ToArray();
+            var linkCache = CacheManager.GetLinkCache();
+            var orgCaches = CacheManager.GetOrgCaches().ToArray();
 
-            var files = new List<string>
+            var files = new List<FileInfo>
             {
-                ospoPath
+                linkCache
             };
-            files.AddRange(cachedOrgPaths);
+            files.AddRange(orgCaches);
 
             _outputDirectory = Path.GetFullPath(_outputDirectory);
 
-            foreach (var sourcePath in files)
+            foreach (var file in files)
             {
-                var name = Path.GetFileName(sourcePath);
-                var destinationPath = Path.Combine(_outputDirectory, name);
+                var destinationPath = Path.Combine(_outputDirectory, file.Name);
 
-                if (File.Exists(sourcePath))
+                if (file.Exists)
                 {
                     var destinationDirectoryPath = Path.GetDirectoryName(destinationPath);
                     Directory.CreateDirectory(destinationDirectoryPath);
                 }
 
-                File.Copy(sourcePath, destinationPath, true);
+                file.CopyTo(destinationPath, true);
             }
 
             return Task.CompletedTask;

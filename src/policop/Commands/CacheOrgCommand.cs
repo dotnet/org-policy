@@ -23,9 +23,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override async Task ExecuteAsync()
         {
-            var path = CachedOrg.GetCacheLocation(_orgName);
+            var cacheLocation = CacheManager.GetOrgCache(_orgName).FullName;
             var client = await GitHubClientFactory.CreateAsync(_token);
-            await CachedOrg.LoadAsync(client, _orgName, cacheLocation: path, forceUpdate: true);
+            await CachedOrg.LoadAsync(client, _orgName, cacheLocation: cacheLocation, forceUpdate: true);
         }
     }
 }

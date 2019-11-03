@@ -21,10 +21,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override async Task ExecuteAsync()
         {
-            var path = OspoLinkSet.GetCacheLocation();
+            var cacheLocation = CacheManager.GetLinkCache().FullName;
             var client = await OspoClientFactory.CreateAsync(_token);
             var linkSet = await client.GetAllAsync();
-            await linkSet.SaveAsync(path);
+            await linkSet.SaveAsync(cacheLocation);
         }
     }
 }

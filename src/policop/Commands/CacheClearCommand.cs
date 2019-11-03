@@ -4,9 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
-
 using Mono.Options;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Commands
@@ -30,28 +27,22 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override Task ExecuteAsync()
         {
-            var files = new List<string>();
-
             var includeAll = !_clearOrg && !_clearLinks;
 
-            var ospoPath = OspoLinkSet.GetCacheLocation();
-            var orgDirectory = Path.GetDirectoryName(CachedOrg.GetCacheLocation("dummy"));
-            var orgFiles = Directory.EnumerateFiles(orgDirectory, "*.json").Where(f => f != ospoPath);
+            var files = new List<FileInfo>();
 
             if (_clearOrg || includeAll)
-                files.AddRange(orgFiles);
+                files.AddRange(CacheManager.GetOrgCaches());
 
             if (_clearLinks || includeAll)
-                files.Add(ospoPath);
+                files.Add(CacheManager.GetLinkCache());
 
-            files.RemoveAll(f => !File.Exists(f));
-
-            foreach (var file in files)
+            foreach (var file in files.Where(f => f.Exists))
             {
                 Console.WriteLine($"rm: {file}");
 
                 if (_force)
-                    File.Delete(file);
+                    file.Delete();
             }
 
             if (!_force && files.Count > 0)
@@ -63,5 +54,4 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             return Task.CompletedTask;
         }
     }
-
 }
