@@ -15,6 +15,11 @@ namespace Microsoft.DotnetOrg.PolicyCop
             return new FileInfo(OspoLinkSet.GetCacheLocation());
         }
 
+        public static FileInfo GetOrgCache(string orgName)
+        {
+            return new FileInfo(CachedOrg.GetCacheLocation(orgName));
+        }
+
         public static IEnumerable<FileInfo> GetOrgCaches()
         {
             var orgCacheDirectory = Path.GetDirectoryName(CachedOrg.GetCacheLocation("dummy"));
@@ -24,11 +29,6 @@ namespace Microsoft.DotnetOrg.PolicyCop
             var cachedOrgs = Directory.EnumerateFiles(orgCacheDirectory, "*.json");
             return cachedOrgs.Where(o => o != GetLinkCache().FullName)
                              .Select(o => new FileInfo(o));
-        }
-
-        public static FileInfo GetOrgCache(string orgName)
-        {
-            return new FileInfo(CachedOrg.GetCacheLocation(orgName));
         }
     }
 }
