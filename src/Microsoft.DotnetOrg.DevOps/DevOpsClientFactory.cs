@@ -54,7 +54,7 @@ namespace Microsoft.DotnetOrg.DevOps
             Console.WriteLine($"Let's log you in so it can create a personal access token.");
             Console.WriteLine();
             Console.WriteLine($"Press any key to navigate to {url}");
-            Console.WriteLine($"and create a token with the scope TBD.");
+            Console.WriteLine($"and create a token with the scope: Build - Read.");
 
             Console.ReadKey(true);
             Console.WriteLine();
