@@ -1,10 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
-using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
 
 using Mono.Options;
 
@@ -24,22 +20,20 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         {
             Console.WriteLine();
 
-            var ospoPath = OspoLinkSet.GetCacheLocation();
-            var ospoInfo = new FileInfo(ospoPath);
-            var ospoState = ospoInfo.Exists ? ospoInfo.LastWriteTime.ToString() : "missing";
+            var linkCache = CacheManager.GetLinkCache();
 
             Console.WriteLine("Microsoft link data from the Open Source Program Office (OSPO)");
             Console.WriteLine("--------------------------------------------------------------");
             Console.WriteLine();
 
-            if (!ospoInfo.Exists)
+            if (!linkCache.Exists)
             {
                 Console.WriteLine($"    missing");
             }
             else
             {
-                Console.WriteLine($"    {ospoPath}");
-                Console.WriteLine($"    {ospoState}");
+                Console.WriteLine($"    {linkCache.FullName}");
+                Console.WriteLine($"    {linkCache.LastWriteTime.ToString()}");
             }
 
             Console.WriteLine();
@@ -47,22 +41,18 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             Console.WriteLine("-----------------------------");
             Console.WriteLine();
 
-            var orgDirectory = Path.GetDirectoryName(CachedOrg.GetCacheLocation("dummy"));
-            var cachedOrgPaths = Directory.EnumerateFiles(orgDirectory, "*.json")
-                                           .Where(f => f != ospoPath)
-                                           .ToArray();
+            var orgCaches = CacheManager.GetOrgCaches().ToArray();
 
-            if (cachedOrgPaths.Length == 0)
+            if (orgCaches.Length == 0)
             {
                 Console.WriteLine($"    missing");
             }
             else
             {
-                foreach (var cachedOrgPath in cachedOrgPaths)
+                foreach (var orgCache in orgCaches)
                 {
-                    var cachedOrgInfo = new FileInfo(cachedOrgPath);
-                    Console.WriteLine($"    {cachedOrgPath}");
-                    Console.WriteLine($"    {cachedOrgInfo.LastWriteTime}");
+                    Console.WriteLine($"    {orgCache.FullName}");
+                    Console.WriteLine($"    {orgCache.LastWriteTime}");
                     Console.WriteLine();
                 }
             }

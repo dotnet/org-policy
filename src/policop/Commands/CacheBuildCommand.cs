@@ -5,8 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.DotnetOrg.DevOps;
-using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
 
 using Mono.Options;
 
@@ -37,10 +35,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var includeAll = !_refreshOrg && !_refreshLinks;
 
             if (_refreshOrg || includeAll)
-                files.Add(("dotnet.json", CachedOrg.GetCacheLocation("dotnet")));
+                files.Add(("dotnet.json", CacheManager.GetOrgCache("dotnet").FullName));
 
             if (_refreshLinks || includeAll)
-                files.Add(("ms-links.json", OspoLinkSet.GetCacheLocation()));
+                files.Add(("ms-links.json", CacheManager.GetLinkCache().FullName));
 
             try
             {
