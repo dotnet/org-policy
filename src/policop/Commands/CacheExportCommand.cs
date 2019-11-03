@@ -48,13 +48,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 {
                     var destinationDirectoryPath = Path.GetDirectoryName(destinationPath);
                     Directory.CreateDirectory(destinationDirectoryPath);
+                    file.CopyTo(destinationPath, true);
                 }
-
-                file.CopyTo(destinationPath, true);
             }
 
             return Task.CompletedTask;
         }
     }
-
 }

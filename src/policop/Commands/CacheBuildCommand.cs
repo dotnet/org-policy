@@ -69,8 +69,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 try
                 {
                     using (var remoteStream = await client.GetArtifactFileAsync(latestBuild.Id, "drop", remoteFileName))
-                    using (var localStream = File.Create(localFileName))
-                        await remoteStream.CopyToAsync(localStream);
+                    {
+                        var directory = Path.GetDirectoryName(localFileName);
+                        Directory.CreateDirectory(directory);
+
+                        using (var localStream = File.Create(localFileName))
+                            await remoteStream.CopyToAsync(localStream);
+                    }
                 }
                 catch (Exception ex)
                 {
