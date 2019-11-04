@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 using Microsoft.Csv;
 
@@ -8,11 +6,6 @@ namespace Microsoft.DotnetOrg.PolicyCop
 {
     internal static class TableHelpers
     {
-        public static void PrintToConsole<T>(this IReadOnlyCollection<T> rows, string[] headers) where T : ITuple
-        {
-            rows.ToCsvDocument(headers).PrintToConsole();
-        }
-
         public static void PrintToConsole(this CsvDocument document)
         {
             var indent = "    ";
@@ -64,25 +57,6 @@ namespace Microsoft.DotnetOrg.PolicyCop
 
                 Console.WriteLine();
             }
-        }
-
-        public static CsvDocument ToCsvDocument<T>(this IEnumerable<T> rows, params string[] headers)
-            where T : ITuple
-        {
-            var document = new CsvDocument(headers);
-
-            using (var writer = document.Append())
-            {
-                foreach (var row in rows)
-                {
-                    for (var i = 0; i < row.Length; i++)
-                        writer.Write(Convert.ToString(row[i]));
-
-                    writer.WriteLine();
-                }
-            }
-
-            return document;
         }
     }
 }

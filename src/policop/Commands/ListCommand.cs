@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using Microsoft.Csv;
 using Microsoft.DotnetOrg.GitHubCaching;
 using Microsoft.DotnetOrg.Ospo;
+using Microsoft.DotnetOrg.PolicyCop.Reporting;
 
 using Mono.Options;
 
@@ -21,6 +22,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private readonly List<string> _repoTerms = new List<string>();
         private readonly List<string> _teamTerms = new List<string>();
         private readonly List<string> _userTerms = new List<string>();
+        private readonly List<string> _includedColumns = new List<string>();
+        private readonly List<string> _columnFilters = new List<string>();
         private List<string> _activeTerms;
         private bool _viewInExcel;
 
@@ -35,6 +38,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("t", "Lists teams", v => { _listTeams = true; _activeTerms = _teamTerms; })
                    .Add("u", "Lists user", v => { _listUsers = true; _activeTerms = _userTerms; })
                    .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
+                   .Add("c", "Column names to include", v => _activeTerms = _includedColumns)
+                   .Add("f", "Extra filters", v => _activeTerms = _columnFilters)
                    .Add("<>", v => _activeTerms.Add(v));
         }
 
@@ -95,11 +100,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     }
                     else if (_listRepos && _listUsers)
                     {
-                        ListUserAccess(org);
+                        ListUserAccess(org, linkSet);
                     }
                     else if (_listTeams && _listUsers)
                     {
-                        ListTeamMembers(org);
+                        ListTeamMembers(org, linkSet);
                     }
                     return;
                 case 3:
@@ -110,196 +115,302 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private void ListRepos(CachedOrg org)
         {
-            var repoFilter = CreateRepoFilter();
+            var termFilters = CreateRepoTermFilter();
+            var columnFilters = CreateColumnFilters();
             var rows = org.Repos
-                          .Where(repoFilter)
                           .OrderBy(r => r.Name)
-                          .Select(r => (r.Name, r.IsPrivate ? "Private" : "Public", r.IsArchived ? "Yes" : "No", r.LastPush))
+                          .Select(r => new ReportRow(repo: r))
+                          .Where(termFilters)
+                          .Where(columnFilters)
                           .ToArray();
 
-            OutputTable(rows, "repo", "visibility", "archived", "last-push");
+            var columns = GetColumns("r:name", "r:private", "r:archived");
+            OutputTable(rows, columns);
         }
 
         private void ListTeams(CachedOrg org)
         {
-            var teamFilter = CreateTeamFilter();
+            var termFilters = CreateTeamTermFilter();
+            var columnFilters = CreateColumnFilters();
             var rows = org.Teams
-                          .Where(teamFilter)
                           .OrderBy(t => t.GetFullName())
-                          .Select(t => ValueTuple.Create(t.GetFullName()))
+                          .Select(t => new ReportRow(team: t))
+                          .Where(termFilters)
+                          .Where(columnFilters)
                           .ToArray();
 
-            OutputTable(rows, "team");
+            var columns = GetColumns("t:name");
+            OutputTable(rows, columns);
         }
 
         private void ListUsers(CachedOrg org, OspoLinkSet linkSet)
         {
-            var userFilter = CreateUserFilter();
+            var termFilters = CreateUserTermFilter();
+            var columnFilters = CreateColumnFilters();
             var rows = org.Users
-                          .Where(userFilter)
                           .OrderBy(u => u.Login)
-                          .Select(u =>
-                          {
-                              var kind = u.IsExternal
-                                          ? "External"
-                                          : u.IsOwner
-                                              ? "Owner"
-                                              : "Member";
-
-                              if (linkSet.LinkByLogin.TryGetValue(u.Login, out var link))
-                                  return (User: u, Kind: kind, Linked: true, Email: link.MicrosoftInfo.EmailAddress, Name: link.MicrosoftInfo.PreferredName);
-                              else
-                                  return (User: u, Kind: kind, Linked: false, u.Email, u.Name);
-                          })
-                          .Select(t => (t.User.Login, t.Kind, t.Linked ? "Yes" : "No", t.Email, t.Name))
+                          .Select(u => new ReportRow(user: u, linkSet: linkSet))
+                          .Where(termFilters)
+                          .Where(columnFilters)
                           .ToArray();
 
-            OutputTable(rows, "user-login", "kind", "linked", "email", "name");
+            var columns = GetColumns("u:login", "u:name", "u:ms-linked", "u:email");
+            OutputTable(rows, columns);
         }
 
         private void ListTeamAccess(CachedOrg org)
         {
-            var teamFilter = CreateTeamFilter();
-            var repoFilter = CreateRepoFilter();
+            var teamFilter = CreateTeamTermFilter();
+            var repoFilter = CreateRepoTermFilter();
+            var columnFilters = CreateColumnFilters();
 
             var rows = org.Teams
+                          .SelectMany(t => t.Repos)
+                          .Select(ta => new ReportRow(repo: ta.Repo, team: ta.Team, teamAccess: ta))
                           .Where(teamFilter)
-                          .SelectMany(t => t.Repos.Where(ta => repoFilter(ta.Repo)))
-                          .Select(ta =>
-                          {
-                              var team = ta.Team;
-                              var repo = ta.Repo;
-                              var permission = ta.Permission.ToString().ToLower();
-                              return (repo.Name, team.GetFullName(), permission);
-                          })
+                          .Where(repoFilter)
+                          .Where(columnFilters)
                           .ToArray();
 
-            OutputTable(rows, "repo", "team", "permission");
+            var columns = GetColumns("r:name", "t:name", "ta:permission");
+            OutputTable(rows, columns);
         }
 
-        private void ListUserAccess(CachedOrg org)
+        private void ListUserAccess(CachedOrg org, OspoLinkSet linkSet)
         {
-            var userFilter = CreateUserFilter();
-            var repoFilter = CreateRepoFilter();
+            var userFilter = CreateUserTermFilter();
+            var repoFilter = CreateRepoTermFilter();
+            var columnFilters = CreateColumnFilters();
 
             var rows = org.Collaborators
-                          .Where(c => userFilter(c.User) && repoFilter(c.Repo))
-                          .Select(c =>
-                          {
-                              var user = c.User;
-                              var repo = c.Repo;
-                              var permission = c.Permission.ToString().ToLower();
-                              var reason = c.Describe();
-                              return (repo.Name, user.Login, permission, reason);
-                          })
+                          .Select(c => new ReportRow(repo: c.Repo, user: c.User, userAccess: c, linkSet: linkSet))
+                          .Where(userFilter)
+                          .Where(repoFilter)
+                          .Where(columnFilters)
                           .ToArray();
 
-            OutputTable(rows, "repo", "user-login", "permission", "reason");
+            var columns = GetColumns("r:name", "u:login", "ua:permission", "ua:reason");
+            OutputTable(rows, columns);
         }
 
-        private void ListTeamMembers(CachedOrg org)
+        private void ListTeamMembers(CachedOrg org, OspoLinkSet linkSet)
         {
-            var teamFilter = CreateTeamFilter();
-            var userFilter = CreateUserFilter();
+            var teamFilter = CreateTeamTermFilter();
+            var userFilter = CreateUserTermFilter();
+            var columnFilters = CreateColumnFilters();
 
             var rows = org.Teams
+                          .SelectMany(t => t.Members.Select(m => new ReportRow(team: t, user: m, linkSet: linkSet)))
                           .Where(teamFilter)
-                          .SelectMany(t => t.Members.Select(m => (Team: t, User: m, Kind: t.Maintainers.Contains(m) ? "Maintainer" : "Member")))
-                          .Where(t => userFilter(t.User))
-                          .Select(t => (t.Team.GetFullName(), t.User.Login, t.Kind))
+                          .Where(userFilter)
+                          .Where(columnFilters)
                           .ToArray();
 
-            OutputTable(rows, "team", "user-login", "kind");
+            var columns = GetColumns("t:name", "u:login", "tm:maintainer");
+            OutputTable(rows, columns);
         }
 
-        private Func<CachedRepo, bool> CreateRepoFilter()
+        private Func<ReportRow, bool> CreateRepoTermFilter()
         {
-            return CreateFilter<CachedRepo>(r => r.Name, _repoTerms);
+            return CreateTermFilters(_repoTerms, "r:name");
         }
 
-        private Func<CachedTeam, bool> CreateTeamFilter()
+        private Func<ReportRow, bool> CreateTeamTermFilter()
         {
-            if (_teamTerms.Count == 0)
-                return _ => true;
+            return CreateTermFilters(_teamTerms, "t:name", "t:full-name");
+        }
 
-            var filters = new[]
+        private Func<ReportRow, bool> CreateUserTermFilter()
+        {
+            return CreateTermFilters(_userTerms, "u:login", "u:name", "u:email");
+        }
+
+        private IReadOnlyList<ReportColumn> GetColumns(params string[] defaultColumns)
+        {
+            Debug.Assert(defaultColumns != null && defaultColumns.Length > 0);
+
+            if (_includedColumns.Count == 0)
+                _includedColumns.AddRange(defaultColumns);
+
+            var result = new List<ReportColumn>();
+            var hadErrors = false;
+
+            foreach (var qualifiedName in _includedColumns)
             {
-                CreateFilter<CachedTeam>(t => t.Name, _teamTerms),
-                CreateFilter<CachedTeam>(t => t.GetFullName(), _teamTerms)
-            };
-
-            return t => filters.Any(f => f(t));
-        }
-
-        private Func<CachedUser, bool> CreateUserFilter()
-        {
-            if (_userTerms.Count == 0)
-                return _ => true;
-
-            var filters = new[]
-            {
-                CreateFilter<CachedUser>(t => t.Login, _userTerms),
-                CreateFilter<CachedUser>(t => t.Name, _userTerms),
-                CreateFilter<CachedUser>(t => t.Email, _userTerms)
-            };
-
-            return u => filters.Any(f => f(u));
-        }
-
-        public static Func<T, bool> CreateFilter<T>(Func<T, string> selector, List<string> terms)
-        {
-            if (terms.Count == 0)
-                return _ => true;
-
-            return item =>
-            {
-                var text = selector(item) ?? string.Empty;
-
-                foreach (var term in terms)
+                var column = ReportColumn.Get(qualifiedName);
+                if (column != null)
                 {
-                    var wildcardAtStart = term.StartsWith("*");
-                    var wildcardAtEnd = term.EndsWith("*");
-                    var actualTerm = term.Trim('*');
+                    result.Add(column);
+                }
+                else
+                {
+                    Console.Error.WriteLine($"error: column '{qualifiedName}' isn't valid");
+                    hadErrors = true;
+                }
+            }
 
-                    bool result;
+            if (hadErrors)
+                Environment.Exit(1);
 
-                    if (wildcardAtStart && wildcardAtEnd)
-                    {
-                        result = text.IndexOf(actualTerm, StringComparison.OrdinalIgnoreCase) >= 0;
-                    }
-                    else if (wildcardAtStart)
-                    {
-                        result = text.EndsWith(actualTerm, StringComparison.OrdinalIgnoreCase);
-                    }
-                    else if (wildcardAtEnd)
-                    {
-                        result = text.StartsWith(actualTerm, StringComparison.OrdinalIgnoreCase);
-                    }
-                    else
-                    {
-                        result = text.Equals(actualTerm, StringComparison.OrdinalIgnoreCase);
-                    }
+            return result;
+        }
 
-                    if (!result)
+        private static Func<ReportRow, bool> CreateTermFilters(IReadOnlyCollection<string> expressions, params string[] qualifiedNames)
+        {
+            var termFilters = ParseTermFilters(expressions, qualifiedNames);
+            return CreateDisjunctionFilter(termFilters);
+        }
+
+        private Func<ReportRow, bool> CreateColumnFilters()
+        {
+            var termFilters = ParseColumnFilters(_columnFilters);
+
+            var hasErrors = termFilters.Any(kv => kv.Key == null);
+            if (hasErrors)
+                Environment.Exit(1);
+
+            return CreateConjunctionFilter(termFilters);
+        }
+
+        private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseTermFilters(IReadOnlyCollection<string> expressions, string[] qualifiedNames)
+        {
+            var columns = new List<ReportColumn>();
+
+            foreach (var qualifiedName in qualifiedNames)
+            {
+                var column = ReportColumn.Get(qualifiedName);
+                Debug.Assert(column != null, $"Column {qualifiedName} is invalid");
+                columns.Add(column);
+            }
+
+            var result = new List<KeyValuePair<ReportColumn, string>>();
+
+            foreach (var column in columns)
+            {
+                foreach (var expression in expressions)
+                {
+                    result.Add(new KeyValuePair<ReportColumn, string>(column, expression));
+                }
+            }
+
+            return result;
+        }
+
+        private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseColumnFilters(IReadOnlyCollection<string> expressions)
+        {
+            return expressions.Select(ParseColumnFilter).ToArray();
+        }
+
+        private static KeyValuePair<ReportColumn, string> ParseColumnFilter(string expression)
+        {
+            var indexOfEquals = expression.IndexOf("=");
+
+            string qualifiedName;
+            string value;
+
+            if (indexOfEquals < 0)
+            {
+                qualifiedName = expression.Trim();
+                value = "Yes";
+            }
+            else
+            {
+                qualifiedName = expression.Substring(0, indexOfEquals).Trim();
+                value = expression.Substring(indexOfEquals + 1).Trim();
+            }
+
+            var column = ReportColumn.Get(qualifiedName);
+            if (column == null)
+                Console.Error.WriteLine($"error: column '{qualifiedName}' isn't valid");
+
+            return new KeyValuePair<ReportColumn, string>(column, value);
+        }
+
+        private static Func<ReportRow, bool> CreateConjunctionFilter(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> columnFilters)
+        {
+            if (columnFilters.Count == 0)
+                return _ => true;
+
+            return row =>
+            {
+                foreach (var columnFilter in columnFilters)
+                {
+                    if (!Evaluate(row, columnFilter))
                         return false;
                 }
+
                 return true;
             };
         }
 
-        private void OutputTable<T>(IReadOnlyCollection<T> rows, params string[] headers) where T : ITuple
+        private static Func<ReportRow, bool> CreateDisjunctionFilter(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> columnFilters)
         {
-            if (rows.Count == 0)
+            if (columnFilters.Count == 0)
+                return _ => true;
+
+            return row =>
+            {
+                foreach (var columnFilter in columnFilters)
+                {
+                    if (Evaluate(row, columnFilter))
+                        return true;
+                }
+
+                return false;
+            };
+        }
+
+        private static bool Evaluate(ReportRow row, KeyValuePair<ReportColumn, string> columnFilter)
+        {
+            var column = columnFilter.Key;
+            var term = columnFilter.Value;
+            var text = column.GetValue(row) ?? string.Empty;
+
+            var wildcardAtStart = term.StartsWith("*");
+            var wildcardAtEnd = term.EndsWith("*");
+            var actualTerm = term.Trim('*');
+
+            if (wildcardAtStart && wildcardAtEnd)
+                return text.IndexOf(actualTerm, StringComparison.OrdinalIgnoreCase) >= 0;
+
+            if (wildcardAtStart)
+                return text.EndsWith(actualTerm, StringComparison.OrdinalIgnoreCase);
+
+            if (wildcardAtEnd)
+                return text.StartsWith(actualTerm, StringComparison.OrdinalIgnoreCase);
+
+            return text.Equals(actualTerm, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void OutputTable(IReadOnlyCollection<ReportRow> rows, IReadOnlyList<ReportColumn> columns)
+        {
+            if (rows.Count == 0 || columns.Count == 0)
                 return;
+
+            var headers = columns.Select(h => h.QualifiedName);
+            var document = new CsvDocument(headers);
+
+            using (var writer = document.Append())
+            {
+                foreach (var row in rows)
+                {
+                    foreach (var column in columns)
+                    {
+                        var value = column.GetValue(row);
+                        writer.Write(value ?? string.Empty);
+                    }
+
+                    writer.WriteLine();
+                }
+            }
 
             if (_viewInExcel)
             {
-                var document = rows.ToCsvDocument(headers);
                 document.ViewInExcel();
             }
             else
             {
-                rows.PrintToConsole(headers);
+                document.PrintToConsole();
             }
         }
     }
