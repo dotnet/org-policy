@@ -40,6 +40,29 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         public CachedWhatIfPermission WhatIfRemovedFromTeam(CachedTeam team)
         {
+            return WhatIf(team, null);
+        }
+
+        public CachedWhatIfPermission WhatIf(CachedTeam team, CachedPermission? newPermission)
+        {
+            return WhatIf(ta =>
+            {
+                if (ta.Team == team)
+                {
+                    if (newPermission == null)
+                        return null;
+
+                    // Only downgrade, never upgrade
+                    if (ta.Permission >= newPermission.Value)
+                        return newPermission.Value;
+                }
+
+                return ta.Permission;
+            });
+        }
+
+        public CachedWhatIfPermission WhatIf(Func<CachedTeamAccess, CachedPermission?> permissionChanger)
+        {
             if (User.IsOwner)
                 return new CachedWhatIfPermission(this, CachedPermission.Admin);
 
@@ -70,13 +93,13 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
                 foreach (var nestedTeam in teamAccess.Team.DescendentsAndSelf())
                 {
-                    if (nestedTeam == team)
-                        continue;
-
                     if (!nestedTeam.Members.Contains(User))
                         continue;
 
-                    maximumLevel = Math.Max(maximumLevel, teamAccessLevel);
+                    var newPermission = permissionChanger(teamAccess);
+                    var newPermissionLevel = newPermission == null ? -1 : (int)newPermission.Value;
+                    maximumLevel = Math.Max(maximumLevel, newPermissionLevel);
+                    break;
                 }
             }
 

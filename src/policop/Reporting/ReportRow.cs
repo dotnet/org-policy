@@ -1,12 +1,11 @@
-﻿
-using Microsoft.DotnetOrg.GitHubCaching;
+﻿using Microsoft.DotnetOrg.GitHubCaching;
 using Microsoft.DotnetOrg.Ospo;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
     internal struct ReportRow
     {
-        public ReportRow(CachedRepo repo = null, CachedTeam team = null, CachedUser user = null, OspoLinkSet linkSet = null, CachedUserAccess userAccess = null, CachedTeamAccess teamAccess = null)
+        public ReportRow(CachedRepo repo = null, CachedTeam team = null, CachedUser user = null, OspoLinkSet linkSet = null, CachedUserAccess userAccess = null, CachedTeamAccess teamAccess = null, CachedWhatIfPermission? whatIfPermission = null)
         {
             Repo = repo;
             Team = team;
@@ -14,6 +13,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             LinkSet = linkSet;
             UserAccess = userAccess;
             TeamAccess = teamAccess;
+            WhatIfPermission = whatIfPermission;
         }
 
         public CachedRepo Repo { get; }
@@ -22,5 +22,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
         public OspoLinkSet LinkSet { get; }
         public CachedUserAccess UserAccess { get; }
         public CachedTeamAccess TeamAccess { get; }
+        public CachedWhatIfPermission? WhatIfPermission { get; }
     }
 }

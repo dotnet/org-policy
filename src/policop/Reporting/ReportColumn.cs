@@ -32,7 +32,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                                                                   .Concat(TeamAccessColumns)
                                                                   .Concat(UserAccessColumns);
 
-        public static IReadOnlyList<RepoReportColumn> RepoColumns { get; } = new[]
+        public static IReadOnlyList<ReportColumn> RepoColumns { get; } = new[]
         {
             new RepoReportColumn(
                 "name",
@@ -60,7 +60,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             ),
         };
 
-        public static IReadOnlyList<TeamReportColumn> TeamColumns { get; } = new[]
+        public static IReadOnlyList<ReportColumn> TeamColumns { get; } = new[]
         {
             new TeamReportColumn(
                 "name",
@@ -84,7 +84,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             ),
         };
 
-        public static IReadOnlyList<UserReportColumn> UserColumns { get; } = new[]
+        public static IReadOnlyList<ReportColumn> UserColumns { get; } = new[]
         {
             new UserReportColumn(
                 "login",
@@ -164,7 +164,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             )
         };
 
-        public static IReadOnlyList<TeamMembershipReportColumn> TeamMembershipColumns { get; } = new[]
+        public static IReadOnlyList<ReportColumn> TeamMembershipColumns { get; } = new[]
         {
             new TeamMembershipReportColumn(
                 "maintainer",
@@ -173,7 +173,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             )
         };
 
-        public static IReadOnlyList<TeamAccessReportColumn> TeamAccessColumns { get; } = new[]
+        public static IReadOnlyList<ReportColumn> TeamAccessColumns { get; } = new[]
 {
             new TeamAccessReportColumn(
                 "permission",
@@ -182,7 +182,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             )
         };
 
-        public static IReadOnlyList<UserAccessReportColumn> UserAccessColumns { get; } = new[]
+        public static IReadOnlyList<ReportColumn> UserAccessColumns { get; } = new ReportColumn[]
         {
             new UserAccessReportColumn(
                 "permission",
@@ -193,6 +193,12 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "reason",
                 "The reason why the user has the permission",
                 ua => ua.Describe().ToString()
+            ),
+            new CustomReportColumn(
+                "ua",
+                "change",
+                "The change in permissions",
+                r => r.WhatIfPermission?.ToString()
             )
         };
     }
