@@ -92,17 +92,17 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 (u, ls) => u.Login            ),
             new UserReportColumn(
                 "owner",
-                "Indicates whether the user is an owner",
+                "Indicates whether the user is an org owner",
                 (u, ls) => u.IsOwner ? "Yes" : "No"
             ),
             new UserReportColumn(
                 "member",
-                "Indicates whether the user is an owner",
+                "Indicates whether the user is an org owner or member",
                 (u, ls) => u.IsMember ? "Yes" : "No"
             ),
             new UserReportColumn(
                 "external",
-                "Indicates whether the user is an owner",
+                "Indicates whether the user is not an org member",
                 (u, ls) => u.IsExternal ? "Yes" : "No"
             ),
             new UserReportColumn(
