@@ -38,12 +38,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     : CachedAccessReason.FromCollaborator;
         }
 
-        public CachedWhatIfPermission WhatIfRemovedFromTeam(CachedTeam team)
-        {
-            return WhatIf(team, null);
-        }
-
-        public CachedWhatIfPermission WhatIf(CachedTeam team, CachedPermission? newPermission)
+        public CachedWhatIfPermission WhatIfDowngraded(CachedTeam team, CachedPermission? newPermission)
         {
             return WhatIf(ta =>
             {
