@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using Microsoft.DotnetOrg.GitHubCaching;
+using Microsoft.DotnetOrg.Ospo;
 
 namespace Microsoft.DotnetOrg.Policies
 {
@@ -55,13 +57,37 @@ namespace Microsoft.DotnetOrg.Policies
                    emailContainsMicrosoft;
         }
 
-        public static bool IsMicrosoftUser(this PolicyAnalysisContext context, CachedUser user)
+        public static bool IsMicrosoftUser(this CachedUser user, OspoLinkSet linkSet)
         {
-            if (context.LinkSet.LinkByLogin.ContainsKey(user.Login))
+            if (linkSet.LinkByLogin.ContainsKey(user.Login))
                 return true;
 
             var microsoftBotsTeam = user.Org.GetMicrosoftBotsTeam();
             return microsoftBotsTeam != null && microsoftBotsTeam.Members.Contains(user);
+        }
+
+        public static string GetMicrosoftName(this CachedUser user, OspoLinkSet linkSet)
+        {
+            if (linkSet.LinkByLogin.TryGetValue(user.Login, out var l) &&
+                !string.IsNullOrEmpty(l.MicrosoftInfo.PreferredName))
+            {
+                return l.MicrosoftInfo.PreferredName;
+            }
+
+            return user.Name;
+        }
+
+        public static string GetMicrosoftEmail(this CachedUser user, OspoLinkSet linkSet)
+        {
+            if (linkSet.LinkByLogin.TryGetValue(user.Login, out var l))
+                return l.MicrosoftInfo.EmailAddress;
+
+            return user.Email;
+        }
+
+        public static bool IsMicrosoftUser(this PolicyAnalysisContext context, CachedUser user)
+        {
+            return user.IsMicrosoftUser(context.LinkSet);
         }
 
         public static bool IsBot(this CachedUser user)

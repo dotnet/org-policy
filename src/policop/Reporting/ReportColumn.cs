@@ -108,27 +108,12 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             new UserReportColumn(
                 "name",
                 "The name of the GitHub",
-                (u, ls) =>
-                {
-                    if (ls.LinkByLogin.TryGetValue(u.Login, out var l) &&
-                        !string.IsNullOrEmpty(l.MicrosoftInfo.PreferredName))
-                    {
-                        return l.MicrosoftInfo.PreferredName;
-                    }
-
-                    return u.Name;
-                }
+                (u, ls) => u.GetMicrosoftName(ls)
             ),
             new UserReportColumn(
                 "email",
                 "The email of the user",
-                (u, ls) =>
-                {
-                    if (ls.LinkByLogin.TryGetValue(u.Login, out var l))
-                        return l.MicrosoftInfo.EmailAddress;
-
-                    return u.Email;
-                }
+                (u, ls) => u.GetMicrosoftEmail(ls)
             ),
             new UserReportColumn(
                 "ms-linked",

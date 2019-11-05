@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+
+using Markdig;
 
 using Microsoft.Csv;
 using Microsoft.DotnetOrg.GitHubCaching;
 using Microsoft.DotnetOrg.Ospo;
+using Microsoft.DotnetOrg.Policies;
 using Microsoft.DotnetOrg.PolicyCop.Reporting;
+using Microsoft.Office.Interop.Outlook;
 
 using Mono.Options;
 
@@ -20,6 +24,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private List<string> _activeTerms;
         private string _outputFileName;
         private bool _viewInExcel;
+        private bool _generateEmail;
+        private bool _sendEmail;
         private readonly ReportContext _reportContext = new ReportContext();
 
         public override string Name => "what-if";
@@ -37,6 +43,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("c", "Column names to include", v => _activeTerms = _reportContext.IncludedColumns)
                    .Add("f", "Extra filters", v => _activeTerms = _reportContext.ColumnFilters)
                    .Add("o|output=", "The {path} where the output .csv file should be written to.", v => _outputFileName = v)
+                   .Add("email", "If specified, it will generate emails for affected people", v => _generateEmail = true)
+                   .Add("send", "If specified, it will send generated emails", v => _sendEmail = true)
                    .Add("<>", v => _activeTerms?.Add(v));
         }
 
@@ -124,8 +132,99 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             if (_viewInExcel)
                 document.ViewInExcel();
+            else if (_generateEmail)
+                SendOrSaveMails(org, linkSet, rows, newPermission);
             else
                 document.PrintToConsole();
+        }
+
+        private void SendOrSaveMails(CachedOrg org, OspoLinkSet linkSet, ReportRow[] rows, CachedPermission? newPermission)
+        {
+            var outlookApp = new Application();
+            var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().UsePipeTables().Build();
+
+            var userGroups = rows.Where(r => r.WhatIfPermission != null &&
+                                              !r.WhatIfPermission.Value.IsUnchanged &&
+                                              r.User.IsMicrosoftUser(linkSet) &&
+                                              !string.IsNullOrEmpty(r.User.GetMicrosoftEmail(linkSet)))
+                                 .Select(r => (r.User, r.Repo, WhatIfPermission: r.WhatIfPermission.Value))
+                                 .Distinct()
+                                 .GroupBy(r => r.User);
+
+            var affectedTeams = rows.Select(r => r.Team)
+                                     .Distinct()
+                                     .ToArray();
+
+            var excludedAdmins = rows.Where(r => r.WhatIfPermission != null &&
+                                                  !r.WhatIfPermission.Value.IsUnchanged &&
+                                                  r.WhatIfPermission.Value.UserAccess.Permission == CachedPermission.Admin)
+                                      .Select(r => (r.Repo, r.User));
+            var excludedAdminsSet = new HashSet<(CachedRepo, CachedUser)>(excludedAdmins);
+
+            foreach (var userGroup in userGroups)
+            {
+                var user = userGroup.Key;
+                var name = user.GetMicrosoftName(linkSet);
+                var email = user.GetMicrosoftEmail(linkSet);
+
+                var sb = new StringBuilder();
+                sb.AppendLine($"Hello {name},");
+                sb.AppendLine();
+                sb.AppendLine($"We're making some team changes to the {_orgName} GitHub org:");
+                sb.AppendLine();
+
+                foreach (var team in affectedTeams)
+                {
+                    if (newPermission == null)
+                        sb.AppendLine($"* The team {team.Name} will be deleted.");
+                    else
+                        sb.AppendLine($"* The team {team.Name} will now only grant `{newPermission.ToString().ToLower()}` permissions.");
+                }
+
+                sb.AppendLine();
+                sb.AppendLine("Once this change is in effect, your permissions to these repos will be affected:");
+                sb.AppendLine();
+                sb.AppendLine("Repo|Change|Repo Admins");
+                sb.AppendLine(":---|:-----|:----------");
+
+                foreach (var (_, repo, change) in userGroup)
+                {
+                    var repoAdmins = repo.GetAdministrators()
+                                         .Where(u => u.IsMicrosoftUser(linkSet) &&
+                                                     !excludedAdminsSet.Contains((repo, u)))
+                                         .Select(u => (Email: u.GetMicrosoftEmail(linkSet), Name: u.GetMicrosoftName(linkSet)))
+                                         .Where(t => !string.IsNullOrEmpty(t.Email) && !string.IsNullOrEmpty(t.Name))
+                                         .Select(t => $"[{t.Name}](mailto:{t.Email})");
+                    var repoAdminList = string.Join("; ", repoAdmins);
+
+                    sb.Append(repo.Name);
+                    sb.Append("|");
+                    sb.Append(change.ToString());
+                    sb.Append("|");
+                    sb.Append(repoAdminList);
+                    sb.AppendLine();
+                }
+
+                sb.AppendLine();
+                sb.AppendLine("If you need more access, please contact the corresponding repo admins so that they can add you to the appropriate team.");
+                sb.AppendLine();
+                sb.AppendLine("Apologies for any disruption and thank you for your understanding.");
+                sb.AppendLine("");
+                sb.AppendLine("Thanks!");
+
+                var html = Markdown.ToHtml(sb.ToString(), pipeline);
+
+                var mailItem = (MailItem)outlookApp.CreateItem(OlItemType.olMailItem);
+                mailItem.To = email;
+                mailItem.ReplyRecipients.Add("dotnetossadmin@microsoft.com");
+                mailItem.Subject = $"[Action Required] Your permissions for some repos will change";
+                mailItem.HTMLBody = html;
+
+                if (_sendEmail)
+                    mailItem.Send();
+                else
+                    mailItem.Save();
+            }
         }
     }
 }
