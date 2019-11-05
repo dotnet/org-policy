@@ -41,5 +41,4 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return Task.CompletedTask;
         }
     }
-
 }

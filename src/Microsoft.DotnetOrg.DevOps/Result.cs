@@ -4,5 +4,4 @@
     {
         public T Value { get; set; }
     }
-
 }
