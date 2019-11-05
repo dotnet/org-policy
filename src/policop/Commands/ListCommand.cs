@@ -69,7 +69,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             if (linkSet == null)
             {
-                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-links first.");
+                Console.Error.WriteLine("error: links not cached yet. Run cache-refresh or cache-links first.");
                 return;
             }
 
