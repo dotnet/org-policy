@@ -113,14 +113,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private void WhatIf(CachedOrg org, OspoLinkSet linkSet, CachedPermission? newPermission)
         {
-            var repoFilter = _reportContext.CreateRepoTermFilter();
-            var teamFilter = _reportContext.CreateTeamTermFilter();
-            var userFilter = _reportContext.CreateUserTermFilter();
-            var columnFilters = _reportContext.CreateColumnFilters();
+            var repoFilter = _reportContext.CreateRepoFilter();
+            var teamFilter = _reportContext.CreateTeamFilter();
+            var userFilter = _reportContext.CreateUserFilter(linkSet);
 
-            var rows = org.Collaborators.Where(ua => userFilter(new ReportRow(user: ua.User, linkSet: linkSet)))
-                          .SelectMany(c => org.Teams.Where(t => teamFilter(new ReportRow(team: t))), (ua, t) => (UserAccess: ua, Team: t))
-                          .Where(t => repoFilter(new ReportRow(repo: t.UserAccess.Repo)))
+            var rows = org.Collaborators.Where(ua => userFilter(ua.User))
+                          .SelectMany(c => org.Teams.Where(teamFilter), (ua, t) => (UserAccess: ua, Team: t))
+                          .Where(t => repoFilter(t.UserAccess.Repo))
                           .Select(t => new ReportRow(repo: t.UserAccess.Repo,
                                                       userAccess: t.UserAccess,
                                                       team: t.Team,
@@ -128,7 +127,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                                       linkSet: linkSet,
                                                       whatIfPermission: t.UserAccess.WhatIf(t.Team, newPermission)))
                           .Where(r => !r.WhatIfPermission.Value.IsUnchanged)
-                          .Where(columnFilters)
+                          .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
             var columns = _reportContext.GetColumns("r:name", "t:name", "u:login", "ua:change");

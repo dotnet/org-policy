@@ -110,13 +110,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private void ListRepos(CachedOrg org)
         {
-            var termFilters = _reportContext.CreateRepoTermFilter();
-            var columnFilters = _reportContext.CreateColumnFilters();
             var rows = org.Repos
                           .OrderBy(r => r.Name)
                           .Select(r => new ReportRow(repo: r))
-                          .Where(termFilters)
-                          .Where(columnFilters)
+                          .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
             var columns = _reportContext.GetColumns("r:name", "r:private", "r:archived");
@@ -125,13 +122,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private void ListTeams(CachedOrg org)
         {
-            var termFilters = _reportContext.CreateTeamTermFilter();
-            var columnFilters = _reportContext.CreateColumnFilters();
             var rows = org.Teams
                           .OrderBy(t => t.GetFullName())
                           .Select(t => new ReportRow(team: t))
-                          .Where(termFilters)
-                          .Where(columnFilters)
+                          .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
             var columns = _reportContext.GetColumns("t:name");
@@ -140,13 +134,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private void ListUsers(CachedOrg org, OspoLinkSet linkSet)
         {
-            var termFilters = _reportContext.CreateUserTermFilter();
-            var columnFilters = _reportContext.CreateColumnFilters();
             var rows = org.Users
                           .OrderBy(u => u.Login)
                           .Select(u => new ReportRow(user: u, linkSet: linkSet))
-                          .Where(termFilters)
-                          .Where(columnFilters)
+                          .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
             var columns = _reportContext.GetColumns("u:login", "u:name", "u:ms-linked", "u:email");
@@ -155,16 +146,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private void ListTeamAccess(CachedOrg org)
         {
-            var teamFilter = _reportContext.CreateTeamTermFilter();
-            var repoFilter = _reportContext.CreateRepoTermFilter();
-            var columnFilters = _reportContext.CreateColumnFilters();
-
             var rows = org.Teams
                           .SelectMany(t => t.Repos)
                           .Select(ta => new ReportRow(repo: ta.Repo, team: ta.Team, teamAccess: ta))
-                          .Where(teamFilter)
-                          .Where(repoFilter)
-                          .Where(columnFilters)
+                          .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
             var columns = _reportContext.GetColumns("r:name", "t:name", "ta:permission");
@@ -173,15 +158,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private void ListUserAccess(CachedOrg org, OspoLinkSet linkSet)
         {
-            var userFilter = _reportContext.CreateUserTermFilter();
-            var repoFilter = _reportContext.CreateRepoTermFilter();
-            var columnFilters = _reportContext.CreateColumnFilters();
-
             var rows = org.Collaborators
                           .Select(c => new ReportRow(repo: c.Repo, user: c.User, userAccess: c, linkSet: linkSet))
-                          .Where(userFilter)
-                          .Where(repoFilter)
-                          .Where(columnFilters)
+                          .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
             var columns = _reportContext.GetColumns("r:name", "u:login", "ua:permission", "ua:reason");
@@ -190,15 +169,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private void ListTeamMembers(CachedOrg org, OspoLinkSet linkSet)
         {
-            var teamFilter = _reportContext.CreateTeamTermFilter();
-            var userFilter = _reportContext.CreateUserTermFilter();
-            var columnFilters = _reportContext.CreateColumnFilters();
-
             var rows = org.Teams
                           .SelectMany(t => t.Members.Select(m => new ReportRow(team: t, user: m, linkSet: linkSet)))
-                          .Where(teamFilter)
-                          .Where(userFilter)
-                          .Where(columnFilters)
+                          .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
             var columns = _reportContext.GetColumns("t:name", "u:login", "tm:maintainer");
