@@ -16,7 +16,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     internal sealed class WhatIfCommand : ToolCommand
     {
         private string _orgName;
-        private string _command;
         private string _newPermissions;
         private List<string> _activeTerms;
         private string _outputFileName;
@@ -25,13 +24,12 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override string Name => "what-if";
 
-        public override string Description => "Shows the impact when a user is removed from a particular team";
+        public override string Description => "Shows the impact when a team's permissions are downgraded";
 
         public override void AddOptions(OptionSet options)
         {
             options.AddOrg(v => _orgName = v)
-                   .Add("team-user-remove", "Checks what happens if the selected users are removed from the selected teams", v => _command = "team-user-remove")
-                   .Add("team-repo-grant=", "Checks what happens if the selected users are removed from the selected teams", v => { _command = "team-repo-grant"; _newPermissions = v; })
+                   .Add("p=", "Selects new {permission} for the selected teams", v => _newPermissions = v)
                    .Add("r", "Lists repos", v => { _activeTerms = _reportContext.RepoTerms; })
                    .Add("t", "Lists teams", v => { _activeTerms = _reportContext.TeamTerms; })
                    .Add("u", "Lists user", v => { _activeTerms = _reportContext.UserTerms; })
@@ -72,46 +70,34 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            if (_command == null)
-            {
-                Console.Error.WriteLine($"error: must specify an operation (e.g. --team-user-remove)");
-                return;
-            }
+            CachedPermission? newPermission;
 
-            if (_command == "team-user-remove")
+            if (_newPermissions == "none")
             {
-                WhatIf(org, linkSet, null);
+                newPermission = null;
             }
-            else if (_command == "team-repo-grant")
+            else if (_newPermissions == "pull")
             {
-                CachedPermission newPermission;
-                if (_newPermissions == "pull")
-                {
-                    newPermission = CachedPermission.Pull;
-                }
-                else if (_newPermissions == "push")
-                {
-                    newPermission = CachedPermission.Push;
-                }
-                else if (_newPermissions == "admin")
-                {
-                    newPermission = CachedPermission.Admin;
-                }
-                else
-                {
-                    Console.Error.WriteLine($"error: permission can be 'pull', 'push' or 'admin' but not '{_newPermissions}'");
-                    return;
-                }
-
-                WhatIf(org, linkSet, newPermission);
+                newPermission = CachedPermission.Pull;
+            }
+            else if (_newPermissions == "push")
+            {
+                newPermission = CachedPermission.Push;
+            }
+            else if (_newPermissions == "admin")
+            {
+                newPermission = CachedPermission.Admin;
             }
             else
             {
-                Debug.Assert(false);
+                Console.Error.WriteLine($"error: permission can be 'none', 'pull', 'push' or 'admin' but not '{_newPermissions}'");
+                return;
             }
+
+            WhatIfDowngraded(org, linkSet, newPermission);
         }
 
-        private void WhatIf(CachedOrg org, OspoLinkSet linkSet, CachedPermission? newPermission)
+        private void WhatIfDowngraded(CachedOrg org, OspoLinkSet linkSet, CachedPermission? newPermission)
         {
             var repoFilter = _reportContext.CreateRepoFilter();
             var teamFilter = _reportContext.CreateTeamFilter();
@@ -125,7 +111,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                                       team: t.Team,
                                                       user: t.UserAccess.User,
                                                       linkSet: linkSet,
-                                                      whatIfPermission: t.UserAccess.WhatIf(t.Team, newPermission)))
+                                                      whatIfPermission: t.UserAccess.WhatIfDowngraded(t.Team, newPermission)))
                           .Where(r => !r.WhatIfPermission.Value.IsUnchanged)
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
