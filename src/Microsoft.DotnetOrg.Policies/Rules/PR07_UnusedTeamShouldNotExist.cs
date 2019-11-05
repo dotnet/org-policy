@@ -34,5 +34,4 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             }
         }
     }
-
 }
