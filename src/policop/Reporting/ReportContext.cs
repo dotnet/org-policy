@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 
 using Microsoft.Csv;
+using Microsoft.DotnetOrg.GitHubCaching;
+using Microsoft.DotnetOrg.Ospo;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
@@ -13,25 +15,101 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
     //       - fix WhatIfCommand
     internal sealed class ReportContext
     {
+        private static readonly IReadOnlyList<string> _repoTermColumns = new[] { "r:name" };
+        private static readonly IReadOnlyList<string> _teamTermColumns = new[] { "t:name", "t:full-name" };
+        private static readonly IReadOnlyList<string> _userTermColumns = new[] { "u:login", "u:name", "u:email" };
+
         public List<string> RepoTerms { get; } = new List<string>();
         public List<string> TeamTerms { get; } = new List<string>();
         public List<string> UserTerms { get; } = new List<string>();
         public List<string> IncludedColumns { get; } = new List<string>();
         public List<string> ColumnFilters { get; } = new List<string>();
 
-        public Func<ReportRow, bool> CreateRepoTermFilter()
+        public Func<CachedRepo, bool> CreateRepoFilter()
         {
-            return CreateTermFilters(RepoTerms, "r:name");
+            return CreateFilter<RepoReportColumn, CachedRepo>(RepoTerms, _repoTermColumns, (rc, r) => rc.GetValue(r));
         }
 
-        public Func<ReportRow, bool> CreateTeamTermFilter()
+        public Func<CachedTeam, bool> CreateTeamFilter()
         {
-            return CreateTermFilters(TeamTerms, "t:name", "t:full-name");
+            return CreateFilter<TeamReportColumn, CachedTeam>(TeamTerms, _teamTermColumns, (tc, t) => tc.GetValue(t));
         }
 
-        public Func<ReportRow, bool> CreateUserTermFilter()
+        public Func<CachedUser, bool> CreateUserFilter(OspoLinkSet linkSet)
         {
-            return CreateTermFilters(UserTerms, "u:login", "u:name", "u:email");
+            return CreateFilter<UserReportColumn, CachedUser>(UserTerms, _userTermColumns, (uc, u) => uc.GetValue(u, linkSet));
+        }
+
+        private Func<TCache, bool> CreateFilter<TColumn, TCache>(IReadOnlyCollection<string> terms,
+                                                                 IReadOnlyCollection<string> termColumns,
+                                                                 Func<TColumn, TCache, string> valueSelector)
+            where TColumn: ReportColumn
+        {
+            var termFilters = SelectedTypedColumns<TColumn>(ParseTermFilters(terms, termColumns));
+            var columnFilters = SelectedTypedColumns<TColumn>(ParseColumnFilters(ColumnFilters));
+
+            return r =>
+            {
+                if (termFilters.Count > 0)
+                {
+                    var anyTrue = false;
+
+                    foreach (var f in termFilters)
+                    {
+                        var column = f.Key;
+                        var term = f.Value;
+                        var text = valueSelector(column, r) ?? string.Empty;
+                        if (Evaluate(term, text))
+                        {
+                            anyTrue = true;
+                            break;
+                        }
+                    }
+
+                    if (!anyTrue)
+                        return false;
+                }
+
+                foreach (var f in columnFilters)
+                {
+                    var column = f.Key;
+                    var term = f.Value;
+                    var text = valueSelector(column, r) ?? string.Empty;
+                    if (!Evaluate(term, text))
+                        return false;
+                }
+
+                return true;
+            };
+        }
+
+        private static IReadOnlyList<KeyValuePair<TColumn, string>> SelectedTypedColumns<TColumn>(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> genericFilters)
+        {
+            var filters = new List<KeyValuePair<TColumn, string>>();
+
+            foreach (var kv in genericFilters)
+            {
+                var column = kv.Key;
+                var expression = kv.Value;
+
+                if (column is TColumn typedColumn)
+                    filters.Add(new KeyValuePair<TColumn, string>(typedColumn, expression));
+            }
+
+            return filters.ToArray();
+        }
+
+        public Func<ReportRow, bool> CreateRowFilter()
+        {
+            var repoTermFilters = CreateTermFilters(RepoTerms, _repoTermColumns);
+            var teamTermFilters = CreateTermFilters(TeamTerms, _teamTermColumns);
+            var userTermFilters = CreateTermFilters(UserTerms, _userTermColumns);
+            var columnFilters = CreateColumnFilters();
+
+            return r => repoTermFilters(r) &&
+                        teamTermFilters(r) &&
+                        userTermFilters(r) &&
+                        columnFilters(r);
         }
 
         public IReadOnlyList<ReportColumn> GetColumns(params string[] defaultColumns)
@@ -64,13 +142,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             return result;
         }
 
-        private static Func<ReportRow, bool> CreateTermFilters(IReadOnlyCollection<string> expressions, params string[] qualifiedNames)
+        private static Func<ReportRow, bool> CreateTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> qualifiedNames)
         {
             var termFilters = ParseTermFilters(expressions, qualifiedNames);
             return CreateDisjunctionFilter(termFilters);
         }
 
-        public Func<ReportRow, bool> CreateColumnFilters()
+        private Func<ReportRow, bool> CreateColumnFilters()
         {
             var termFilters = ParseColumnFilters(ColumnFilters);
 
@@ -81,7 +159,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             return CreateConjunctionFilter(termFilters);
         }
 
-        private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseTermFilters(IReadOnlyCollection<string> expressions, string[] qualifiedNames)
+        private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> qualifiedNames)
         {
             var columns = new List<ReportColumn>();
 
@@ -174,7 +252,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             var column = columnFilter.Key;
             var term = columnFilter.Value;
             var text = column.GetValue(row) ?? string.Empty;
+            return Evaluate(term, text);
+        }
 
+        private static bool Evaluate(string term, string text)
+        {
             var wildcardAtStart = term.StartsWith("*");
             var wildcardAtEnd = term.EndsWith("*");
             var actualTerm = term.Trim('*');
