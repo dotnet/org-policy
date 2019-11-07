@@ -32,7 +32,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public static async Task DownloadFileAsync(string token, string remoteFileName, string localFileName)
         {
-            var client = await DevOpsClientFactory.CreateAsync("terrajobst", "github-policy-checker", token);
+            var client = await DevOpsClientFactory.CreateAsync("terrajobst", "dotnet-org-policy", token);
 
             var builds = await client.GetBuildsAsync("19", resultFilter: "succeeded", reasonFilter: "schedule,manual");
             var latestBuild = builds.FirstOrDefault();
