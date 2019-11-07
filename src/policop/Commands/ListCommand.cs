@@ -34,7 +34,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
                    .Add("c", "Column names to include", v => _activeTerms = _reportContext.IncludedColumns)
                    .Add("f", "Extra filters", v => _activeTerms = _reportContext.ColumnFilters)
-                   .Add("<>", v => _activeTerms.Add(v));
+                   .Add("<>", v => _activeTerms?.Add(v));
         }
 
         public override async Task ExecuteAsync()
