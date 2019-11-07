@@ -32,7 +32,7 @@ jobs:
   - task: CmdLine@2
     inputs:
       script: |
-        $(policop) cache-org --org dotnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(TokenOspo)
+        $(policop) cache-org --org dotnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
         $(policop) cache-export -o $(cachePath)
         $(policop) check --org dotnet -o $(violationsPath) --policy-repo terrajobst/org-policy-violations --github-token $(GitHubToken)
         $(policop) cache-clear -f
