@@ -39,7 +39,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var org = await CachedOrg.LoadFromCacheAsync(_orgName);
+            var org = await CacheManager.LoadOrgAsync(_orgName);
 
             if (org == null)
             {

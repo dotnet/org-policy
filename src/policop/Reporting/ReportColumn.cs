@@ -89,63 +89,51 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             new UserReportColumn(
                 "login",
                 "The GitHub login",
-                (u, ls) => u.Login            ),
+                u => u.Login            ),
             new UserReportColumn(
                 "owner",
                 "Indicates whether the user is an org owner",
-                (u, ls) => u.IsOwner ? "Yes" : "No"
+                u => u.IsOwner ? "Yes" : "No"
             ),
             new UserReportColumn(
                 "member",
                 "Indicates whether the user is an org owner or member",
-                (u, ls) => u.IsMember ? "Yes" : "No"
+                u => u.IsMember ? "Yes" : "No"
             ),
             new UserReportColumn(
                 "external",
                 "Indicates whether the user is not an org member",
-                (u, ls) => u.IsExternal ? "Yes" : "No"
+                u => u.IsExternal ? "Yes" : "No"
             ),
             new UserReportColumn(
                 "name",
                 "The name of the GitHub",
-                (u, ls) => u.GetMicrosoftName(ls)
+                u => u.GetMicrosoftName()
             ),
             new UserReportColumn(
                 "email",
                 "The email of the user",
-                (u, ls) => u.GetMicrosoftEmail(ls)
+                u => u.GetMicrosoftEmail()
             ),
             new UserReportColumn(
                 "ms-linked",
                 "Indicates whether the user is a linked Microsoft user",
-                (u, ls) => ls.LinkByLogin.ContainsKey(u.Login) ? "Yes" : "No"
+                u => u.MicrosoftInfo != null ? "Yes" : "No"
             ),
             new UserReportColumn(
                 "ms-login",
                 "The Microsoft alias of the user",
-                (u, ls) =>
-                {
-                    if (ls.LinkByLogin.TryGetValue(u.Login, out var l))
-                        return l.MicrosoftInfo.Alias;
-
-                    return string.Empty;
-                }
+                u => u.MicrosoftInfo?.Alias ?? string.Empty
             ),
             new UserReportColumn(
                 "company",
                 "The company name",
-                (u, ls) =>
-                {
-                    if (ls.LinkByLogin.ContainsKey(u.Login))
-                        return "Microsoft";
-
-                    return u.Company;
-                }
+                u => u.MicrosoftInfo != null ? "Microsoft" : u.Company
             ),
             new UserReportColumn(
                 "bot",
                 "Indicates whether the account is considered a bot",
-                (u, ls) => u.IsBot() ? "Yes" : "No"
+                u => u.IsBot() ? "Yes" : "No"
             )
         };
 

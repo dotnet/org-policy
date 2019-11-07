@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Csv;
 using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
 using Microsoft.DotnetOrg.Policies;
 
 using Mono.Options;
@@ -49,7 +48,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var org = await CachedOrg.LoadFromCacheAsync(_orgName);
+            var org = await CacheManager.LoadOrgAsync(_orgName);
 
             if (org == null)
             {
@@ -57,15 +56,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var linkSet = await OspoLinkSet.LoadFromCacheAsync();
-
-            if (linkSet == null)
-            {
-                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-links first.");
-                return;
-            }
-
-            var context = new PolicyAnalysisContext(org, linkSet);
+            var context = new PolicyAnalysisContext(org);
             var violations = PolicyRunner.Run(context);
 
             SaveVioloations(_orgName, _outputFileName, _viewInExcel, violations);

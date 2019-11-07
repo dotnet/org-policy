@@ -2,20 +2,24 @@
 using System.IO;
 using System.Threading.Tasks;
 
+using Microsoft.DotnetOrg.Ospo;
+
 using Octokit;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
     internal sealed class CacheLoader
     {
-        public CacheLoader(GitHubClient gitHubClient, TextWriter logWriter = null)
+        public CacheLoader(GitHubClient gitHubClient, TextWriter logWriter, OspoClient ospoClient)
         {
             GitHubClient = gitHubClient;
             Log = logWriter ?? Console.Out;
+            OspoClient = ospoClient;
         }
 
         public GitHubClient GitHubClient { get; }
         public TextWriter Log { get; }
+        public OspoClient OspoClient { get; }
 
         public async Task<CachedOrg> LoadAsync(string orgName)
         {
@@ -195,6 +199,12 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 cachedUser.Name = user.Name;
                 cachedUser.Company = user.Company;
                 cachedUser.Email = user.Email;
+
+                if (OspoClient != null)
+                {
+                    var link = await OspoClient.GetAsync(cachedUser.Login);
+                    cachedUser.MicrosoftInfo = link?.MicrosoftInfo;
+                }
             }
         }
     }

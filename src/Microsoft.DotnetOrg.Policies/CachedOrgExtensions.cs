@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
 
 namespace Microsoft.DotnetOrg.Policies
 {
@@ -56,37 +55,29 @@ namespace Microsoft.DotnetOrg.Policies
                    emailContainsMicrosoft;
         }
 
-        public static bool IsMicrosoftUser(this CachedUser user, OspoLinkSet linkSet)
+        public static bool IsMicrosoftUser(this CachedUser user)
         {
-            if (linkSet.LinkByLogin.ContainsKey(user.Login))
+            if (user.MicrosoftInfo != null)
                 return true;
 
             var microsoftBotsTeam = user.Org.GetMicrosoftBotsTeam();
             return microsoftBotsTeam != null && microsoftBotsTeam.Members.Contains(user);
         }
 
-        public static string GetMicrosoftName(this CachedUser user, OspoLinkSet linkSet)
+        public static string GetMicrosoftName(this CachedUser user)
         {
-            if (linkSet.LinkByLogin.TryGetValue(user.Login, out var l) &&
-                !string.IsNullOrEmpty(l.MicrosoftInfo.PreferredName))
-            {
-                return l.MicrosoftInfo.PreferredName;
-            }
+            if (!string.IsNullOrEmpty(user.MicrosoftInfo?.PreferredName))
+                return user.MicrosoftInfo.PreferredName;
 
             return user.Name;
         }
 
-        public static string GetMicrosoftEmail(this CachedUser user, OspoLinkSet linkSet)
+        public static string GetMicrosoftEmail(this CachedUser user)
         {
-            if (linkSet.LinkByLogin.TryGetValue(user.Login, out var l))
-                return l.MicrosoftInfo.EmailAddress;
+            if (!string.IsNullOrEmpty(user.MicrosoftInfo?.EmailAddress))
+                return user.MicrosoftInfo.EmailAddress;
 
             return user.Email;
-        }
-
-        public static bool IsMicrosoftUser(this PolicyAnalysisContext context, CachedUser user)
-        {
-            return user.IsMicrosoftUser(context.LinkSet);
         }
 
         public static bool IsBot(this CachedUser user)

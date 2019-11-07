@@ -1,6 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.Csv;
 
 using Mono.Options;
 
@@ -18,46 +21,21 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override Task ExecuteAsync()
         {
-            Console.WriteLine();
-
-            var linkCache = CacheManager.GetLinkCache();
-
-            Console.WriteLine("Microsoft link data from the Open Source Program Office (OSPO)");
-            Console.WriteLine("--------------------------------------------------------------");
-            Console.WriteLine();
-
-            if (!linkCache.Exists)
-            {
-                Console.WriteLine($"    missing");
-            }
-            else
-            {
-                Console.WriteLine($"    {linkCache.FullName}");
-                Console.WriteLine($"    {linkCache.LastWriteTime.ToString()}");
-            }
-
-            Console.WriteLine();
-            Console.WriteLine("Organization data from GitHub");
-            Console.WriteLine("-----------------------------");
-            Console.WriteLine();
-
             var orgCaches = CacheManager.GetOrgCaches().ToArray();
+            var document = new CsvDocument("org", "date", "path");
 
-            if (orgCaches.Length == 0)
-            {
-                Console.WriteLine($"    missing");
-            }
-            else
+            using (var writer = document.Append())
             {
                 foreach (var orgCache in orgCaches)
                 {
-                    Console.WriteLine($"    {orgCache.FullName}");
-                    Console.WriteLine($"    {orgCache.LastWriteTime}");
-                    Console.WriteLine();
+                    writer.Write(Path.GetFileNameWithoutExtension(orgCache.Name));
+                    writer.Write(orgCache.LastWriteTime.ToShortDateString());
+                    writer.Write(orgCache.FullName);
+                    writer.WriteLine();
                 }
             }
 
-            Console.WriteLine();
+            document.PrintToConsole();
 
             return Task.CompletedTask;
         }

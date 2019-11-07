@@ -1,15 +1,14 @@
 ﻿using System;
 
 using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
     internal sealed class UserReportColumn : ReportColumn
     {
-        private readonly Func<CachedUser, OspoLinkSet, string> _selector;
+        private readonly Func<CachedUser, string> _selector;
 
-        public UserReportColumn(string name, string description, Func<CachedUser, OspoLinkSet, string> selector)
+        public UserReportColumn(string name, string description, Func<CachedUser, string> selector)
             : base(name, description)
         {
             _selector = selector;
@@ -19,12 +18,12 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 
         public override string GetValue(ReportRow row)
         {
-            return row.User == null || row.LinkSet == null ? null : GetValue(row.User, row.LinkSet);
+            return row.User == null ? null : GetValue(row.User);
         }
 
-        public string GetValue(CachedUser user, OspoLinkSet linkSet)
+        public string GetValue(CachedUser user)
         {
-            return _selector(user, linkSet);
+            return _selector(user);
         }
     }
 }

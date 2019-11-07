@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 using Mono.Options;
@@ -29,26 +27,19 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return Task.CompletedTask;
             }
 
-            var linkCache = CacheManager.GetLinkCache();
-            var orgCaches = CacheManager.GetOrgCaches().ToArray();
-
-            var files = new List<FileInfo>
-            {
-                linkCache
-            };
-            files.AddRange(orgCaches);
-
             _outputDirectory = Path.GetFullPath(_outputDirectory);
 
-            foreach (var file in files)
-            {
-                var destinationPath = Path.Combine(_outputDirectory, file.Name);
+            var orgCaches = CacheManager.GetOrgCaches();
 
-                if (file.Exists)
+            foreach (var orgCache in orgCaches)
+            {
+                var destinationPath = Path.Combine(_outputDirectory, orgCache.Name);
+
+                if (orgCache.Exists)
                 {
                     var destinationDirectoryPath = Path.GetDirectoryName(destinationPath);
                     Directory.CreateDirectory(destinationDirectoryPath);
-                    file.CopyTo(destinationPath, true);
+                    orgCache.CopyTo(destinationPath, true);
                 }
             }
 
