@@ -36,6 +36,6 @@ jobs:
         $(policop) cache-export -o $(cachePath)
         $(policop) check --org dotnet -o $(violationsPath) --policy-repo terrajobst/org-policy-violations --github-token $(GitHubToken)
         $(policop) cache-clear -f
-    condition: and(succeeded(), not(eq($(GitHubToken), '')), not(eq($(OspoToken), '')), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual')))
+    condition: and(succeeded(), not(eq(variables['GitHubToken'], '')), not(eq(variables['OspoToken'], '')), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual')))
   - task: PublishBuildArtifacts@1
     condition: eq(variables['system.pullrequest.isfork'], false)
