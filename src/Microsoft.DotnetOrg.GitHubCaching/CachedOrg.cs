@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Octokit;
@@ -138,7 +142,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 var loader = new CacheLoader(gitHubClient, logWriter);
                 cachedOrg = await loader.LoadAsync(orgName);
-                await CachePersistence.SaveAsync(cachedOrg, cacheLocation);
+                await cachedOrg.SaveAsync(cacheLocation);
             }
 
             return cachedOrg;
@@ -146,16 +150,20 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         public static string GetCacheLocation(string orgName)
         {
-            return CachePersistence.GetPath(orgName);
+            var exePath = Environment.GetCommandLineArgs()[0];
+            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var cachedDirectory = Path.Combine(localAppData, fileInfo.CompanyName, fileInfo.ProductName, "Cache");
+            return Path.Combine(cachedDirectory, $"{orgName}.json");
         }
 
         public static async Task<CachedOrg> LoadFromCacheAsync(string orgName, string cacheLocation = null)
         {
             var path = string.IsNullOrEmpty(cacheLocation)
-                        ? CachePersistence.GetPath(orgName)
+                        ? GetCacheLocation(orgName)
                         : cacheLocation;
 
-            var cachedOrg = await CachePersistence.LoadAsync(path);
+            var cachedOrg = await LoadAsync(path);
 
             var cacheIsValid = cachedOrg != null &&
                                cachedOrg.Name == orgName &&
@@ -164,24 +172,44 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return cacheIsValid ? cachedOrg : null;
         }
 
-        public static Task<CachedOrg> LoadAsync(Stream stream)
+        public static async Task<CachedOrg> LoadAsync(string path)
         {
-            return CachePersistence.LoadAsync(stream);
+            if (!File.Exists(path))
+                return null;
+
+            using (var stream = File.OpenRead(path))
+                return await LoadAsync(stream);
         }
 
-        public static Task<CachedOrg> LoadAsync(string fileName)
+        public static async Task<CachedOrg> LoadAsync(Stream stream)
         {
-            return CachePersistence.LoadAsync(fileName);
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            options.Converters.Add(new JsonStringEnumConverter());
+            var orgData = await JsonSerializer.DeserializeAsync<CachedOrg>(stream, options);
+            orgData.Initialize();
+            return orgData;
         }
 
-        public Task SaveAsync(Stream stream)
+        public async Task SaveAsync(string path)
         {
-            return CachePersistence.SaveAsync(this, stream);
+            var cacheDirectory = Path.GetDirectoryName(path);
+            Directory.CreateDirectory(cacheDirectory);
+
+            using (var stream = File.Create(path))
+                await SaveAsync(stream);
         }
 
-        public Task SaveAsync(string fileName)
+        public async Task SaveAsync(Stream stream)
         {
-            return CachePersistence.SaveAsync(this, fileName);
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            options.Converters.Add(new JsonStringEnumConverter());
+            await JsonSerializer.SerializeAsync(stream, this, options);
         }
     }
 }
