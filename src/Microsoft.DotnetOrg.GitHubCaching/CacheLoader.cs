@@ -189,6 +189,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         private async Task LoadUsersDetailsAsync(CachedOrg cachedOrg)
         {
+            var linkSet = await LoadLinkSetAsync();
+
             var i = 0;
 
             foreach (var cachedUser in cachedOrg.Users)
@@ -200,12 +202,18 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 cachedUser.Company = user.Company;
                 cachedUser.Email = user.Email;
 
-                if (OspoClient != null)
-                {
-                    var link = await OspoClient.GetAsync(cachedUser.Login);
+                if (linkSet.LinkByLogin.TryGetValue(cachedUser.Login, out var link))
                     cachedUser.MicrosoftInfo = link?.MicrosoftInfo;
-                }
             }
+        }
+
+        private async Task<OspoLinkSet> LoadLinkSetAsync()
+        {
+            if (OspoClient == null)
+                return new OspoLinkSet();
+
+            Log.WriteLine("Loading Microsoft link information...");
+            return await OspoClient.GetAllAsync();
         }
     }
 }
