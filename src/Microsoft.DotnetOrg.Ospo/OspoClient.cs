@@ -71,6 +71,9 @@ namespace Microsoft.DotnetOrg.Ospo
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
             var response = await _httpClient.SendAsync(request);
 
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return default;
+
             if (!response.IsSuccessStatusCode)
             {
                 var message = await response.Content.ReadAsStringAsync();
