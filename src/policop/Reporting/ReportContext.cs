@@ -43,7 +43,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
         private Func<TCache, bool> CreateFilter<TColumn, TCache>(IReadOnlyCollection<string> terms,
                                                                  IReadOnlyCollection<string> termColumns,
                                                                  Func<TColumn, TCache, string> valueSelector)
-            where TColumn: ReportColumn
+            where TColumn : ReportColumn
         {
             var termFilters = SelectedTypedColumns<TColumn>(ParseTermFilters(terms, termColumns));
             var columnFilters = SelectedTypedColumns<TColumn>(ParseColumnFilters(ColumnFilters));
