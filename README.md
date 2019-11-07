@@ -1,5 +1,7 @@
 # Policy tooling for the dotnet org 
 
+[![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet.org-policy?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=650&branchName=master)
+
 This repo contains tools and tracks policy violations.
 
 ## Policies and process
