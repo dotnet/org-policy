@@ -15,7 +15,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             foreach (var user in context.Org.Users)
             {
                 var userClaimsToBeWorkingForMicrosoft = user.IsClaimingToBeWorkingForMicrosoft();
-                var isMicrosoftUser = context.IsMicrosoftUser(user);
+                var isMicrosoftUser = user.IsMicrosoftUser();
 
                 if (userClaimsToBeWorkingForMicrosoft && !isMicrosoftUser)
                 {

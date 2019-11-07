@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Csv;
 using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
 using Microsoft.DotnetOrg.PolicyCop.Reporting;
 
 using Mono.Options;
@@ -52,19 +51,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var org = await CachedOrg.LoadFromCacheAsync(_orgName);
+            var org = await CacheManager.LoadOrgAsync(_orgName);
 
             if (org == null)
             {
                 Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-org first.");
-                return;
-            }
-
-            var linkSet = await OspoLinkSet.LoadFromCacheAsync();
-
-            if (linkSet == null)
-            {
-                Console.Error.WriteLine("error: links not cached yet. Run cache-refresh or cache-links first.");
                 return;
             }
 
@@ -85,7 +76,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     }
                     else if (_listUsers)
                     {
-                        ListUsers(org, linkSet);
+                        ListUsers(org);
                     }
                     return;
                 case 2:
@@ -95,11 +86,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     }
                     else if (_listRepos && _listUsers)
                     {
-                        ListUserAccess(org, linkSet);
+                        ListUserAccess(org);
                     }
                     else if (_listTeams && _listUsers)
                     {
-                        ListTeamMembers(org, linkSet);
+                        ListTeamMembers(org);
                     }
                     return;
                 case 3:
@@ -132,11 +123,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             OutputTable(rows, columns);
         }
 
-        private void ListUsers(CachedOrg org, OspoLinkSet linkSet)
+        private void ListUsers(CachedOrg org)
         {
             var rows = org.Users
                           .OrderBy(u => u.Login)
-                          .Select(u => new ReportRow(user: u, linkSet: linkSet))
+                          .Select(u => new ReportRow(user: u))
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
@@ -156,10 +147,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             OutputTable(rows, columns);
         }
 
-        private void ListUserAccess(CachedOrg org, OspoLinkSet linkSet)
+        private void ListUserAccess(CachedOrg org)
         {
             var rows = org.Collaborators
-                          .Select(c => new ReportRow(repo: c.Repo, user: c.User, userAccess: c, linkSet: linkSet))
+                          .Select(c => new ReportRow(repo: c.Repo, user: c.User, userAccess: c))
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
@@ -167,10 +158,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             OutputTable(rows, columns);
         }
 
-        private void ListTeamMembers(CachedOrg org, OspoLinkSet linkSet)
+        private void ListTeamMembers(CachedOrg org)
         {
             var rows = org.Teams
-                          .SelectMany(t => t.Members.Select(m => new ReportRow(team: t, user: m, linkSet: linkSet)))
+                          .SelectMany(t => t.Members.Select(m => new ReportRow(team: t, user: m)))
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 

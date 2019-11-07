@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,13 +6,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
+using Microsoft.DotnetOrg.Ospo;
+
 using Octokit;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
     public sealed class CachedOrg
     {
-        public static int CurrentVersion = 3;
+        public static int CurrentVersion = 4;
 
         public int Version { get; set; }
         public string Name { get; set; }
@@ -128,48 +128,13 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return $"https://github.com/{login}";
         }
 
-        public static async Task<CachedOrg> LoadAsync(GitHubClient gitHubClient,
-                                                      string orgName,
-                                                      TextWriter logWriter = null,
-                                                      string cacheLocation = null,
-                                                      bool forceUpdate = false)
+        public static Task<CachedOrg> LoadAsync(GitHubClient gitHubClient,
+                                                string orgName,
+                                                TextWriter logWriter = null,
+                                                OspoClient ospoClient = null)
         {
-            var cachedOrg = forceUpdate
-                    ? null
-                    : await LoadFromCacheAsync(orgName, cacheLocation);
-
-            if (cachedOrg == null)
-            {
-                var loader = new CacheLoader(gitHubClient, logWriter);
-                cachedOrg = await loader.LoadAsync(orgName);
-                await cachedOrg.SaveAsync(cacheLocation);
-            }
-
-            return cachedOrg;
-        }
-
-        public static string GetCacheLocation(string orgName)
-        {
-            var exePath = Environment.GetCommandLineArgs()[0];
-            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
-            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var cachedDirectory = Path.Combine(localAppData, fileInfo.CompanyName, fileInfo.ProductName, "Cache");
-            return Path.Combine(cachedDirectory, $"{orgName}.json");
-        }
-
-        public static async Task<CachedOrg> LoadFromCacheAsync(string orgName, string cacheLocation = null)
-        {
-            var path = string.IsNullOrEmpty(cacheLocation)
-                        ? GetCacheLocation(orgName)
-                        : cacheLocation;
-
-            var cachedOrg = await LoadAsync(path);
-
-            var cacheIsValid = cachedOrg != null &&
-                               cachedOrg.Name == orgName &&
-                               cachedOrg.Version == CurrentVersion;
-
-            return cacheIsValid ? cachedOrg : null;
+            var loader = new CacheLoader(gitHubClient, logWriter, ospoClient);
+            return loader.LoadAsync(orgName);
         }
 
         public static async Task<CachedOrg> LoadAsync(string path)

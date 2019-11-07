@@ -8,7 +8,6 @@ using Markdig;
 
 using Microsoft.Csv;
 using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
 using Microsoft.DotnetOrg.Policies;
 using Microsoft.DotnetOrg.PolicyCop.Reporting;
 using Microsoft.Office.Interop.Outlook;
@@ -62,19 +61,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var org = await CachedOrg.LoadFromCacheAsync(_orgName);
+            var org = await CacheManager.LoadOrgAsync(_orgName);
 
             if (org == null)
             {
                 Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-org first.");
-                return;
-            }
-
-            var linkSet = await OspoLinkSet.LoadFromCacheAsync();
-
-            if (linkSet == null)
-            {
-                Console.Error.WriteLine("error: links not cached yet. Run cache-refresh or cache-links first.");
                 return;
             }
 
@@ -102,14 +93,14 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            WhatIfDowngraded(org, linkSet, newPermission);
+            WhatIfDowngraded(org, newPermission);
         }
 
-        private void WhatIfDowngraded(CachedOrg org, OspoLinkSet linkSet, CachedPermission? newPermission)
+        private void WhatIfDowngraded(CachedOrg org, CachedPermission? newPermission)
         {
             var repoFilter = _reportContext.CreateRepoFilter();
             var teamFilter = _reportContext.CreateTeamFilter();
-            var userFilter = _reportContext.CreateUserFilter(linkSet);
+            var userFilter = _reportContext.CreateUserFilter();
 
             var rows = org.Collaborators.Where(ua => userFilter(ua.User))
                           .SelectMany(c => org.Teams.Where(teamFilter), (ua, t) => (UserAccess: ua, Team: t))
@@ -118,7 +109,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                                       userAccess: t.UserAccess,
                                                       team: t.Team,
                                                       user: t.UserAccess.User,
-                                                      linkSet: linkSet,
                                                       whatIfPermission: t.UserAccess.WhatIfDowngraded(t.Team, newPermission)))
                           .Where(r => !r.WhatIfPermission.Value.IsUnchanged)
                           .Where(_reportContext.CreateRowFilter())
@@ -133,20 +123,20 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             if (_viewInExcel)
                 document.ViewInExcel();
             else if (_generateEmail)
-                SendOrSaveMails(org, linkSet, rows, newPermission);
+                SendOrSaveMails(org, rows, newPermission);
             else
                 document.PrintToConsole();
         }
 
-        private void SendOrSaveMails(CachedOrg org, OspoLinkSet linkSet, ReportRow[] rows, CachedPermission? newPermission)
+        private void SendOrSaveMails(CachedOrg org, ReportRow[] rows, CachedPermission? newPermission)
         {
             var outlookApp = new Application();
             var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().UsePipeTables().Build();
 
             var userGroups = rows.Where(r => r.WhatIfPermission != null &&
                                               !r.WhatIfPermission.Value.IsUnchanged &&
-                                              r.User.IsMicrosoftUser(linkSet) &&
-                                              !string.IsNullOrEmpty(r.User.GetMicrosoftEmail(linkSet)))
+                                              r.User.IsMicrosoftUser() &&
+                                              !string.IsNullOrEmpty(r.User.GetMicrosoftEmail()))
                                  .Select(r => (r.User, r.Repo, WhatIfPermission: r.WhatIfPermission.Value))
                                  .Distinct()
                                  .GroupBy(r => r.User);
@@ -164,8 +154,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             foreach (var userGroup in userGroups)
             {
                 var user = userGroup.Key;
-                var name = user.GetMicrosoftName(linkSet);
-                var email = user.GetMicrosoftEmail(linkSet);
+                var name = user.GetMicrosoftName();
+                var email = user.GetMicrosoftEmail();
 
                 var sb = new StringBuilder();
                 sb.AppendLine($"Hello {name},");
@@ -190,9 +180,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 foreach (var (_, repo, change) in userGroup)
                 {
                     var repoAdmins = repo.GetAdministrators()
-                                         .Where(u => u.IsMicrosoftUser(linkSet) &&
+                                         .Where(u => u.IsMicrosoftUser() &&
                                                      !excludedAdminsSet.Contains((repo, u)))
-                                         .Select(u => (Email: u.GetMicrosoftEmail(linkSet), Name: u.GetMicrosoftName(linkSet)))
+                                         .Select(u => (Email: u.GetMicrosoftEmail(), Name: u.GetMicrosoftName()))
                                          .Where(t => !string.IsNullOrEmpty(t.Email) && !string.IsNullOrEmpty(t.Name))
                                          .Select(t => $"[{t.Name}](mailto:{t.Email})");
                     var repoAdminList = string.Join("; ", repoAdmins);

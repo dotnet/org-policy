@@ -19,7 +19,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 {
                     foreach (var user in team.Members)
                     {
-                        var isMicrosoftUser = context.IsMicrosoftUser(user);
+                        var isMicrosoftUser = user.IsMicrosoftUser();
                         if (!isMicrosoftUser)
                         {
                             yield return new PolicyViolation(

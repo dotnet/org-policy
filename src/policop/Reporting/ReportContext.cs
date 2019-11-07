@@ -5,7 +5,6 @@ using System.Linq;
 
 using Microsoft.Csv;
 using Microsoft.DotnetOrg.GitHubCaching;
-using Microsoft.DotnetOrg.Ospo;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
@@ -35,9 +34,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             return CreateFilter<TeamReportColumn, CachedTeam>(TeamTerms, _teamTermColumns, (tc, t) => tc.GetValue(t));
         }
 
-        public Func<CachedUser, bool> CreateUserFilter(OspoLinkSet linkSet)
+        public Func<CachedUser, bool> CreateUserFilter()
         {
-            return CreateFilter<UserReportColumn, CachedUser>(UserTerms, _userTermColumns, (uc, u) => uc.GetValue(u, linkSet));
+            return CreateFilter<UserReportColumn, CachedUser>(UserTerms, _userTermColumns, (uc, u) => uc.GetValue(u));
         }
 
         private Func<TCache, bool> CreateFilter<TColumn, TCache>(IReadOnlyCollection<string> terms,
