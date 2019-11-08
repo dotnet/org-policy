@@ -242,7 +242,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var fingerprints = new HashSet<Guid>(violations.Select(v => v.Fingerprint));
 
             var oldIssues = existingIssues.Where(issue => issue.State.Value == ItemState.Closed &&
-                                                              !issue.Labels.Any(l => l.Name == PolicyOverrideLabel))
+                                                           !issue.Labels.Any(l => l.Name == PolicyOverrideLabel))
                                            .Select(issue => (Fingerprint: GetFingerprint(issue.Title), Issue: issue))
                                            .Where(t => t.Fingerprint != null && fingerprints.Contains(t.Fingerprint.Value))
                                            .Select(t => t.Issue)
@@ -268,7 +268,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         {
             var newFingerprints = new HashSet<Guid>(violations.Select(v => v.Fingerprint));
 
-            var solvedIssues = existingIssues.Select(issue => (Fingerprint: GetFingerprint(issue.Title), Issue: issue))
+            var solvedIssues = existingIssues.Where(issue => issue.State.Value == ItemState.Open)
+                                              .Select(issue => (Fingerprint: GetFingerprint(issue.Title), Issue: issue))
                                               .Where(t => t.Fingerprint != null && !newFingerprints.Contains(t.Fingerprint.Value))
                                               .Select(t => t.Issue)
                                               .ToList();
