@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
@@ -15,11 +14,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
         {
             foreach (var team in context.Org.Teams)
             {
-                var hasChildren = team.Children.Any();
-                var hasRepos = team.Repos.Any();
-                var isUsed = hasChildren || hasRepos;
-
-                if (!isUsed)
+                if (team.IsUnused())
                 {
                     yield return new PolicyViolation(
                         Descriptor,

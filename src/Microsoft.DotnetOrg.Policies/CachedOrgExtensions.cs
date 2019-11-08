@@ -102,6 +102,13 @@ namespace Microsoft.DotnetOrg.Policies
             return user.Login.IndexOf("bot", StringComparison.OrdinalIgnoreCase) > 0;
         }
 
+        public static bool IsUnused(this CachedTeam team)
+        {
+            var hasChildren = team.Children.Any();
+            var hasRepos = team.Repos.Any();
+            return !hasChildren && !hasRepos;
+        }
+
         public static IEnumerable<CachedUser> GetOwners(this CachedOrg org)
         {
             return org.Users.Where(u => u.IsOwner && !u.IsBot());
