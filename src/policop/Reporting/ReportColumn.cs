@@ -173,7 +173,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
         public static IReadOnlyList<ReportColumn> TeamMembershipColumns { get; } = new[]
         {
             new TeamMembershipReportColumn(
-                "tm:maintainer",
+                "tu:maintainer",
                 "Indicates whether the user is a maintainer",
                 (t, u) => t.Maintainers.Contains(u) ? "Yes" : "No"
             )
@@ -182,7 +182,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
         public static IReadOnlyList<ReportColumn> TeamAccessColumns { get; } = new[]
 {
             new TeamAccessReportColumn(
-                "ta:permission",
+                "rt:permission",
                 "The permission the team has",
                 ta => ta.Permission.ToString().ToLower()
             )
@@ -191,17 +191,17 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
         public static IReadOnlyList<ReportColumn> UserAccessColumns { get; } = new ReportColumn[]
         {
             new UserAccessReportColumn(
-                "ua:permission",
+                "ru:permission",
                 "The permission the user has",
                 ua => ua.Permission.ToString().ToLower()
             ),
             new UserAccessReportColumn(
-                "ua:reason",
+                "ru:reason",
                 "The reason why the user has the permission",
                 ua => ua.Describe().ToString()
             ),
             new RowReportColumn(
-                "ua:change",
+                "ru:change",
                 "The change in permissions",
                 r => r.WhatIfPermission?.ToString()
             )
