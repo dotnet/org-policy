@@ -200,7 +200,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "The reason why the user has the permission",
                 ua => ua.Describe().ToString()
             ),
-            new CustomReportColumn(
+            new RowReportColumn(
                 "ua:change",
                 "The change in permissions",
                 r => r.WhatIfPermission?.ToString()

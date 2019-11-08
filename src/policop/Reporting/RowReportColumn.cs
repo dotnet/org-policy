@@ -2,11 +2,11 @@
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
-    internal sealed class CustomReportColumn : ReportColumn
+    internal sealed class RowReportColumn : ReportColumn
     {
         private readonly Func<ReportRow, string> _selector;
 
-        public CustomReportColumn(string name, string description, Func<ReportRow, string> selector)
+        public RowReportColumn(string name, string description, Func<ReportRow, string> selector)
             : base(name, description)
         {
             _selector = selector;
