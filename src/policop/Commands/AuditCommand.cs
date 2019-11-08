@@ -43,7 +43,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             if (org == null)
             {
-                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-refresh or cache-org first.");
+                Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
                 return;
             }
 
