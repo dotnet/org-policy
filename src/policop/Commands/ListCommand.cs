@@ -143,7 +143,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
-            var columns = _reportContext.GetColumns("r:name", "t:name", "ta:permission");
+            var columns = _reportContext.GetColumns("r:name", "t:name", "rt:permission");
             OutputTable(rows, columns);
         }
 
@@ -154,7 +154,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
-            var columns = _reportContext.GetColumns("r:name", "u:login", "ua:permission", "ua:reason");
+            var columns = _reportContext.GetColumns("r:name", "u:login", "ru:permission", "ru:reason");
             OutputTable(rows, columns);
         }
 
@@ -165,7 +165,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
-            var columns = _reportContext.GetColumns("t:name", "u:login", "tm:maintainer");
+            var columns = _reportContext.GetColumns("t:name", "u:login", "tu:maintainer");
             OutputTable(rows, columns);
         }
 
