@@ -58,6 +58,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "Indicates wether the repo is owned by Microsoft",
                 r => r.IsOwnedByMicrosoft() ? "Yes" : "No"
             ),
+            new RepoReportColumn(
+                "admins",
+                "Names and emails of admins",
+                r => string.Join("; ", r.GetAdministrators().Select(u => u.GetEmailName()))
+            ),
         };
 
         public static IReadOnlyList<ReportColumn> TeamColumns { get; } = new[]
@@ -87,6 +92,16 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "Indicates wether the team is owned by Microsoft",
                 t => t.IsOwnedByMicrosoft() ? "Yes" : "No"
             ),
+            new TeamReportColumn(
+                "ms-only-members",
+                "Indicates wether the team has only members from Microsoft",
+                t => t.Members.All(m => m.IsMicrosoftUser()) ? "Yes" : "No"
+            ),
+            new TeamReportColumn(
+                "maintainers",
+                "Names and emails of maintainers",
+                t => string.Join("; ", t.GetMaintainers().Select(u => u.GetEmailName()))
+            ),
         };
 
         public static IReadOnlyList<ReportColumn> UserColumns { get; } = new[]
@@ -113,12 +128,12 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             new UserReportColumn(
                 "name",
                 "The name of the GitHub",
-                u => u.GetMicrosoftName()
+                u => u.GetName()
             ),
             new UserReportColumn(
                 "email",
                 "The email of the user",
-                u => u.GetMicrosoftEmail()
+                u => u.GetEmail()
             ),
             new UserReportColumn(
                 "ms-linked",
