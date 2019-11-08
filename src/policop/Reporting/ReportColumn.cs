@@ -68,6 +68,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 t => t.Name
             ),
             new TeamReportColumn(
+                "parent-name",
+                "The name of the parent team",
+                t => t.Parent?.Name
+            ),
+            new TeamReportColumn(
                 "full-name",
                 "The full name of the team",
                 t => t.GetFullName()
