@@ -28,7 +28,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                                                                   .Concat(UserColumns)
                                                                   .Concat(TeamMembershipColumns)
                                                                   .Concat(TeamAccessColumns)
-                                                                  .Concat(UserAccessColumns);
+                                                                  .Concat(UserAccessColumns)
+                                                                  .Concat(AuditColumns);
 
         public static IReadOnlyList<ReportColumn> RepoColumns { get; } = new[]
         {
@@ -205,6 +206,43 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "The change in permissions",
                 r => r.WhatIfPermission?.ToString()
             )
+        };
+
+        public static IReadOnlyList<ReportColumn> AuditColumns { get; } = new ReportColumn[]
+        {
+            new RowReportColumn(
+                "rtu:principal-kind",
+                "Indicates whether it's a user or team",
+                r => {
+                    if (r.Team != null && r.User == null)
+                        return "Team";
+                    else if (r.Team == null && r.User != null)
+                        return "User";
+                    return null;
+                }
+            ),
+            new RowReportColumn(
+                "rtu:principal",
+                "The user or team",
+                r => {
+                    if (r.Team != null && r.User == null)
+                        return r.Team.Name;
+                    else if (r.Team == null && r.User != null)
+                        return r.User.Login;
+                    return null;
+                }
+            ),
+            new RowReportColumn(
+                "rtu:permission",
+                "The permission of the user or team",
+                r => {
+                    if (r.TeamAccess != null && r.UserAccess == null)
+                        return r.TeamAccess.Permission.ToString().ToLower();
+                    else if (r.TeamAccess == null && r.UserAccess != null)
+                        return r.UserAccess.Permission.ToString().ToLower();
+                    return null;
+                }
+            ),
         };
     }
 }

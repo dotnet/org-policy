@@ -94,7 +94,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     }
                     return;
                 case 3:
-                    Console.Error.WriteLine($"error: -r, -t, or -u cannot be specified all");
+                    ListAuditMembers(org);
                     return;
             }
         }
@@ -166,6 +166,33 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .ToArray();
 
             var columns = _reportContext.GetColumns("t:name", "u:login", "tm:maintainer");
+            OutputTable(rows, columns);
+        }
+
+        private void ListAuditMembers(CachedOrg org)
+        {
+            var repoFilter = _reportContext.CreateRepoFilter();
+            var teamFilter = _reportContext.CreateTeamFilter();
+            var userFilter = _reportContext.CreateUserFilter();
+            var rowFilter = _reportContext.CreateRowFilter();
+
+            var teamRows = org.Repos
+                              .Where(repoFilter)
+                              .SelectMany(r => r.Teams.Where(ta => teamFilter(ta.Team)), (r, ta) => new ReportRow(repo: r, team: ta.Team, teamAccess: ta));
+            var userRows = org.Repos
+                              .Where(repoFilter)
+                              .SelectMany(r => r.Users.Where(ua => userFilter(ua.User)), (r, ua) => new ReportRow(repo: r, user: ua.User, userAccess: ua));
+            var rows = teamRows.Concat(userRows)
+                               .Where(rowFilter)
+                               .ToArray();
+
+            var columns = _reportContext.GetColumns("r:name",
+                                                    "r:private",
+                                                    "r:last-push",
+                                                    "rtu:principal-kind",
+                                                    "rtu:principal",
+                                                    "rtu:permission",
+                                                    "ru:reason");
             OutputTable(rows, columns);
         }
 
