@@ -119,7 +119,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
-            var columns = _reportContext.GetColumns("t:full-name", "t:marker", "t:ms-owned");
+            var columns = _reportContext.GetColumns("t:full-name", "t:marker", "t:ms-owned", "t:description");
             OutputTable(rows, columns);
         }
 
