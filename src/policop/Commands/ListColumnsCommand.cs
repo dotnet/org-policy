@@ -24,7 +24,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             {
                 foreach (var column in ReportColumn.All)
                 {
-                    writer.Write(column.QualifiedName);
+                    writer.Write(column.Name);
                     writer.Write(column.Description);
                     writer.WriteLine();
                 }

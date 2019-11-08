@@ -14,8 +14,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             _selector = selector;
         }
 
-        public override string Prefix => "ua";
-
         public override string GetValue(ReportRow row)
         {
             return row.UserAccess == null ? null : GetValue(row.UserAccess);

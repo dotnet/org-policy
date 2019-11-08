@@ -121,16 +121,16 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             var result = new List<ReportColumn>();
             var hadErrors = false;
 
-            foreach (var qualifiedName in IncludedColumns)
+            foreach (var name in IncludedColumns)
             {
-                var column = ReportColumn.Get(qualifiedName);
+                var column = ReportColumn.Get(name);
                 if (column != null)
                 {
                     result.Add(column);
                 }
                 else
                 {
-                    Console.Error.WriteLine($"error: column '{qualifiedName}' isn't valid");
+                    Console.Error.WriteLine($"error: column '{name}' isn't valid");
                     hadErrors = true;
                 }
             }
@@ -141,9 +141,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             return result;
         }
 
-        private static Func<ReportRow, bool> CreateTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> qualifiedNames)
+        private static Func<ReportRow, bool> CreateTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> names)
         {
-            var termFilters = ParseTermFilters(expressions, qualifiedNames);
+            var termFilters = ParseTermFilters(expressions, names);
             return CreateDisjunctionFilter(termFilters);
         }
 
@@ -158,14 +158,14 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             return CreateConjunctionFilter(termFilters);
         }
 
-        private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> qualifiedNames)
+        private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> names)
         {
             var columns = new List<ReportColumn>();
 
-            foreach (var qualifiedName in qualifiedNames)
+            foreach (var name in names)
             {
-                var column = ReportColumn.Get(qualifiedName);
-                Debug.Assert(column != null, $"Column {qualifiedName} is invalid");
+                var column = ReportColumn.Get(name);
+                Debug.Assert(column != null, $"Column {name} is invalid");
                 columns.Add(column);
             }
 
@@ -191,23 +191,23 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
         {
             var indexOfEquals = expression.IndexOf("=");
 
-            string qualifiedName;
+            string name;
             string value;
 
             if (indexOfEquals < 0)
             {
-                qualifiedName = expression.Trim();
+                name = expression.Trim();
                 value = "Yes";
             }
             else
             {
-                qualifiedName = expression.Substring(0, indexOfEquals).Trim();
+                name = expression.Substring(0, indexOfEquals).Trim();
                 value = expression.Substring(indexOfEquals + 1).Trim();
             }
 
-            var column = ReportColumn.Get(qualifiedName);
+            var column = ReportColumn.Get(name);
             if (column == null)
-                Console.Error.WriteLine($"error: column '{qualifiedName}' isn't valid");
+                Console.Error.WriteLine($"error: column '{name}' isn't valid");
 
             return new KeyValuePair<ReportColumn, string>(column, value);
         }
@@ -277,7 +277,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             if (rows.Count == 0 || columns.Count == 0)
                 return new CsvDocument();
 
-            var headers = columns.Select(h => h.QualifiedName);
+            var headers = columns.Select(h => h.Name);
             var document = new CsvDocument(headers);
 
             using (var writer = document.Append())

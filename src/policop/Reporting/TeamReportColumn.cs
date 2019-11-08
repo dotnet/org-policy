@@ -14,8 +14,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             _selector = selector;
         }
 
-        public override string Prefix => "t";
-
         public override string GetValue(ReportRow row)
         {
             return row.Team == null ? null : GetValue(row.Team);
