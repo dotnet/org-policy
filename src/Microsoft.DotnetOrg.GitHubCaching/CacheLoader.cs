@@ -94,7 +94,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 {
                     Id = team.Id.ToString(),
                     ParentId = team.Parent?.Id.ToString(),
-                    Name = team.Name
+                    Name = team.Name,
+                    Description = team.Description,
+                    IsSecret = team.Privacy.Value == TeamPrivacy.Secret
                 };
                 cachedOrg.Teams.Add(cachedTeam);
 
