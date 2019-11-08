@@ -136,7 +136,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var userGroups = rows.Where(r => r.WhatIfPermission != null &&
                                               !r.WhatIfPermission.Value.IsUnchanged &&
                                               r.User.IsMicrosoftUser() &&
-                                              !string.IsNullOrEmpty(r.User.GetMicrosoftEmail()))
+                                              !string.IsNullOrEmpty(r.User.GetEmail()))
                                  .Select(r => (r.User, r.Repo, WhatIfPermission: r.WhatIfPermission.Value))
                                  .Distinct()
                                  .GroupBy(r => r.User);
@@ -154,8 +154,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             foreach (var userGroup in userGroups)
             {
                 var user = userGroup.Key;
-                var name = user.GetMicrosoftName();
-                var email = user.GetMicrosoftEmail();
+                var name = user.GetName();
+                var email = user.GetEmail();
 
                 var sb = new StringBuilder();
                 sb.AppendLine($"Hello {name},");
@@ -182,7 +182,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     var repoAdmins = repo.GetAdministrators()
                                          .Where(u => u.IsMicrosoftUser() &&
                                                      !excludedAdminsSet.Contains((repo, u)))
-                                         .Select(u => (Email: u.GetMicrosoftEmail(), Name: u.GetMicrosoftName()))
+                                         .Select(u => (Email: u.GetEmail(), Name: u.GetName()))
                                          .Where(t => !string.IsNullOrEmpty(t.Email) && !string.IsNullOrEmpty(t.Name))
                                          .Select(t => $"[{t.Name}](mailto:{t.Email})");
                     var repoAdminList = string.Join("; ", repoAdmins);

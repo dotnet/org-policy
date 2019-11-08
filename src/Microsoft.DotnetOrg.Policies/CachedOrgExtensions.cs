@@ -64,20 +64,31 @@ namespace Microsoft.DotnetOrg.Policies
             return microsoftBotsTeam != null && microsoftBotsTeam.Members.Contains(user);
         }
 
-        public static string GetMicrosoftName(this CachedUser user)
+        public static string GetName(this CachedUser user)
         {
             if (!string.IsNullOrEmpty(user.MicrosoftInfo?.PreferredName))
                 return user.MicrosoftInfo.PreferredName;
 
-            return user.Name;
+            return user.Name ?? "@" + user.Login;
         }
 
-        public static string GetMicrosoftEmail(this CachedUser user)
+        public static string GetEmail(this CachedUser user)
         {
             if (!string.IsNullOrEmpty(user.MicrosoftInfo?.EmailAddress))
                 return user.MicrosoftInfo.EmailAddress;
 
             return user.Email;
+        }
+
+        public static string GetEmailName(this CachedUser user)
+        {
+            var name = user.GetName();
+            var email = user.GetEmail();
+
+            if (string.IsNullOrEmpty(email))
+                return name;
+
+            return $"{name} <{email}>";
         }
 
         public static bool IsBot(this CachedUser user)
