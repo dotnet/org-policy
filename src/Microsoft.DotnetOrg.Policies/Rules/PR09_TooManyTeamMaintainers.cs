@@ -6,7 +6,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
     {
         public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR09",
-            "Team should be owned by Microsoft",
+            "Too many team maintainers",
             PolicySeverity.Error
         );
 
