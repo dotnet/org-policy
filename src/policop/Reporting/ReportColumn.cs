@@ -102,6 +102,16 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "Names and emails of maintainers",
                 t => string.Join("; ", t.GetMaintainers().Select(u => u.GetEmailName()))
             ),
+            new TeamReportColumn(
+                "description",
+                "Description for the team",
+                t => t.Description
+            ),
+            new TeamReportColumn(
+                "is-secret",
+                "Indicates whether this team can be seen by all org members or just owners and members",
+                t => t.IsSecret ? "Yes" : "No"
+            ),
         };
 
         public static IReadOnlyList<ReportColumn> UserColumns { get; } = new[]

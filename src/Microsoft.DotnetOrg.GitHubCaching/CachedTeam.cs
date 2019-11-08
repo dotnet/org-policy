@@ -10,6 +10,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public string Id { get; set; }
         public string Name { get; set; }
         public string ParentId { get; set; }
+        public string Description { get; set; }
+        public bool IsSecret { get; set; }
         public List<string> MaintainerLogins { get; set; } = new List<string>();
         public List<string> MemberLogins { get; set; } = new List<string>();
         public List<CachedTeamAccess> Repos { get; set; } = new List<CachedTeamAccess>();
