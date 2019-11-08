@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
@@ -16,7 +17,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
             foreach (var team in context.Org.Teams)
             {
-                var numberOfMaintainers = team.Maintainers.Count;
+                var numberOfMaintainers = team.Maintainers.Count(m => !m.IsOwner);
 
                 if (numberOfMaintainers > Threshold)
                 {

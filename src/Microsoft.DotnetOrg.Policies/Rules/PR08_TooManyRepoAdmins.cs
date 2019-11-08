@@ -20,7 +20,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             foreach (var repo in context.Org.Repos)
             {
                 var numberOfAdmins = repo.Users.Count(ua => ua.Permission == CachedPermission.Admin &&
-                                                           !ua.Describe().IsOwner);
+                                                             !ua.User.IsOwner);
 
                 if (numberOfAdmins > Threshold)
                 {
