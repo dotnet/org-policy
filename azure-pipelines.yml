@@ -19,7 +19,7 @@ variables:
 
 jobs:
 - job:
-  timeoutInMinutes: 120
+  timeoutInMinutes: 240
   steps:
   - task: NuGetToolInstaller@1
   - task: NuGetCommand@2
