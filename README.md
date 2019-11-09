@@ -18,8 +18,8 @@ contains names of private repos and teams.
 
 ## Running locally
 
-You can run the tool locally by cloning this repo running `policop.cmd` from the
-root.
+You can run the tool locally by cloning this repo and running `policop.cmd` from
+the root.
 
 ### Getting the org data
 
