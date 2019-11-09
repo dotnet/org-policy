@@ -8,64 +8,137 @@ This repo contains tools and tracks policy violations.
 
 For details on policies, see [the docs](doc/README.md).
 
-## `policop check`
+## Usage
 
-This tool helps with enforcing [the policies] we're using in this organization.
+For the `dotnet` org, the policies are evaluated daily and violations are posted
+in the internal repo [org-policy-violations]. The repo is internal because it
+contains names of private repos and teams.
 
-[the policies]: doc/README.md
+[org-policy-violations]: https://github.com/dotnet/org-policy-violations
 
-```
-usage: policop check [OPTIONS]+
-      --org=name             The name of the GitHub organization
-  -o, --output=path          The path where the output .csv file should be written to.
-      --cache-location=path  The path where the .json cache should be written to.
-      --github-token=token   The GitHub API token to be used.
-      --ospo-token=token     The OSPO API token to be used.
-      --policy-repo=repo     The GitHub repo policy violations should be file in.
-  @file                      Read response file for more options.
-```
+## Running locally
 
-Example:
+You can run the tool locally by cloning this repo running `policop.cmd` from the
+root.
 
-```
-$ .\policop check --org dotnet -o D:\violations.csv
-```
+### Getting the org data
 
-## `policop audit`
+Before you can do anything useful, you need to get access to the org data, which
+includes repos, teams, users and their relationships. This also includes access
+to linking information between Microsoft user accounts and GitHub user accounts.
 
-This tool helps to audit GitHub organizations by producing a report like this:
+Due to performance and API rate limitations it's not practical to query this
+information from GitHub when you're experimenting and trying to analyze the org.
+So instead, you can download a cached version of the org that was computed and
+uploaded to a private Azure DevOps project during the nightly policy runs.
 
-| repo         | repo-state | repo-last-pushed | principal-kind | principal             | permission | via-team                   |
-|--------------|------------|------------------|----------------|-----------------------|------------|----------------------------|
-| Some repo    | public     | 10/23/2019 8:30  | team           | Some Team             | admin      | Some Team                  |
-| Some repo    | public     | 10/23/2019 8:30  | team           | Another Team          | push       | Another Team               |
-| Some repo    | public     | 10/23/2019 8:30  | user           | Some Owner            | admin      | (Owner)                    |
-| Some repo    | public     | 10/23/2019 8:30  | user           | Some User             | push       | Some Team\Some Nested Team |
-| Another repo | public     | 10/23/2019 3:30  | user           | Another Owner         | admin      | (Owner)                    |
-| Another repo | public     | 10/23/2019 3:30  | user           | Some User             | push       | Some Team                  |
-| Another repo | public     | 10/23/2019 3:30  | user           | Some External User    | pull       | (Collaborator)             |
-| Another repo | public     | 10/23/2019 3:30  | user           | Another External User | push       | (Collaborator)             |
+You do this by running:
 
-```
-usage: policop audit [OPTIONS]+
-      --org=name             The name of the GitHub organization
-  -o, --output=path          The path where the output .csv file should be written to.
-      --cache-location=path  The path where the .json cache should be written to.
-      --excel                Shows the results in Excel
-  @file                      Read response file for more options.
+```PS
+$ .\policop cache-build
 ```
 
-`policop audit` will prompt for log in information on first run so it can create a
-personal access token (PAT). It needs read-only access to repos and orgs.
+This will download the latest version of the org data and store it on your local
+machine. If you run this command for the first time, it will take you to a
+website where you'll need to create an access token that the tool will then
+store and use on future calls.
 
-```
-$ .\policop audit --org <org-name> [-o <output-file>]
+You can check how old your local cache by running
+
+```PS
+$ .\policop cache-info
 ```
 
-If you don't specify an output file, the app will print the results to the
-console. Alternatively, you can show the results in Excel by specifying
-`--excel`.
+You can also clear the cache with
 
+```PS
+$ .\policop cache-clear -f
 ```
-$ .\policop audit --org dotnet -o C:\work\permissions.csv
+
+### Evaluating policies
+
+In order to check policies, you simply use this command:
+
+```PS
+$ .\policop check --excel
 ```
+
+This will compute all policy violations and display the result in Excel. You can
+also write them to a file if you prefer that:
+
+```PS
+$ .\policop check -o D:\temp\test.csv
+```
+
+### Querying org data
+
+The primary command is `policop list` which you can use to query information
+from the org.
+
+Using `-r`, `-t`, and `-u` you can list all components of the:
+
+* `-r` the list of repos
+* `-t` the list of teams
+* `-u` the list of users
+* `-r -t` the list of repos and permissions teams are given
+* `-r -u` the list of repos and permissions users are given
+* `-t -u` the list of teams and their members
+* `-r -t -u` the list of repos and permission teams & users are given
+
+Each of those options accept a list of terms you can use to filter,
+with basic wild card support, such as `*core*` or `dotnet*`.
+
+So to list all teams containing the text `core` you'd do this:
+
+```PS
+$ .\policop list -t *core*
+```
+
+To find all members of all teams named `*core*` you'd do this:
+
+```PS
+# List team members whose of teams whose name contains "core"
+$ .\policop list -t *core* -u 
+```
+
+Using `-f` you can also filter:
+
+```PS
+# List all repos whose name contains dotnet and where a team
+# grants admin access
+$ .\policop list -r *dotnet* -t -f rt:permission=admin
+```
+
+For columns returning `Yes`/`No` you can also use the simple
+version:
+
+```PS
+# List all private repos
+$ .\policop list -r -f r:private
+```
+
+And lastly, using `-c` you can create custom reports with specific columns:
+
+```PS
+# List all private repos and show their name, description and list of admins
+$ .\policop list -r -f r:private -c r:name r:description r:admins
+```
+
+The available columns can be listed by running
+
+```PS
+$ .\policop list-columns
+```
+
+The naming convention indicates when the columns can be used:
+
+* `r:*` when repos are included
+* `t:*` when teams are included
+* `u:*` when users are included
+* `rt:*` when repos and teams are included
+* `ru:*` when repos and users are included
+* `tu:*` when teams and users are included
+* `rtu:*` when repos, teams, and users are included
+
+In general, `policop list` will print the results to the console but with `-o`
+you can write to a file and with `--excel` you can send it straight into Excel.
