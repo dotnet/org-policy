@@ -193,6 +193,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private static async Task CreateIssuesAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations, IReadOnlyList<Issue> existingIssues)
         {
             var newViolations = violations.Where(v => !existingIssues.Any(e => e.Title.Contains(v.Fingerprint.ToString()))).ToList();
+            
+            var allAssigness = newViolations.SelectMany(v => v.Assignees).ToHashSet();
+            await GrantReadAccessAsync(client, orgName, policyRepo, allAssigness);
+
             var i = 0;
 
             foreach (var newViolation in newViolations)
@@ -200,12 +204,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 await client.PrintProgressAsync(Console.Out, "Filing issue", newViolation.Title, i++, newViolations.Count);
 
                 var title = $"{newViolation.Title} ({newViolation.Fingerprint})";
-                var body = $"{newViolation.Body}";
-
-                body += Environment.NewLine + Environment.NewLine;
-                body += "### Assignees" + Environment.NewLine;
-                foreach (var assignee in newViolation.Assignees)
-                    body += $"* {assignee.Markdown()}" + Environment.NewLine;
+                var body = newViolation.Body;
 
                 var newIssue = new NewIssue(title)
                 {
@@ -217,8 +216,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     }
                 };
 
-            //foreach (var assignee in violation.Assignees)
-            //    newIssue.Assignees.Add(assignee.Login);
+                foreach (var assignee in newViolation.Assignees)
+                    newIssue.Assignees.Add(assignee.Login);
 
             retry:
                 try
@@ -234,6 +233,23 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     await Task.Delay(delay);
                     goto retry;
                 }
+            }
+        }
+
+        private static async Task GrantReadAccessAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyCollection<CachedUser> users)
+        {
+            await client.PrintProgressAsync(Console.Out, $"Get collaborators for {orgName}/{policyRepo}...");
+            var collaborators = await client.Repository.Collaborator.GetAll(orgName, policyRepo);
+            var collaboratorSet = collaborators.Select(c => c.Login).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var missingUsers = users.Where(u => !collaboratorSet.Contains(u.Login)).ToArray();
+
+            var i = 0;
+
+            foreach (var user in missingUsers)
+            {
+                await client.PrintProgressAsync(Console.Out, "Granting pull", user.Login, i++, missingUsers.Length);
+                var request = new CollaboratorRequest(Permission.Pull);
+                await client.Repository.Collaborator.Add(orgName, policyRepo, user.Login, request);
             }
         }
 
