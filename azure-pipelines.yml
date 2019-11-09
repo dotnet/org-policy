@@ -34,7 +34,7 @@ jobs:
       script: |
         $(policop) cache-org --org dotnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
         $(policop) cache-export -o $(cachePath)
-        $(policop) check --org dotnet -o $(violationsPath) --policy-repo terrajobst/org-policy-violations --github-token $(GitHubToken)
+        $(policop) check --org dotnet -o $(violationsPath) --policy-repo dotnet/org-policy-violations --github-token $(GitHubToken)
         $(policop) cache-clear -f
     condition: and(succeeded(), not(eq(variables['GitHubToken'], '')), not(eq(variables['OspoToken'], '')), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual')))
   - task: PublishBuildArtifacts@1
