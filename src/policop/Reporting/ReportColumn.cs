@@ -178,7 +178,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 
         public static IReadOnlyList<ReportColumn> TeamMembershipColumns { get; } = new[]
         {
-            new TeamMembershipReportColumn(
+            new TeamUserReportColumn(
                 "tu:maintainer",
                 "Indicates whether the user is a maintainer",
                 (t, u) => t.Maintainers.Contains(u) ? "Yes" : "No"

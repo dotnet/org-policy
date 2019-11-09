@@ -4,11 +4,11 @@ using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
-    internal sealed class TeamMembershipReportColumn : ReportColumn
+    internal sealed class TeamUserReportColumn : ReportColumn
     {
         private readonly Func<CachedTeam, CachedUser, string> _selector;
 
-        public TeamMembershipReportColumn(string name, string description, Func<CachedTeam, CachedUser, string> selector)
+        public TeamUserReportColumn(string name, string description, Func<CachedTeam, CachedUser, string> selector)
             : base(name, description)
         {
             _selector = selector;
