@@ -14,7 +14,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 {
     public sealed class CachedOrg
     {
-        public static int CurrentVersion = 5;
+        public static int CurrentVersion = 6;
 
         public int Version { get; set; }
         public string Name { get; set; }

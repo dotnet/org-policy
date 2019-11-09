@@ -62,6 +62,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "Names and emails of admins",
                 r => string.Join("; ", r.GetAdministrators().Select(u => u.GetEmailName()))
             ),
+            new RepoReportColumn(
+                "r:description",
+                "Description for the repo",
+                r => r.Description
+            ),
         };
 
         public static IReadOnlyList<ReportColumn> TeamColumns { get; } = new[]

@@ -10,6 +10,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public bool IsPrivate { get; set; }
         public bool IsArchived { get; set; }
         public DateTimeOffset LastPush { get; set; }
+        public string Description { get; set; }
 
         [JsonIgnore]
         public CachedOrg Org { get; set; }

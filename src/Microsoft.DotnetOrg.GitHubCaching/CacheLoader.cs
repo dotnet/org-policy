@@ -149,7 +149,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     Name = repo.Name,
                     IsPrivate = repo.Private,
                     IsArchived = repo.Archived,
-                    LastPush = repo.PushedAt ?? repo.CreatedAt
+                    LastPush = repo.PushedAt ?? repo.CreatedAt,
+                    Description = repo.Description
                 };
                 cachedOrg.Repos.Add(cachedRepo);
 
