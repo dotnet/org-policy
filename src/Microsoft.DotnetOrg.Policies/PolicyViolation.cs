@@ -44,19 +44,24 @@ namespace Microsoft.DotnetOrg.Policies
 
         private static IReadOnlyCollection<CachedUser> ComputeAssignees(CachedOrg org, CachedRepo repo, CachedTeam team, CachedUser user, IReadOnlyCollection<CachedUser> assignees)
         {
-            if (assignees != null && assignees.Count > 0)
-                return assignees;
+            var result = new List<CachedUser>();
 
-            if (repo != null)
-                return repo.GetAdministrators().ToArray();
+            if (assignees != null)
+                result.AddRange(assignees.Where(a => a.IsMember));
 
-            if (team != null)
-                return team.GetMaintainers().ToArray();
+            if (result.Count == 0 && repo != null)
+                result.AddRange(repo.GetAdministrators().Where(a => a.IsMember));
 
-            if (user != null)
-                return new[] { user };
+            if (result.Count == 0 && team != null)
+                result.AddRange(team.GetMaintainers());
 
-            return org.GetOwners().ToArray();
+            if (result.Count == 0 && user != null && user.IsMember)
+                result.Add(user);
+
+            if (result.Count == 0)
+                result.AddRange(org.GetOwners());
+
+            return result.ToArray();
         }
 
         private static Guid ComputeFingerprint(string diagnosticId, CachedRepo repo, CachedUser user, CachedTeam team)
