@@ -8,10 +8,6 @@ using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
-    // TODO: - create functions to filter early on repo, team, and user.
-    //       - should combine term filters and column filters
-    //       - create a single function called CreateRowFilter() that creates the combined filter for the row
-    //       - fix WhatIfCommand
     internal sealed class ReportContext
     {
         private static readonly IReadOnlyList<string> _repoTermColumns = new[] { "r:name" };
