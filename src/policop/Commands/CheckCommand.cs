@@ -59,14 +59,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var context = new PolicyAnalysisContext(org);
             var violations = PolicyRunner.Run(context);
 
-            // BEGIN TEMPORRARY LIMITER
-            #warning Remove temporary limiter
-            var guid1 = Guid.Parse("1dabfabc-d3a1-506b-99e4-0cb7e30794d9");
-            var guid2 = Guid.Parse("62e76fe1-3778-0260-f149-44ece26957ce");
-            violations = violations.Where(v => v.Fingerprint == guid1 ||
-                                           v.Fingerprint == guid2).ToArray();
-            // END
-
             SaveVioloations(_orgName, _outputFileName, _viewInExcel, violations);
 
             if (!string.IsNullOrEmpty(_policyRepo))
