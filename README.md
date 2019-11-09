@@ -43,7 +43,7 @@ machine. If you run this command for the first time, it will take you to a
 website where you'll need to create an access token that the tool will then
 store and use on future calls.
 
-You can check how old your local cache by running
+You can check how old your local cache is by running
 
 ```PS
 $ .\policop cache-info
@@ -75,7 +75,7 @@ $ .\policop check -o D:\temp\test.csv
 The primary command is `policop list` which you can use to query information
 from the org.
 
-Using `-r`, `-t`, and `-u` you can list all components of the:
+Using `-r`, `-t`, and `-u` you can list all components of the org:
 
 * `-r` the list of repos
 * `-t` the list of teams
@@ -83,12 +83,12 @@ Using `-r`, `-t`, and `-u` you can list all components of the:
 * `-r -t` the list of repos and permissions teams are given
 * `-r -u` the list of repos and permissions users are given
 * `-t -u` the list of teams and their members
-* `-r -t -u` the list of repos and permission teams & users are given
+* `-r -t -u` the list of repos and permissions teams & users are given
 
 Each of those options accept a list of terms you can use to filter,
 with basic wild card support, such as `*core*` or `dotnet*`.
 
-So to list all teams containing the text `core` you'd do this:
+So to list all teams whose name contains the text `core` you'd do this:
 
 ```PS
 $ .\policop list -t *core*
@@ -97,7 +97,7 @@ $ .\policop list -t *core*
 To find all members of all teams named `*core*` you'd do this:
 
 ```PS
-# List team members whose of teams whose name contains "core"
+# List team members of teams whose name contains "core"
 $ .\policop list -t *core* -u 
 ```
 
