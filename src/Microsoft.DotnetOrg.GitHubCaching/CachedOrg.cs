@@ -109,7 +109,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             var sb = new StringBuilder();
             foreach (var c in teamName)
             {
-                if (char.IsLetterOrDigit(c))
+                if (char.IsLetterOrDigit(c) || c == '_')
                 {
                     sb.Append(char.ToLower(c));
                 }
