@@ -12,8 +12,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public string ParentId { get; set; }
         public string Description { get; set; }
         public bool IsSecret { get; set; }
-        public List<string> MaintainerLogins { get; set; } = new List<string>();
-        public List<string> MemberLogins { get; set; } = new List<string>();
+        public SortedSet<string> MaintainerLogins { get; set; } = new SortedSet<string>();
+        public SortedSet<string> MemberLogins { get; set; } = new SortedSet<string>();
         public List<CachedTeamAccess> Repos { get; set; } = new List<CachedTeamAccess>();
 
         [JsonIgnore]
