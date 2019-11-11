@@ -85,6 +85,12 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             if (_updateIssues)
                 await UpdateIssuesAsync(gitHubClient, policyRepo, report);
+
+            Console.WriteLine($"  Existing violations: {report.ExistingViolations.Count:N0}");
+            Console.WriteLine($"Overridden violations: {report.OverriddenViolations.Count:N0}");
+            Console.WriteLine($"   Created violations: {report.CreatedViolations.Count:N0}");
+            Console.WriteLine($"  Reopened violations: {report.ReopenedViolations.Count:N0}");
+            Console.WriteLine($"    Closed violations: {report.ClosedViolations.Count:N0}");
         }
 
         private static readonly string AreaViolationLabel = "area-violation";
