@@ -31,7 +31,7 @@ namespace Microsoft.DotnetOrg.Policies
             Assignees = ComputeAssignees(org, repo, team, user, assignees);
         }
 
-        public string DiagnosticId { get; }
+        public string DiagnosticId => Descriptor.DiagnosticId;
         public PolicyDescriptor Descriptor { get; }
         public Guid Fingerprint { get; }
         public string Title { get; }
