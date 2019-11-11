@@ -397,15 +397,17 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private sealed class ViolationReport
         {
-            public ViolationReport(IReadOnlyList<(PolicyViolation v, PolicyIssue)> existingViolations, IReadOnlyList<PolicyViolation> createdViolations, IReadOnlyList<(PolicyViolation, PolicyIssue)> reopenedViolations, IReadOnlyList<PolicyIssue> closedViolations)
+            public ViolationReport(IReadOnlyList<(PolicyViolation v, PolicyIssue)> existingViolations, IReadOnlyList<(PolicyViolation Violation, PolicyIssue Issue)> overriddenViolations, IReadOnlyList<PolicyViolation> createdViolations, IReadOnlyList<(PolicyViolation, PolicyIssue)> reopenedViolations, IReadOnlyList<PolicyIssue> closedViolations)
             {
                 ExistingViolations = existingViolations;
+                OverriddenViolations = overriddenViolations;
                 CreatedViolations = createdViolations;
                 ReopenedViolations = reopenedViolations;
                 ClosedViolations = closedViolations;
             }
 
             public IReadOnlyList<(PolicyViolation v, PolicyIssue)> ExistingViolations { get; }
+            public IReadOnlyList<(PolicyViolation Violation, PolicyIssue Issue)> OverriddenViolations { get; }
             public IReadOnlyList<PolicyViolation> CreatedViolations { get; }
             public IReadOnlyList<(PolicyViolation, PolicyIssue)> ReopenedViolations { get; }
             public IReadOnlyList<PolicyIssue> ClosedViolations { get; }
@@ -414,6 +416,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             {
                 foreach (var (v, i) in ExistingViolations)
                     yield return ("Existing", v, i);
+
+                foreach (var (v, i) in OverriddenViolations)
+                    yield return ("Overridden", v, i);
 
                 foreach (var v in CreatedViolations)
                     yield return ("New", v, null);
@@ -428,9 +433,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             public static ViolationReport Create(IReadOnlyList<PolicyViolation> violations)
             {
                 var existingViolations = Array.Empty<(PolicyViolation, PolicyIssue)>();
+                var overriddenViolations = Array.Empty<(PolicyViolation, PolicyIssue)>();
+                var createdViolations = violations;
                 var reopenedViolations = Array.Empty<(PolicyViolation, PolicyIssue)>();
                 var closedViolations = Array.Empty<PolicyIssue>();
-                return new ViolationReport(existingViolations, violations, reopenedViolations, closedViolations);
+                return new ViolationReport(existingViolations, overriddenViolations, createdViolations, reopenedViolations, closedViolations);
             }
 
             public static ViolationReport Create(IReadOnlyList<PolicyViolation> violations, IReadOnlyList<PolicyIssue> issues)
@@ -439,23 +446,43 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
                 var issueByFingerprint = issues.ToDictionary(i => i.Fingerprint);
 
-                var existingViolations = violations.Where(v => issueByFingerprint.ContainsKey(v.Fingerprint))
-                                                    .Select(v => (v, issueByFingerprint[v.Fingerprint]))
-                                                    .Where(t => !t.Item2.IsClosed || t.Item2.IsOverride)
-                                                    .ToArray();
+                var mapping = new List<(PolicyViolation Violation, PolicyIssue Issue)>();
 
-                var createdViolations = violations.Where(v => !issueByFingerprint.ContainsKey(v.Fingerprint))
+                foreach (var violation in violations)
+                {
+                    issueByFingerprint.TryGetValue(violation.Fingerprint, out var issue);
+                    mapping.Add((violation, issue));
+                }
+
+                foreach (var issue in issues)
+                {
+                    if (!violationByFingerprint.ContainsKey(issue.Fingerprint))
+                        mapping.Add((null, issue));
+                }
+
+                var existingViolations = mapping.Where(m => m.Violation != null && m.Issue != null)
+                                                 .Where(m => m.Issue.IsOpen && !m.Issue.IsOverride)
+                                                 .ToArray();
+
+                var overriddenViolations = mapping.Where(m => m.Violation != null && m.Issue != null)
+                                                   .Where(m => m.Issue.IsOverride)
                                                    .ToArray();
 
-                var reopenedViolations = violations.Where(v => issueByFingerprint.ContainsKey(v.Fingerprint))
-                                                    .Select(v => (v, issueByFingerprint[v.Fingerprint]))
-                                                    .Where(t => t.Item2.IsClosed && !t.Item2.IsOverride)
-                                                    .ToArray();
+                var createdViolations = mapping.Where(m => m.Violation != null && m.Issue == null)
+                                                .Select(m => m.Violation)
+                                                .ToArray();
 
-                var closedViolations = issues.Where(i => !violationByFingerprint.ContainsKey(i.Fingerprint))
-                                              .ToArray();
+                var reopenedViolations = mapping.Where(m => m.Violation != null && m.Issue != null)
+                                                 .Where(m => m.Issue.IsClosed && !m.Issue.IsOverride)
+                                                 .ToArray();
 
-                return new ViolationReport(existingViolations, createdViolations, reopenedViolations, closedViolations);
+                var closedViolations = mapping.Where(m => m.Issue != null)
+                                               .Where(m => m.Issue.IsOpen)
+                                               .Where(m => m.Violation == null || m.Issue.IsOverride)
+                                               .Select(m => m.Issue)
+                                               .ToArray();
+
+                return new ViolationReport(existingViolations, overriddenViolations, createdViolations, reopenedViolations, closedViolations);
             }
         }
     }
