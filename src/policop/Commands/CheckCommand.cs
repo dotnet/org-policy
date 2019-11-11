@@ -19,6 +19,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private string _outputFileName;
         private string _gitHubToken;
         private string _policyRepo;
+        private bool _updateIssues;
         private bool _viewInExcel;
 
         public override string Name => "check";
@@ -31,7 +32,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("o|output=", "The {path} where the output .csv file should be written to.", v => _outputFileName = v)
                    .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
                    .Add("github-token=", "The GitHub API {token} to be used.", v => _gitHubToken = v)
-                   .Add("policy-repo=", "The GitHub {repo} policy violations should be file in.", v => _policyRepo = v);
+                   .Add("policy-repo=", "The GitHub {repo} policy violations should be filed in.", v => _policyRepo = v)
+                   .Add("update-issues", "Will create, repopen and closed policy violations.", v => _updateIssues = true);
         }
 
         public override async Task ExecuteAsync()
@@ -56,29 +58,51 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
+            if (_updateIssues && string.IsNullOrEmpty(_policyRepo))
+            {
+                Console.Error.WriteLine($"error: --policy-repo must be specified if --update-issues is specified.");
+                return;
+            }
+
+            if (!RepoName.TryParse(_policyRepo, out var policyRepo))
+            {
+                Console.Error.WriteLine($"error: policy repo must be of form owner/name but was '{_policyRepo}'.");
+                return;
+            }
+
+            var gitHubClient = string.IsNullOrEmpty(_policyRepo)
+                                ? null
+                                : await GitHubClientFactory.CreateAsync(_gitHubToken);
+
             var context = new PolicyAnalysisContext(org);
             var violations = PolicyRunner.Run(context);
 
-            SaveVioloations(_orgName, _outputFileName, _viewInExcel, violations);
+            var report = gitHubClient == null
+                            ? ViolationReport.Create(violations)
+                            : await CreateViolationReportAsync(gitHubClient, policyRepo, violations);
 
-            if (!string.IsNullOrEmpty(_policyRepo))
-            {
-                var gitHubClient = await GitHubClientFactory.CreateAsync(_gitHubToken);
-                await FilePolicyViolationsAsync(gitHubClient, _orgName, _policyRepo, violations);
-            }
+            SaveVioloations(_orgName, _outputFileName, _viewInExcel, report);
+
+            if (_updateIssues)
+                await UpdateIssuesAsync(gitHubClient, policyRepo, report);
         }
 
         private static readonly string AreaViolationLabel = "area-violation";
         private static readonly string PolicyOverrideLabel = "policy-override";
 
-        private static void SaveVioloations(string orgName, string outputFileName, bool viewInExcel, IReadOnlyList<PolicyViolation> violations)
+        private static void SaveVioloations(string orgName, string outputFileName, bool viewInExcel, ViolationReport report)
         {
-            var csvDocument = new CsvDocument("org", "severity", "rule", "rule-title", "fingerprint", "violation", "repo", "user", "team", "assignees");
-            using (var writer = csvDocument.Append())
+            var document = new CsvDocument("org", "status", "severity", "rule", "rule-title", "fingerprint", "violation", "repo", "user", "team", "assignees");
+
+            using (var writer = document.Append())
             {
-                foreach (var violation in violations)
+                foreach (var (status, violation, _) in report.GetAll())
                 {
+                    if (violation == null)
+                        continue;
+
                     writer.Write(orgName);
+                    writer.Write(status);
                     writer.Write(violation.Descriptor.Severity.ToString());
                     writer.Write(violation.Descriptor.DiagnosticId);
                     writer.Write(violation.Descriptor.Title);
@@ -108,33 +132,44 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
 
             if (!string.IsNullOrEmpty(outputFileName))
-                csvDocument.Save(outputFileName);
+                document.Save(outputFileName);
 
             if (viewInExcel)
-                csvDocument.ViewInExcel();
+                document.ViewInExcel();
         }
 
-        private static async Task FilePolicyViolationsAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations)
+        private static async Task<ViolationReport> CreateViolationReportAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<PolicyViolation> violations)
         {
-            if (policyRepo.Contains("/"))
-            {
-                var parts = policyRepo.Split('/');
-                orgName = parts[0];
-                policyRepo = parts[1];
-            }
-
-            await CreateLabelsAsync(client, orgName, policyRepo, violations);
-
-            var existingIssues = await GetIssuesAsync(client, orgName, policyRepo);
-            await CreateIssuesAsync(client, orgName, policyRepo, violations, existingIssues);
-            await ReopenIssuesAsync(client, orgName, policyRepo, violations, existingIssues);
-            await CloseIssuesAsync(client, orgName, policyRepo, violations, existingIssues);
+            var existingIssues = await GetIssuesAsync(client, policyRepo);
+            return ViolationReport.Create(violations, existingIssues);
         }
 
-        private static async Task CreateLabelsAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations)
+        private static async Task<IReadOnlyList<PolicyIssue>> GetIssuesAsync(GitHubClient client, RepoName policyRepo)
+        {
+            await client.PrintProgressAsync(Console.Out, "Loading issue list");
+            var issueRequest = new RepositoryIssueRequest
+            {
+                State = ItemStateFilter.All
+            };
+            issueRequest.Labels.Add(AreaViolationLabel);
+            var existingIssues = await client.Issue.GetAllForRepository(policyRepo.Owner, policyRepo.Name, issueRequest);
+            return existingIssues.Select(PolicyIssue.Create)
+                                  .Where(pi => pi != null)
+                                  .ToArray();
+        }
+
+        private static async Task UpdateIssuesAsync(GitHubClient client, RepoName policyRepo, ViolationReport report)
+        {
+            await CreateLabelsAsync(client, policyRepo, report.CreatedViolations);
+            await CreateIssuesAsync(client, policyRepo, report.CreatedViolations);
+            await ReopenIssuesAsync(client, policyRepo, report.ReopenedViolations);
+            await CloseIssuesAsync(client, policyRepo, report.ClosedViolations);
+        }
+
+        private static async Task CreateLabelsAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<PolicyViolation> violations)
         {
             await client.PrintProgressAsync(Console.Out, "Loading label list");
-            var existingLabels = await client.Issue.Labels.GetAllForRepository(orgName, policyRepo);
+            var existingLabels = await client.Issue.Labels.GetAllForRepository(policyRepo.Owner, policyRepo.Name);
 
             var existingLabelNames = existingLabels.ToDictionary(l => l.Name);
             var desiredLabelNames = violations.Select(v => v.Descriptor.DiagnosticId).Distinct().Concat(new[] { AreaViolationLabel, PolicyOverrideLabel }).ToArray();
@@ -174,55 +209,41 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 {
                     Description = description
                 };
-                await client.Issue.Labels.Create(orgName, policyRepo, newLabel);
+                await client.Issue.Labels.Create(policyRepo.Owner, policyRepo.Name, newLabel);
             }
         }
 
-        private static async Task<IReadOnlyList<Issue>> GetIssuesAsync(GitHubClient client, string orgName, string policyRepo)
+        private static async Task CreateIssuesAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<PolicyViolation> violations)
         {
-            await client.PrintProgressAsync(Console.Out, "Loading issue list");
-            var issueRequest = new RepositoryIssueRequest
-            {
-                State = ItemStateFilter.All
-            };
-            issueRequest.Labels.Add(AreaViolationLabel);
-            var existingIssues = await client.Issue.GetAllForRepository(orgName, policyRepo, issueRequest);
-            return existingIssues;
-        }
-
-        private static async Task CreateIssuesAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations, IReadOnlyList<Issue> existingIssues)
-        {
-            var newViolations = violations.Where(v => !existingIssues.Any(e => e.Title.Contains(v.Fingerprint.ToString()))).ToList();
-            
-            var allAssigness = newViolations.SelectMany(v => v.Assignees).ToHashSet();
-            await GrantReadAccessAsync(client, orgName, policyRepo, allAssigness);
+            var allAssigness = violations.SelectMany(v => v.Assignees).ToHashSet();
+            await GrantReadAccessAsync(client, policyRepo, allAssigness);
 
             var i = 0;
 
-            foreach (var newViolation in newViolations)
+            foreach (var violation in violations)
             {
-                await client.PrintProgressAsync(Console.Out, "Filing issue", newViolation.Title, i++, newViolations.Count);
+                await client.PrintProgressAsync(Console.Out, "Filing issue", violation.Title, i++, violations.Count);
 
-                var title = $"{newViolation.Title} ({newViolation.Fingerprint})";
-                var body = newViolation.Body;
+                var title = $"{violation.Title} ({violation.Fingerprint})";
+                var body = violation.Body;
 
                 var newIssue = new NewIssue(title)
                 {
                     Body = body,
                     Labels =
                     {
-                        newViolation.Descriptor.DiagnosticId,
+                        violation.Descriptor.DiagnosticId,
                         AreaViolationLabel
                     }
                 };
 
-                foreach (var assignee in newViolation.Assignees)
+                foreach (var assignee in violation.Assignees)
                     newIssue.Assignees.Add(assignee.Login);
 
             retry:
                 try
                 {
-                    await client.Issue.Create(orgName, policyRepo, newIssue);
+                    await client.Issue.Create(policyRepo.Owner, policyRepo.Name, newIssue);
                 }
                 catch (AbuseException ex)
                 {
@@ -236,10 +257,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
         }
 
-        private static async Task GrantReadAccessAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyCollection<CachedUser> users)
+        private static async Task GrantReadAccessAsync(GitHubClient client, RepoName policyRepo, IReadOnlyCollection<CachedUser> users)
         {
-            await client.PrintProgressAsync(Console.Out, $"Get collaborators for {orgName}/{policyRepo}...");
-            var collaborators = await client.Repository.Collaborator.GetAll(orgName, policyRepo);
+            await client.PrintProgressAsync(Console.Out, $"Get collaborators for {policyRepo}...");
+            var collaborators = await client.Repository.Collaborator.GetAll(policyRepo.Owner, policyRepo.Name);
             var collaboratorSet = collaborators.Select(c => c.Login).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var missingUsers = users.Where(u => !collaboratorSet.Contains(u.Login)).ToArray();
 
@@ -249,81 +270,193 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             {
                 await client.PrintProgressAsync(Console.Out, "Granting pull", user.Login, i++, missingUsers.Length);
                 var request = new CollaboratorRequest(Permission.Pull);
-                await client.Repository.Collaborator.Add(orgName, policyRepo, user.Login, request);
+                await client.Repository.Collaborator.Add(policyRepo.Owner, policyRepo.Name, user.Login, request);
             }
         }
 
-        private static async Task ReopenIssuesAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations, IReadOnlyList<Issue> existingIssues)
+        private static async Task ReopenIssuesAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<(PolicyViolation, PolicyIssue)> violation)
         {
-            var fingerprints = new HashSet<Guid>(violations.Select(v => v.Fingerprint));
-
-            var oldIssues = existingIssues.Where(issue => issue.State.Value == ItemState.Closed &&
-                                                           !issue.Labels.Any(l => l.Name == PolicyOverrideLabel))
-                                           .Select(issue => (Fingerprint: GetFingerprint(issue.Title), Issue: issue))
-                                           .Where(t => t.Fingerprint != null && fingerprints.Contains(t.Fingerprint.Value))
-                                           .Select(t => t.Issue)
-                                           .ToList();
-
             var i = 0;
 
-            foreach (var oldIssue in oldIssues)
+            foreach (var reopenedViolation in violation)
             {
-                await client.PrintProgressAsync(Console.Out, "Reopening issue", oldIssue.Title, i++, oldIssues.Count);
+                var issue = reopenedViolation.Item2.Issue;
 
-                await client.Issue.Comment.Create(orgName, policyRepo, oldIssue.Number, "The violation still exists.");
+                await client.PrintProgressAsync(Console.Out, "Reopening issue", issue.Title, i++, violation.Count);
+
+                await client.Issue.Comment.Create(policyRepo.Owner, policyRepo.Name, issue.Number, "The violation still exists.");
 
                 var issueUpdate = new IssueUpdate
                 {
                     State = ItemState.Open
                 };
-                await client.Issue.Update(orgName, policyRepo, oldIssue.Number, issueUpdate);
+                await client.Issue.Update(policyRepo.Owner, policyRepo.Name, issue.Number, issueUpdate);
             }
         }
 
-        private static async Task CloseIssuesAsync(GitHubClient client, string orgName, string policyRepo, IReadOnlyList<PolicyViolation> violations, IReadOnlyList<Issue> existingIssues)
+        private static async Task CloseIssuesAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<PolicyIssue> issues)
         {
-            var newFingerprints = new HashSet<Guid>(violations.Select(v => v.Fingerprint));
-
-            var solvedIssues = existingIssues.Where(issue => issue.State.Value == ItemState.Open)
-                                              .Select(issue => (Fingerprint: GetFingerprint(issue.Title), Issue: issue))
-                                              .Where(t => t.Fingerprint != null && !newFingerprints.Contains(t.Fingerprint.Value))
-                                              .Select(t => t.Issue)
-                                              .ToList();
-
             var i = 0;
 
-            foreach (var solvedIssue in solvedIssues)
+            foreach (var issue in issues)
             {
-                await client.PrintProgressAsync(Console.Out, "Closing issue", solvedIssue.Title, i++, solvedIssues.Count);
+                var gitHubIssue = issue.Issue;
 
-                await client.Issue.Comment.Create(orgName, policyRepo, solvedIssue.Number, "The violation was addressed.");
+                await client.PrintProgressAsync(Console.Out, "Closing issue", gitHubIssue.Title, i++, issues.Count);
+
+                await client.Issue.Comment.Create(policyRepo.Owner, policyRepo.Name, gitHubIssue.Number, "The violation was addressed.");
 
                 var issueUpdate = new IssueUpdate
                 {
                     State = ItemState.Closed
                 };
-                await client.Issue.Update(orgName, policyRepo, solvedIssue.Number, issueUpdate);
+                await client.Issue.Update(policyRepo.Owner, policyRepo.Name, gitHubIssue.Number, issueUpdate);
             }
         }
 
-        private static Guid? GetFingerprint(string issueTitle)
+        private struct RepoName
         {
-            var openParenthesis = issueTitle.LastIndexOf('(');
-            var closeParenthesis = issueTitle.LastIndexOf(')');
-
-            if (openParenthesis < 0 || closeParenthesis < 0 ||
-                openParenthesis >= closeParenthesis ||
-                closeParenthesis != issueTitle.Length - 1)
+            public RepoName(string owner, string name)
             {
-                return null;
+                Owner = owner;
+                Name = name;
             }
 
-            var length = closeParenthesis - openParenthesis + 1;
-            var text = issueTitle.Substring(openParenthesis + 1, length - 2);
-            if (Guid.TryParse(text, out var result))
-                return result;
+            public string Owner { get; }
+            public string Name { get; }
 
-            return null;
+            public static bool TryParse(string ownerSlashName, out RepoName result)
+            {
+                result = default;
+
+                if (string.IsNullOrEmpty(ownerSlashName))
+                    return true;
+
+                var slashPosition = ownerSlashName.IndexOf('/');
+                var slashPositionLast = ownerSlashName.LastIndexOf('/');
+
+                if (slashPosition != slashPositionLast)
+                    return false;
+
+                var owner = ownerSlashName.Substring(0, slashPosition).Trim();
+                var name = ownerSlashName.Substring(slashPosition + 1).Trim();
+                result = new RepoName(owner, name);
+                return true;
+            }
+
+            public override string ToString()
+            {
+                return $"{Owner}/{Name}";
+            }
+        }
+
+        private sealed class PolicyIssue
+        {
+            public PolicyIssue(Guid fingerprint, Issue issue)
+            {
+                Fingerprint = fingerprint;
+                Issue = issue;
+                IsOverride = issue.Labels.Any(l => l.Name == PolicyOverrideLabel);
+            }
+
+            public Guid Fingerprint { get; }
+            public Issue Issue { get; }
+            public bool IsOpen => Issue.State.Value == ItemState.Open;
+            public bool IsClosed => !IsOpen;
+            public bool IsOverride { get; }
+
+            public static PolicyIssue Create(Issue issue)
+            {
+                var fingerprint = GetFingerprint(issue.Title);
+                if (fingerprint == null)
+                    return null;
+
+                return new PolicyIssue(fingerprint.Value, issue);
+            }
+
+            private static Guid? GetFingerprint(string issueTitle)
+            {
+                var openParenthesis = issueTitle.LastIndexOf('(');
+                var closeParenthesis = issueTitle.LastIndexOf(')');
+
+                if (openParenthesis < 0 || closeParenthesis < 0 ||
+                    openParenthesis >= closeParenthesis ||
+                    closeParenthesis != issueTitle.Length - 1)
+                {
+                    return null;
+                }
+
+                var length = closeParenthesis - openParenthesis + 1;
+                var text = issueTitle.Substring(openParenthesis + 1, length - 2);
+                if (Guid.TryParse(text, out var result))
+                    return result;
+
+                return null;
+            }
+        }
+
+        private sealed class ViolationReport
+        {
+            public ViolationReport(IReadOnlyList<(PolicyViolation v, PolicyIssue)> existingViolations, IReadOnlyList<PolicyViolation> createdViolations, IReadOnlyList<(PolicyViolation, PolicyIssue)> reopenedViolations, IReadOnlyList<PolicyIssue> closedViolations)
+            {
+                ExistingViolations = existingViolations;
+                CreatedViolations = createdViolations;
+                ReopenedViolations = reopenedViolations;
+                ClosedViolations = closedViolations;
+            }
+
+            public IReadOnlyList<(PolicyViolation v, PolicyIssue)> ExistingViolations { get; }
+            public IReadOnlyList<PolicyViolation> CreatedViolations { get; }
+            public IReadOnlyList<(PolicyViolation, PolicyIssue)> ReopenedViolations { get; }
+            public IReadOnlyList<PolicyIssue> ClosedViolations { get; }
+
+            public IEnumerable<(string Status, PolicyViolation violation, PolicyIssue)> GetAll()
+            {
+                foreach (var (v, i) in ExistingViolations)
+                    yield return ("Existing", v, i);
+
+                foreach (var v in CreatedViolations)
+                    yield return ("New", v, null);
+
+                foreach (var (v, i) in ReopenedViolations)
+                    yield return ("Reopened", v, i);
+
+                foreach (var i in ClosedViolations)
+                    yield return ("Closed", null, i);
+            }
+
+            public static ViolationReport Create(IReadOnlyList<PolicyViolation> violations)
+            {
+                var existingViolations = Array.Empty<(PolicyViolation, PolicyIssue)>();
+                var reopenedViolations = Array.Empty<(PolicyViolation, PolicyIssue)>();
+                var closedViolations = Array.Empty<PolicyIssue>();
+                return new ViolationReport(existingViolations, violations, reopenedViolations, closedViolations);
+            }
+
+            public static ViolationReport Create(IReadOnlyList<PolicyViolation> violations, IReadOnlyList<PolicyIssue> issues)
+            {
+                var violationByFingerprint = violations.ToDictionary(v => v.Fingerprint);
+
+                var issueByFingerprint = issues.ToDictionary(i => i.Fingerprint);
+
+                var existingViolations = violations.Where(v => issueByFingerprint.ContainsKey(v.Fingerprint))
+                                                    .Select(v => (v, issueByFingerprint[v.Fingerprint]))
+                                                    .Where(t => !t.Item2.IsClosed || t.Item2.IsOverride)
+                                                    .ToArray();
+
+                var createdViolations = violations.Where(v => !issueByFingerprint.ContainsKey(v.Fingerprint))
+                                                   .ToArray();
+
+                var reopenedViolations = violations.Where(v => issueByFingerprint.ContainsKey(v.Fingerprint))
+                                                    .Select(v => (v, issueByFingerprint[v.Fingerprint]))
+                                                    .Where(t => t.Item2.IsClosed && !t.Item2.IsOverride)
+                                                    .ToArray();
+
+                var closedViolations = issues.Where(i => !violationByFingerprint.ContainsKey(i.Fingerprint))
+                                              .ToArray();
+
+                return new ViolationReport(existingViolations, createdViolations, reopenedViolations, closedViolations);
+            }
         }
     }
 }
