@@ -8,6 +8,11 @@ namespace Microsoft.DotnetOrg.Policies
 {
     public static class CachedOrgExtensions
     {
+        public static CachedTeam GetNonMicrosoftTeam(this CachedOrg org)
+        {
+            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "non-microsoft", StringComparison.OrdinalIgnoreCase));
+        }
+
         public static CachedTeam GetMicrosoftTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft", StringComparison.OrdinalIgnoreCase));
@@ -31,7 +36,8 @@ namespace Microsoft.DotnetOrg.Policies
         public static bool IsMarkerTeam(this CachedTeam team)
         {
             var org = team.Org;
-            return team == org.GetMicrosoftTeam() ||
+            return team == org.GetNonMicrosoftTeam() ||
+                   team == org.GetMicrosoftTeam() ||
                    team == org.GetMicrosoftVendorsTeam() ||
                    team == org.GetMicrosoftBotsTeam() ||
                    team == org.GetBotsTeam();
@@ -39,7 +45,12 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool IsOwnedByMicrosoft(this CachedRepo repo)
         {
+            var nonMicrosoftTeam = repo.Org.GetNonMicrosoftTeam();
             var microsoftTeam = repo.Org.GetMicrosoftTeam();
+
+            if (repo.Teams.Any(ta => ta.Team == nonMicrosoftTeam))
+                return false;
+
             return repo.Teams.Any(ta => ta.Team == microsoftTeam);
         }
 
