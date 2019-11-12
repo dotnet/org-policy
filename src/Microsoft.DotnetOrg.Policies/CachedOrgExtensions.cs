@@ -13,6 +13,11 @@ namespace Microsoft.DotnetOrg.Policies
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft", StringComparison.OrdinalIgnoreCase));
         }
 
+        public static CachedTeam GetMicrosoftVendorsTeam(this CachedOrg org)
+        {
+            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft-vendors", StringComparison.OrdinalIgnoreCase));
+        }
+
         public static CachedTeam GetMicrosoftBotsTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft-bots", StringComparison.OrdinalIgnoreCase));
@@ -27,6 +32,7 @@ namespace Microsoft.DotnetOrg.Policies
         {
             var org = team.Org;
             return team == org.GetMicrosoftTeam() ||
+                   team == org.GetMicrosoftVendorsTeam() ||
                    team == org.GetMicrosoftBotsTeam() ||
                    team == org.GetBotsTeam();
         }
@@ -60,8 +66,13 @@ namespace Microsoft.DotnetOrg.Policies
             if (user.MicrosoftInfo != null)
                 return true;
 
-            var microsoftBotsTeam = user.Org.GetMicrosoftBotsTeam();
-            return microsoftBotsTeam != null && microsoftBotsTeam.Members.Contains(user);
+            var teams = new[]
+            {
+                user.Org.GetMicrosoftVendorsTeam(),
+                user.Org.GetMicrosoftBotsTeam()
+            };
+
+            return teams.Any(t => t != null && t.Members.Contains(user));
         }
 
         public static string GetName(this CachedUser user)
