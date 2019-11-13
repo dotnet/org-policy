@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using Microsoft.DotnetOrg.GitHubCaching;
-
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR08_TooManyRepoAdmins : PolicyRule
@@ -19,8 +17,9 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
             foreach (var repo in context.Org.Repos)
             {
-                var numberOfAdmins = repo.Users.Count(ua => ua.Permission == CachedPermission.Admin &&
-                                                             !ua.User.IsOwner);
+                // Note: Even if we don't fallback to owners, we don't want owners to
+                //       to count towards the admin quota.
+                var numberOfAdmins = repo.GetAdministrators(fallbackToOwners: false).Count(u => !u.IsOwner);
 
                 if (numberOfAdmins > Threshold)
                 {

@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using Microsoft.DotnetOrg.GitHubCaching;
-
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR11_ReposShouldHaveSufficientNumberOfAdmins : PolicyRule
@@ -19,8 +17,8 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             foreach (var repo in context.Org.Repos)
             {
                 var isArchived = repo.IsArchived;
-                var numberOfAdmins = repo.Users.Count(ua => ua.Permission == CachedPermission.Admin &&
-                                                            !ua.Describe().IsOwner);
+                var numberOfAdmins = repo.GetAdministrators(fallbackToOwners: false).Count();
+
                 if (!isArchived && numberOfAdmins < Threshold)
                 {
                     yield return new PolicyViolation(

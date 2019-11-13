@@ -136,7 +136,7 @@ namespace Microsoft.DotnetOrg.Policies
             return org.Users.Where(u => u.IsOwner && !u.IsBot());
         }
 
-        public static IEnumerable<CachedUser> GetAdministrators(this CachedRepo repo)
+        public static IEnumerable<CachedUser> GetAdministrators(this CachedRepo repo, bool fallbackToOwners = true)
         {
             var result = repo.Users
                              .Where(ua => ua.Permission == CachedPermission.Admin &&
@@ -144,7 +144,7 @@ namespace Microsoft.DotnetOrg.Policies
                                           !ua.Describe().IsOwner)
                              .Select(ua => ua.User);
 
-            if (!result.Any())
+            if (fallbackToOwners && !result.Any())
                 return repo.Org.GetOwners();
 
             return result;
