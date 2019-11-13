@@ -15,7 +15,8 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static CachedTeam GetMicrosoftTeam(this CachedOrg org)
         {
-            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft", StringComparison.OrdinalIgnoreCase));
+            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft", StringComparison.OrdinalIgnoreCase)) ??
+                   org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft-everyone", StringComparison.OrdinalIgnoreCase));
         }
 
         public static CachedTeam GetMicrosoftVendorsTeam(this CachedOrg org)
