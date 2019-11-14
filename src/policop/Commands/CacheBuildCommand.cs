@@ -12,6 +12,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     internal sealed class CacheBuildCommand : ToolCommand
     {
         private string _token;
+        private string _orgName = "dotnet";
 
         public override string Name => "cache-build";
 
@@ -19,14 +20,14 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override void AddOptions(OptionSet options)
         {
-            options.Add("token=", "The Azure DevOps API {token} to be used.", v => _token = v);
+            options.AddOrg(v => _orgName = v)
+                   .Add("token=", "The Azure DevOps API {token} to be used.", v => _token = v);
         }
 
         public override Task ExecuteAsync()
         {
-            var orgName = "dotnet";
-            var remoteFileName = orgName + ".json";
-            var localFileName = CacheManager.GetOrgCache(orgName).FullName;
+            var remoteFileName = _orgName + ".json";
+            var localFileName = CacheManager.GetOrgCache(_orgName).FullName;
             return DownloadFileAsync(_token, remoteFileName, localFileName);
         }
 
