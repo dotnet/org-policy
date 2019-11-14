@@ -15,8 +15,7 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static CachedTeam GetMicrosoftTeam(this CachedOrg org)
         {
-            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft", StringComparison.OrdinalIgnoreCase)) ??
-                   org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft-everyone", StringComparison.OrdinalIgnoreCase));
+            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft", StringComparison.OrdinalIgnoreCase));
         }
 
         public static CachedTeam GetMicrosoftVendorsTeam(this CachedOrg org)
@@ -44,8 +43,19 @@ namespace Microsoft.DotnetOrg.Policies
                    team == org.GetBotsTeam();
         }
 
+        public static bool IsOwnedByMicrosoft(this CachedOrg org)
+        {
+            // dotnet and mono aren't fully owned by MS
+            return string.Equals(org.Name, "microsoft", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(org.Name, "aspnet", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(org.Name, "xamarin", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static bool IsOwnedByMicrosoft(this CachedRepo repo)
         {
+            if (repo.Org.IsOwnedByMicrosoft())
+                return true;
+
             var nonMicrosoftTeam = repo.Org.GetNonMicrosoftTeam();
             var microsoftTeam = repo.Org.GetMicrosoftTeam();
 
@@ -57,6 +67,9 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool IsOwnedByMicrosoft(this CachedTeam team)
         {
+            if (team.Org.IsOwnedByMicrosoft())
+                return true;
+
             var microsoftTeam = team.Org.GetMicrosoftTeam();
             return team.AncestorsAndSelf().Any(t => t == microsoftTeam);
         }
