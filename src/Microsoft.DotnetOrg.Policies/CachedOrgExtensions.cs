@@ -53,20 +53,23 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool IsOwnedByMicrosoft(this CachedRepo repo)
         {
-            if (repo.Org.IsOwnedByMicrosoft())
-                return true;
-
             var nonMicrosoftTeam = repo.Org.GetNonMicrosoftTeam();
-            var microsoftTeam = repo.Org.GetMicrosoftTeam();
-
             if (repo.Teams.Any(ta => ta.Team == nonMicrosoftTeam))
                 return false;
 
+            if (repo.Org.IsOwnedByMicrosoft())
+                return true;
+
+            var microsoftTeam = repo.Org.GetMicrosoftTeam();
             return repo.Teams.Any(ta => ta.Team == microsoftTeam);
         }
 
         public static bool IsOwnedByMicrosoft(this CachedTeam team)
         {
+            var nonMicrosoftTeam = team.Org.GetNonMicrosoftTeam();
+            if (team.AncestorsAndSelf().Any(t => t == nonMicrosoftTeam))
+                return false;
+
             if (team.Org.IsOwnedByMicrosoft())
                 return true;
 
