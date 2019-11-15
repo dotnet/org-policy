@@ -26,7 +26,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             var start = DateTimeOffset.Now;
 
             Log.WriteLine($"Start: {start}");
-            Log.WriteLine("Loading org data from GitHub...");
+            Log.WriteLine($"Downloading '{orgName}' org from GitHub...");
 
             var cachedOrg = new CachedOrg
             {
@@ -42,7 +42,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             var finish = DateTimeOffset.Now;
             var duration = finish - start;
-            Log.WriteLine($"Finished: {finish}. Took {duration}.");
+            Log.WriteLine($"Finished downloading org {orgName}: {finish}. Took {duration}.");
 
             cachedOrg.Initialize();
 
