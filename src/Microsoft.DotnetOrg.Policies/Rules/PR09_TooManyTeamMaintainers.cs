@@ -13,7 +13,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
-            const int Threshold = 4;
+            const int Threshold = 10;
 
             foreach (var team in context.Org.Teams)
             {
