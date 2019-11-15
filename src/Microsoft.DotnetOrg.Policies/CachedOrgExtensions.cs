@@ -143,6 +143,9 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool IsUnused(this CachedTeam team)
         {
+            if (team.IsMarkerTeam())
+                return false;
+
             var hasChildren = team.Children.Any();
             var hasRepos = team.Repos.Any();
             return !hasChildren && !hasRepos;
