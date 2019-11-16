@@ -12,7 +12,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     {
         public override string Name => "cache-info";
 
-        public override string Description => "Displays information about the cached data";
+        public override string Description => "Displays information about the cached orgs";
 
         public override void AddOptions(OptionSet options)
         {

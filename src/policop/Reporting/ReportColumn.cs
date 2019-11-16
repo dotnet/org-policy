@@ -39,22 +39,22 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 r => r.Name            ),
             new RepoReportColumn(
                 "r:private",
-                "Indicates whether the repos is private",
+                "Indicates whether the repo is private",
                 r => r.IsPrivate ? "Yes" : "No"
             ),
             new RepoReportColumn(
                 "r:archived",
-                "Indicates whether the repos is archived",
+                "Indicates whether the repo is archived",
                 r => r.IsArchived ? "Yes" : "No"
             ),
             new RepoReportColumn(
                 "r:last-push",
-                "Indicates when the repos was lates pushed to",
+                "The date when the repo was last pushed to",
                 r => r.LastPush.LocalDateTime.ToShortDateString()
             ),
             new RepoReportColumn(
                 "r:ms-owned",
-                "Indicates wether the repo is owned by Microsoft",
+                "Indicates whether the repo is owned by Microsoft",
                 r => r.IsOwnedByMicrosoft() ? "Yes" : "No"
             ),
             new RepoReportColumn(
@@ -64,7 +64,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             ),
             new RepoReportColumn(
                 "r:description",
-                "Description for the repo",
+                "Description of the repo",
                 r => r.Description
             ),
         };
@@ -83,22 +83,22 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             ),
             new TeamReportColumn(
                 "t:full-name",
-                "The full name of the team",
+                "The name of the team prefixed with all parent teams",
                 t => t.GetFullName()
             ),
             new TeamReportColumn(
                 "t:marker",
-                "Indicates wether the team is considered a marker team",
+                "Indicates whether the team is considered a marker team",
                 t => t.IsMarkerTeam() ? "Yes" : "No"
             ),
             new TeamReportColumn(
                 "t:ms-owned",
-                "Indicates wether the team is owned by Microsoft",
+                "Indicates whether the team is owned by Microsoft",
                 t => t.IsOwnedByMicrosoft() ? "Yes" : "No"
             ),
             new TeamReportColumn(
                 "t:ms-only-members",
-                "Indicates wether the team has only members from Microsoft",
+                "Indicates whether the team has only members from Microsoft",
                 t => t.Members.All(m => m.IsMicrosoftUser()) ? "Yes" : "No"
             ),
             new TeamReportColumn(
@@ -118,7 +118,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             ),
             new TeamReportColumn(
                 "t:is-unused",
-                "Indicates whether this team is used",
+                "Indicates whether this team has no child teams and isn't assigned to any repos",
                 t => t.IsUnused() ? "Yes" : "No"
             ),
         };
@@ -127,7 +127,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
         {
             new UserReportColumn(
                 "u:login",
-                "The GitHub login",
+                "The GitHub login of the user",
                 u => u.Login            ),
             new UserReportColumn(
                 "u:owner",
@@ -146,7 +146,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             ),
             new UserReportColumn(
                 "u:name",
-                "The name of the GitHub",
+                "The name of the user",
                 u => u.GetName()
             ),
             new UserReportColumn(

@@ -12,7 +12,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override string Name => "cache-export";
 
-        public override string Description => "Exports the cached org and link data to a directory";
+        public override string Description => "Exports the cached orgs to a directory";
 
         public override void AddOptions(OptionSet options)
         {
