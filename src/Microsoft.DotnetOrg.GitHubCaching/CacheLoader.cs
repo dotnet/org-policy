@@ -154,21 +154,28 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 };
                 cachedOrg.Repos.Add(cachedRepo);
 
-                foreach (var user in await GitHubClient.Repository.Collaborator.GetAll(repo.Owner.Login, repo.Name))
+                try
                 {
-                    var permission = user.Permissions.Admin
-                                        ? CachedPermission.Admin
-                                        : user.Permissions.Push
-                                            ? CachedPermission.Push
-                                            : CachedPermission.Pull;
-
-                    var cachedCollaborator = new CachedUserAccess
+                    foreach (var user in await GitHubClient.Repository.Collaborator.GetAll(repo.Owner.Login, repo.Name))
                     {
-                        RepoName = cachedRepo.Name,
-                        UserLogin = user.Login,
-                        Permission = permission
-                    };
-                    cachedOrg.Collaborators.Add(cachedCollaborator);
+                        var permission = user.Permissions.Admin
+                                            ? CachedPermission.Admin
+                                            : user.Permissions.Push
+                                                ? CachedPermission.Push
+                                                : CachedPermission.Pull;
+
+                        var cachedCollaborator = new CachedUserAccess
+                        {
+                            RepoName = cachedRepo.Name,
+                            UserLogin = user.Login,
+                            Permission = permission
+                        };
+                        cachedOrg.Collaborators.Add(cachedCollaborator);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.WriteLine($"error: {ex.Message}");
                 }
             }
         }
