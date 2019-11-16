@@ -118,16 +118,16 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
                 foreach (var repo in await GitHubClient.Organization.Team.GetAllRepositories(team.Id))
                 {
-                    var permissionLevel = repo.Permissions.Admin
-                                            ? CachedPermission.Admin
-                                            : repo.Permissions.Push
-                                                ? CachedPermission.Push
-                                                : CachedPermission.Pull;
+                    var permission = repo.Permissions.Admin
+                                        ? CachedPermission.Admin
+                                        : repo.Permissions.Push
+                                            ? CachedPermission.Push
+                                            : CachedPermission.Pull;
 
                     var cachedRepoAccess = new CachedTeamAccess
                     {
                         RepoName = repo.Name,
-                        Permission = permissionLevel
+                        Permission = permission
                     };
                     cachedTeam.Repos.Add(cachedRepoAccess);
                 }
