@@ -34,8 +34,11 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 var padding = TimeSpan.FromMinutes(2);
                 var waitTime = (rateLimit.Reset - DateTimeOffset.Now).Add(padding);
-                logWriter.WriteLine($"API rate limit exceeded. Waiting {waitTime.TotalMinutes:N0} minutes until it resets ({rateLimit.Reset.ToLocalTime():M/d/yyyy h:mm tt}).");
-                return Task.Delay(waitTime);
+                if (waitTime > TimeSpan.Zero)
+                {
+                    logWriter.WriteLine($"API rate limit exceeded. Waiting {waitTime.TotalMinutes:N0} minutes until it resets ({rateLimit.Reset.ToLocalTime():M/d/yyyy h:mm tt}).");
+                    return Task.Delay(waitTime);
+                }
             }
 
             return Task.CompletedTask;
