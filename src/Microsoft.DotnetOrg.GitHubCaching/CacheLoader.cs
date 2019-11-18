@@ -175,7 +175,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 }
                 catch (Exception ex)
                 {
-                    Log.WriteLine($"error: {ex.Message}");
+                    Log.WriteLine($"error: {ex.Message} ({ex.GetType().FullName})");
                 }
             }
         }
