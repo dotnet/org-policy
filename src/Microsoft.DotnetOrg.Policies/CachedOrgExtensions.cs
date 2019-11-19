@@ -48,7 +48,8 @@ namespace Microsoft.DotnetOrg.Policies
             // dotnet and mono aren't fully owned by MS
             return string.Equals(org.Name, "microsoft", StringComparison.OrdinalIgnoreCase) ||
                    string.Equals(org.Name, "aspnet", StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(org.Name, "xamarin", StringComparison.OrdinalIgnoreCase);
+                   string.Equals(org.Name, "xamarin", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(org.Name, "xamarinhq", StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool IsOwnedByMicrosoft(this CachedRepo repo)

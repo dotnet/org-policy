@@ -35,6 +35,7 @@ jobs:
         $(policop) cache-org --org dotnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
         $(policop) cache-org --org aspnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
         $(policop) cache-org --org xamarin --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
+        $(policop) cache-org --org xamarinhq --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
         $(policop) cache-org --org mono --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
         $(policop) cache-export -o $(cachePath)
         $(policop) check --org dotnet -o $(violationsPath) --policy-repo dotnet/org-policy-violations --update-issues --github-token $(GitHubToken)
