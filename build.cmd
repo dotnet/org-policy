@@ -29,5 +29,5 @@ set OutDir="%~dp0bin"
 
 if not exist %OutDir% mkdir %OutDir%
 pushd "%~dp0src"
-%MSBuild% /nologo /m /v:m /nr:false /bl:%OutDir%\msbuild.binlog /t:Restore /t:Build /p:OutDir=%OutDir% %*
+%MSBuild% /nologo /m /v:m /nr:false /bl:%~dp0\msbuild.binlog /t:Restore /t:Build /p:OutDir=%OutDir% %*
 popd
