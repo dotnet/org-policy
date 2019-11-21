@@ -13,12 +13,13 @@ variables:
   buildConfiguration: 'Release'
   sln: '$(Build.Repository.LocalPath)\src\Microsoft.DotnetOrg.Policies.sln'
   outDir: '$(Build.ArtifactStagingDirectory)\'
-  policop: '$(Build.ArtifactStagingDirectory)\policop.exe'
+  policop: '$(Pipeline.Workspace)\drop\policop.exe'
   cachePath: '$(Build.ArtifactStagingDirectory)'
   violationsPath: '$(Build.ArtifactStagingDirectory)\dotnet.csv'
 
 jobs:
-- job:
+- job: build
+  displayName: Build
   timeoutInMinutes: 240
   steps:
   - task: NuGetToolInstaller@1
@@ -29,17 +30,28 @@ jobs:
     inputs:
       solution: '$(sln)'
       msbuildArguments: '/p:OutDir=$(outDir)'
-  - task: CmdLine@2
-    inputs:
-      script: |
-        $(policop) cache-org --org dotnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
-        $(policop) cache-org --org aspnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
-        $(policop) cache-org --org xamarin --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
-        $(policop) cache-org --org xamarinhq --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
-        $(policop) cache-org --org mono --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
-        $(policop) cache-export -o $(cachePath)
-        $(policop) check --org dotnet -o $(violationsPath) --policy-repo dotnet/org-policy-violations --update-issues --github-token $(GitHubToken)
-        $(policop) cache-clear -f
-    condition: and(succeeded(), not(eq(variables['GitHubToken'], '')), not(eq(variables['OspoToken'], '')), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual')))
   - task: PublishBuildArtifacts@1
     condition: eq(variables['system.pullrequest.isfork'], false)
+- job:
+  dependsOn: build
+  displayName: Run policop
+  condition: and(not(eq(variables['GitHubToken'], '')), not(eq(variables['OspoToken'], '')), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual')))
+  steps:
+  - task: DownloadPipelineArtifact@2
+  - script: $(policop) cache-org --org dotnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
+    displayName: Cache dotnet
+  - script: $(policop) cache-org --org aspnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
+    displayName: Cache aspnet
+  - script: $(policop) cache-org --org xamarin --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
+    displayName: Cache xamarin
+  - script: $(policop) cache-org --org xamarinhq --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
+    displayName: Cache xamarinhq
+  - script: $(policop) cache-org --org mono --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
+    displayName: Cache mono
+  - script: $(policop) cache-export -o $(cachePath)
+    displayName: Export cache
+  - script: $(policop) check --org dotnet -o $(violationsPath) --policy-repo dotnet/org-policy-violations --update-issues --github-token $(GitHubToken)
+    displayName: Check dotnet
+  - script: $(policop) cache-clear -f
+    displayName: Clear org cache
+  - task: PublishBuildArtifacts@1
