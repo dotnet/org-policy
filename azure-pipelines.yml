@@ -20,7 +20,6 @@ variables:
 jobs:
 - job: build
   displayName: Build
-  timeoutInMinutes: 240
   steps:
   - task: NuGetToolInstaller@1
   - task: NuGetCommand@2
@@ -35,8 +34,17 @@ jobs:
 - job:
   dependsOn: build
   displayName: Run policop
-  condition: and(not(eq(variables['GitHubToken'], '')), not(eq(variables['OspoToken'], '')), or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual')))
+  timeoutInMinutes: 240
+  condition: |
+    and(
+      eq(variables['Build.DefinitionName'], 'dotnet-org-policy-check-run'),
+      or(
+        eq(variables['Build.Reason'], 'Schedule'),
+        eq(variables['Build.Reason'], 'Manual')
+      )
+    )
   steps:
+  - checkout: none
   - task: DownloadPipelineArtifact@2
   - script: $(policop) cache-org --org dotnet --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
     displayName: Cache dotnet
