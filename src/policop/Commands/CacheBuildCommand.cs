@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +13,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     internal sealed class CacheBuildCommand : ToolCommand
     {
         private string _token;
-        private string _orgName = "dotnet";
+        private string _orgName;
+        private string _buildId;
 
         public override string Name => "cache-build";
 
@@ -21,43 +23,58 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         public override void AddOptions(OptionSet options)
         {
             options.AddOrg(v => _orgName = v)
-                   .Add("token=", "The Azure DevOps API {token} to be used.", v => _token = v);
+                   .Add("token=", "The Azure DevOps API {token} to be used.", v => _token = v)
+                   .Add("build=", "The (optional) build {id} to use.", v => _buildId = v);
         }
 
-        public override Task ExecuteAsync()
+        public override async Task ExecuteAsync()
         {
-            var remoteFileName = _orgName + ".json";
-            var localFileName = CacheManager.GetOrgCache(_orgName).FullName;
-            return DownloadFileAsync(_token, remoteFileName, localFileName);
-        }
+            var orgNames = !string.IsNullOrEmpty(_orgName)
+                ? new[] { _orgName }
+                : CacheManager.GetOrgCaches().Select(c => Path.GetFileNameWithoutExtension(c.Name)).ToArray();
 
-        public static async Task DownloadFileAsync(string token, string remoteFileName, string localFileName)
-        {
-            var client = await DevOpsClientFactory.CreateAsync("dnceng", "internal", token);
-
+            var client = await DevOpsClientFactory.CreateAsync("dnceng", "internal", _token);
             var builds = await client.GetBuildsAsync("653", resultFilter: "succeeded", reasonFilter: "schedule,manual");
-            var latestBuild = builds.FirstOrDefault();
+            var build = string.IsNullOrEmpty(_buildId)
+                ? builds.FirstOrDefault()
+                : builds.FirstOrDefault(b => b.Id.ToString() == _buildId);
 
-            if (latestBuild == null)
+            if (build == null)
             {
-                Console.Error.WriteLine($"warn: can't find any suitable build on Azure DevOps");
+                if (_buildId == null)
+                    Console.Error.WriteLine("error: no builds found");
+                else
+                    Console.Error.WriteLine($"error: can't find build {_buildId}");
+
                 return;
             }
 
-            try
+            foreach (var orgName in orgNames)
             {
-                using (var remoteStream = await client.GetArtifactFileAsync(latestBuild.Id, "drop", remoteFileName))
-                {
-                    var directory = Path.GetDirectoryName(localFileName);
-                    Directory.CreateDirectory(directory);
+                var remoteFileName = orgName + ".json";
+                var localFileName = CacheManager.GetOrgCache(orgName).FullName;
 
-                    using (var localStream = File.Create(localFileName))
-                        await remoteStream.CopyToAsync(localStream);
+                try
+                {
+                    await DownloadArtifactFileAsync(client, build, remoteFileName, localFileName);
+                    Console.Error.WriteLine($"{orgName} -> {localFileName}");
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"error: can't download org data for {orgName}: {ex.Message}");
                 }
             }
-            catch (Exception ex)
+        }
+
+        private static async Task DownloadArtifactFileAsync(DevOpsClient client, DevOpsBuild build, string remoteFileName, string localFileName)
+        {
+            using (var remoteStream = await client.GetArtifactFileAsync(build.Id, "drop", remoteFileName))
             {
-                Console.Error.WriteLine($"error: can't download {remoteFileName}: {ex.Message}");
+                var directory = Path.GetDirectoryName(localFileName);
+                Directory.CreateDirectory(directory);
+
+                using (var localStream = File.Create(localFileName))
+                    await remoteStream.CopyToAsync(localStream);
             }
         }
     }
