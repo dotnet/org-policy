@@ -39,9 +39,6 @@ jobs:
         eq(variables['Build.Reason'], 'Manual')
       )
     )
-  env:
-    GITHUBTOKEN: $(GitHubToken)
-    OSPOTOKEN: $(OspoToken)
   strategy:
     matrix:
       aspnet:
@@ -64,8 +61,13 @@ jobs:
   - task: DownloadPipelineArtifact@2
   - script: $(policop) cache-org --org $(orgName) --with-ms-links
     displayName: Cache org
+    env:
+      GITHUBTOKEN: $(GitHubToken)
+      OSPOTOKEN: $(OspoToken)
   - script: $(policop) check --org $(orgName) $(checkArgs) -o "$(outDir)\$(orgName).csv"
     displayName: Check org
+    env:
+      GITHUBTOKEN: $(GitHubToken)
   - script: $(policop) cache-export -o $(outDir)
     displayName: Export org
   - script: $(policop) cache-clear -f
