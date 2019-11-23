@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,14 +21,26 @@ namespace Microsoft.DotnetOrg.Ospo
         {
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
-                return File.ReadAllText(tokenFileName).Trim();
+            {
+                var encryptedBytesText = File.ReadAllText(tokenFileName).Trim();
+                var encryptedBytes = Convert.FromBase64String(encryptedBytesText);
+                var textBytes = ProtectedData.Unprotect(encryptedBytes, null, DataProtectionScope.CurrentUser);
+                var text = Encoding.UTF8.GetString(textBytes);
+                return text;
+            }
+            else
+            {
+                var token = await CreateTokenAsync();
+                var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);
+                Directory.CreateDirectory(tokenFileDirectory);
 
-            var token = await CreateTokenAsync();
-            var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);
-            Directory.CreateDirectory(tokenFileDirectory);
-            File.WriteAllText(tokenFileName, token);
+                var textBytes = Encoding.UTF8.GetBytes(token);
+                var encryptedBytes = ProtectedData.Protect(textBytes, null, DataProtectionScope.CurrentUser);
+                var encryptedBytesText = Convert.ToBase64String(encryptedBytes);                
+                File.WriteAllText(tokenFileName, encryptedBytesText);
 
-            return token;
+                return token;
+            }
         }
 
         private static string GetExeName()

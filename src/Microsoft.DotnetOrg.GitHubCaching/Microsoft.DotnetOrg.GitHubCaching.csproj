@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Octokit" Version="0.34.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.6.0" />
     <PackageReference Include="System.Text.Json" Version="4.6.0" />
   </ItemGroup>
 
