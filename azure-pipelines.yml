@@ -15,10 +15,6 @@ variables:
   outDir: $(Build.ArtifactStagingDirectory)\
   policop: $(Pipeline.Workspace)\drop\policop.exe
 
-env:
-  GITHUBTOKEN: $(GitHubToken)
-  OSPOTOKEN: $(OspoToken)
-
 jobs:
 - job: Build
   steps:
@@ -43,6 +39,9 @@ jobs:
         eq(variables['Build.Reason'], 'Manual')
       )
     )
+  env:
+    GITHUBTOKEN: $(GitHubToken)
+    OSPOTOKEN: $(OspoToken)
   strategy:
     matrix:
       aspnet:
