@@ -12,7 +12,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class CacheBuildCommand : ToolCommand
     {
-        private string _token;
         private string _orgName;
         private string _buildId;
 
@@ -23,7 +22,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         public override void AddOptions(OptionSet options)
         {
             options.AddOrg(v => _orgName = v)
-                   .Add("token=", "The Azure DevOps API {token} to be used.", v => _token = v)
                    .Add("build=", "The (optional) build {id} to use.", v => _buildId = v);
         }
 
@@ -33,7 +31,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 ? new[] { _orgName }
                 : CacheManager.GetOrgCaches().Select(c => Path.GetFileNameWithoutExtension(c.Name)).ToArray();
 
-            var client = await DevOpsClientFactory.CreateAsync("dnceng", "internal", _token);
+            var client = await DevOpsClientFactory.CreateAsync("dnceng", "internal");
             var builds = await client.GetBuildsAsync("653", resultFilter: "succeeded", reasonFilter: "schedule,manual");
             var build = string.IsNullOrEmpty(_buildId)
                 ? builds.FirstOrDefault()

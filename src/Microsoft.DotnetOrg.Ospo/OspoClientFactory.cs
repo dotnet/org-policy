@@ -19,6 +19,10 @@ namespace Microsoft.DotnetOrg.Ospo
 
         private static async Task<string> GetTokenAsync()
         {
+            var environmentToken = Environment.GetEnvironmentVariable("OSPOTOKEN");
+            if (!string.IsNullOrEmpty(environmentToken))
+                return environmentToken;
+
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
             {

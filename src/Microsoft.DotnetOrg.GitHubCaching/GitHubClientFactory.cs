@@ -25,6 +25,10 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         private static async Task<string> GetTokenAsync(string scopes)
         {
+            var environmentToken = Environment.GetEnvironmentVariable("GITHUBTOKEN");
+            if (!string.IsNullOrEmpty(environmentToken))
+                return environmentToken;
+
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
             {

@@ -19,6 +19,10 @@ namespace Microsoft.DotnetOrg.DevOps
 
         private static async Task<string> GetTokenAsync(string organization, string project)
         {
+            var environmentToken = Environment.GetEnvironmentVariable("DEVOPSTOKEN");
+            if (!string.IsNullOrEmpty(environmentToken))
+                return environmentToken;
+
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
             {

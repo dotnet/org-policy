@@ -17,7 +17,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     {
         private string _orgName;
         private string _outputFileName;
-        private string _gitHubToken;
         private string _policyRepo;
         private bool _updateIssues;
         private bool _viewInExcel;
@@ -31,7 +30,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             options.AddOrg(v => _orgName = v)
                    .Add("o|output=", "The {path} where the output .csv file should be written to.", v => _outputFileName = v)
                    .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
-                   .Add("github-token=", "The GitHub API {token} to be used.", v => _gitHubToken = v)
                    .Add("policy-repo=", "The GitHub {repo} policy violations should be filed in.", v => _policyRepo = v)
                    .Add("update-issues", "Will create, repopen and closed policy violations.", v => _updateIssues = true);
         }
@@ -72,7 +70,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             var gitHubClient = string.IsNullOrEmpty(_policyRepo)
                                 ? null
-                                : await GitHubClientFactory.CreateAsync(_gitHubToken);
+                                : await GitHubClientFactory.CreateAsync();
 
             var context = new PolicyAnalysisContext(org);
             var violations = PolicyRunner.Run(context);

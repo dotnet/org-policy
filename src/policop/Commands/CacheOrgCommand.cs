@@ -11,8 +11,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     internal sealed class CacheOrgCommand : ToolCommand
     {
         private string _orgName;
-        private string _gitHubToken;
-        private string _ospoToken;
         private bool _includeLinks;
 
         public override string Name => "cache-org";
@@ -22,15 +20,19 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         public override void AddOptions(OptionSet options)
         {
             options.AddOrg(v => _orgName = v)
-                   .Add("with-ms-links", "Include linking information to Microsoft users", v => _includeLinks = true)
-                   .Add("github-token=", "The GitHub {token} to be used.", v => _gitHubToken = v)
-                   .Add("ospo-token=", "The Microsoft Open Source Program Office {token} to be used.", v => _ospoToken = v);
+                   .Add("with-ms-links", "Include linking information to Microsoft users", v => _includeLinks = true);
         }
 
         public override async Task ExecuteAsync()
         {
-            var githubClient = await GitHubClientFactory.CreateAsync(_gitHubToken);
-            var ospoClient = !_includeLinks ? null : await OspoClientFactory.CreateAsync(_ospoToken);
+            if (string.IsNullOrEmpty(_orgName))
+            {
+                Console.Error.WriteLine($"error: --org must be specified");
+                return;
+            }
+
+            var githubClient = await GitHubClientFactory.CreateAsync();
+            var ospoClient = !_includeLinks ? null : await OspoClientFactory.CreateAsync();
             var result = await CachedOrg.LoadAsync(githubClient, _orgName, Console.Out, ospoClient);
             await CacheManager.StoreOrgAsync(result);
         }

@@ -59,9 +59,9 @@ jobs:
   steps:
   - checkout: none
   - task: DownloadPipelineArtifact@2
-  - script: $(policop) cache-org --org $(orgName) --with-ms-links --github-token $(GitHubToken) --ospo-token $(OspoToken)
+  - script: $(policop) cache-org --org $(orgName) --with-ms-links
     displayName: Cache org
-  - script: $(policop) check --org $(orgName) --github-token $(GitHubToken) $(checkArgs) -o "$(outDir)\$(orgName).csv"
+  - script: $(policop) check --org $(orgName) $(checkArgs) -o "$(outDir)\$(orgName).csv"
     displayName: Check org
   - script: $(policop) cache-export -o $(outDir)
     displayName: Export org
