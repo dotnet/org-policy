@@ -63,7 +63,7 @@ jobs:
     displayName: Cache org
   - script: $(policop) check --org $(orgName) --github-token $(GitHubToken) $(checkArgs) -o "$(outDir)\$(orgName).csv"
     displayName: Check org
-  - script: $(policop) cache-export -o "$(outDir)\$(orgName).json"
+  - script: $(policop) cache-export -o $(outDir)
     displayName: Export org
   - script: $(policop) cache-clear -f
     displayName: Clear org
