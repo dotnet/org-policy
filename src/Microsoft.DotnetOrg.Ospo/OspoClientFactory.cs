@@ -40,7 +40,7 @@ namespace Microsoft.DotnetOrg.Ospo
 
                 var textBytes = Encoding.UTF8.GetBytes(token);
                 var encryptedBytes = ProtectedData.Protect(textBytes, null, DataProtectionScope.CurrentUser);
-                var encryptedBytesText = Convert.ToBase64String(encryptedBytes);                
+                var encryptedBytesText = Convert.ToBase64String(encryptedBytes);
                 File.WriteAllText(tokenFileName, encryptedBytesText);
 
                 return token;
