@@ -74,7 +74,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     foreach (var userAccess in repo.Users)
                     {
                         var via = userAccess.Describe().ToString();
-                        var userUrl = CachedOrg.GetUserUrl(userAccess.UserLogin);
+                        var userUrl = userAccess.User.Url;
                         var permissions = userAccess.Permission.ToString().ToLower();
 
                         writer.WriteHyperlink(repo.Url, repo.Name, _viewInExcel);

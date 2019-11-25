@@ -123,9 +123,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return $"https://github.com/orgs/{orgName}/teams/{teamNameFixed}";
         }
 
-        public static string GetUserUrl(string login)
+        public static string GetUserUrl(string login, string orgName)
         {
-            return $"https://github.com/{login}";
+            return $"https://github.com/orgs/{orgName}/people/{login}";
         }
 
         public static Task<CachedOrg> LoadAsync(GitHubClient gitHubClient,
