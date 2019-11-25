@@ -43,13 +43,13 @@ jobs:
     matrix:
       aspnet:
         orgName: aspnet
-        checkArgs:
+        checkArgs: --policy-repo dotnet/aspnet-policy-violations --update-issues
       dotnet:
         orgName: dotnet
         checkArgs: --policy-repo dotnet/org-policy-violations --update-issues --assign-issues
       mono:
         orgName: mono
-        checkArgs:
+        checkArgs: --policy-repo dotnet/mono-policy-violations --update-issues
       xamarin:
         orgName: xamarin
         checkArgs:
