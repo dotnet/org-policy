@@ -46,7 +46,7 @@ jobs:
         checkArgs:
       dotnet:
         orgName: dotnet
-        checkArgs: --policy-repo dotnet/org-policy-violations --update-issues
+        checkArgs: --policy-repo dotnet/org-policy-violations --update-issues --assign-issues
       mono:
         orgName: mono
         checkArgs:

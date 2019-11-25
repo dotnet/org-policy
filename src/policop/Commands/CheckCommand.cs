@@ -19,6 +19,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private string _outputFileName;
         private string _policyRepo;
         private bool _updateIssues;
+        private bool _assignIssues;
         private bool _viewInExcel;
 
         public override string Name => "check";
@@ -31,7 +32,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("o|output=", "The {path} where the output .csv file should be written to.", v => _outputFileName = v)
                    .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
                    .Add("policy-repo=", "The GitHub {repo} policy violations should be filed in.", v => _policyRepo = v)
-                   .Add("update-issues", "Will create, repopen and closed policy violations.", v => _updateIssues = true);
+                   .Add("update-issues", "Will create, repopen and closed policy violations.", v => _updateIssues = true)
+                   .Add("assign-issues", "If specified, it will assign issues as well", v => _assignIssues = true);
         }
 
         public override async Task ExecuteAsync()
@@ -62,6 +64,12 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
+            if (_assignIssues && !_updateIssues)
+            {
+                Console.Error.WriteLine($"error: --assign-issues is only valid if --update-issues is specified too.");
+                return;
+            }
+
             if (!RepoName.TryParse(_policyRepo, out var policyRepo))
             {
                 Console.Error.WriteLine($"error: policy repo must be of form owner/name but was '{_policyRepo}'.");
@@ -82,7 +90,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             SaveVioloations(_orgName, _outputFileName, _viewInExcel, report);
 
             if (_updateIssues)
-                await UpdateIssuesAsync(gitHubClient, policyRepo, report);
+                await UpdateIssuesAsync(gitHubClient, policyRepo, report, _assignIssues);
 
             Console.WriteLine($"  Existing violations: {report.ExistingViolations.Count:N0}");
             Console.WriteLine($"Overridden violations: {report.OverriddenViolations.Count:N0}");
@@ -162,10 +170,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                   .ToArray();
         }
 
-        private static async Task UpdateIssuesAsync(GitHubClient client, RepoName policyRepo, ViolationReport report)
+        private static async Task UpdateIssuesAsync(GitHubClient client, RepoName policyRepo, ViolationReport report, bool assignIssues)
         {
             await CreateLabelsAsync(client, policyRepo, report.CreatedViolations);
-            await CreateIssuesAsync(client, policyRepo, report.CreatedViolations);
+            await CreateIssuesAsync(client, policyRepo, report.CreatedViolations, assignIssues);
             await ReopenIssuesAsync(client, policyRepo, report.ReopenedViolations);
             await CloseIssuesAsync(client, policyRepo, report.ClosedViolations);
         }
@@ -217,10 +225,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
         }
 
-        private static async Task CreateIssuesAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<PolicyViolation> violations)
+        private static async Task CreateIssuesAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<PolicyViolation> violations, bool assignIssues)
         {
-            var allAssigness = violations.SelectMany(v => v.Assignees).ToHashSet();
-            await GrantReadAccessAsync(client, policyRepo, allAssigness);
+            if (assignIssues)
+            {
+                var allAssigness = violations.SelectMany(v => v.Assignees).ToHashSet();
+                await GrantReadAccessAsync(client, policyRepo, allAssigness);
+            }
 
             var i = 0;
 
@@ -241,8 +252,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     }
                 };
 
-                foreach (var assignee in violation.Assignees)
-                    newIssue.Assignees.Add(assignee.Login);
+                if (assignIssues)
+                {
+                    foreach (var assignee in violation.Assignees)
+                        newIssue.Assignees.Add(assignee.Login);
+                }
 
             retry:
                 try
