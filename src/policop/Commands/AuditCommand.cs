@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 
 using Microsoft.Csv;
-using Microsoft.DotnetOrg.GitHubCaching;
 
 using Mono.Options;
 
