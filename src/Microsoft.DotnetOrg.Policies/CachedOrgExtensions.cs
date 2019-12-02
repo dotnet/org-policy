@@ -8,6 +8,11 @@ namespace Microsoft.DotnetOrg.Policies
 {
     public static class CachedOrgExtensions
     {
+        public static CachedTeam GetExternalPartnerTeam(this CachedOrg org)
+        {
+            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "external-partner", StringComparison.OrdinalIgnoreCase));
+        }
+
         public static CachedTeam GetNonMicrosoftTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "non-microsoft", StringComparison.OrdinalIgnoreCase));
@@ -36,7 +41,8 @@ namespace Microsoft.DotnetOrg.Policies
         public static bool IsMarkerTeam(this CachedTeam team)
         {
             var org = team.Org;
-            return team == org.GetNonMicrosoftTeam() ||
+            return team == org.GetExternalPartnerTeam() || 
+                   team == org.GetNonMicrosoftTeam() ||
                    team == org.GetMicrosoftTeam() ||
                    team == org.GetMicrosoftVendorsTeam() ||
                    team == org.GetMicrosoftBotsTeam() ||
@@ -145,6 +151,19 @@ namespace Microsoft.DotnetOrg.Policies
         public static bool IsUnused(this CachedTeam team)
         {
             if (team.IsMarkerTeam())
+                return false;
+
+            // If a team is marked as being an external partner team, we don't consider
+            // it unused. The rationale is that:
+            //
+            //    (1) organizing the lists of external poeple is work that we don't want
+            //        to redo
+            //
+            //    (2) these teams are often used only temporary in order to grant access
+            //        to early design documents or previews
+            //
+            var externalPartnerTeam = team.Org.GetExternalPartnerTeam();
+            if (externalPartnerTeam != null && team.AncestorsAndSelf().Contains(externalPartnerTeam))
                 return false;
 
             var hasChildren = team.Children.Any();
