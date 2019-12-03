@@ -41,7 +41,7 @@ namespace Microsoft.DotnetOrg.Policies
         public static bool IsMarkerTeam(this CachedTeam team)
         {
             var org = team.Org;
-            return team == org.GetExternalPartnerTeam() || 
+            return team == org.GetExternalPartnerTeam() ||
                    team == org.GetNonMicrosoftTeam() ||
                    team == org.GetMicrosoftTeam() ||
                    team == org.GetMicrosoftVendorsTeam() ||
@@ -107,7 +107,7 @@ namespace Microsoft.DotnetOrg.Policies
                 user.Org.GetMicrosoftBotsTeam()
             };
 
-            return teams.Any(t => t != null && t.Members.Contains(user));
+            return teams.Any(t => t != null && t.EffectiveMembers.Contains(user));
         }
 
         public static string GetName(this CachedUser user)
@@ -140,7 +140,7 @@ namespace Microsoft.DotnetOrg.Policies
         public static bool IsBot(this CachedUser user)
         {
             var team = user.Org.GetBotsTeam();
-            return team != null && team.Members.Contains(user);
+            return team != null && team.EffectiveMembers.Contains(user);
         }
 
         public static bool IsPotentiallyABot(this CachedUser user)
@@ -178,7 +178,7 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static IEnumerable<CachedUser> GetAdministrators(this CachedRepo repo, bool fallbackToOwners = true)
         {
-            var result = repo.Users
+            var result = repo.EffectiveUsers
                              .Where(ua => ua.Permission == CachedPermission.Admin &&
                                           !ua.User.IsBot() &&
                                           !ua.Describe().IsOwner)

@@ -1,23 +1,28 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.DotnetOrg.Ospo;
 
-using Octokit;
+using Octokit.GraphQL;
+using Octokit.GraphQL.Model;
+
+using static Octokit.GraphQL.Variable;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
     internal sealed class CacheLoader
     {
-        public CacheLoader(GitHubClient gitHubClient, TextWriter logWriter, OspoClient ospoClient)
+        public CacheLoader(Connection connection, TextWriter logWriter, OspoClient ospoClient)
         {
-            GitHubClient = gitHubClient;
+            Connection = connection;
             Log = logWriter ?? Console.Out;
             OspoClient = ospoClient;
         }
 
-        public GitHubClient GitHubClient { get; }
+        public Connection Connection { get; }
         public TextWriter Log { get; }
         public OspoClient OspoClient { get; }
 
@@ -34,11 +39,58 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 Name = orgName
             };
 
-            await LoadMembersAsync(cachedOrg);
-            await LoadTeamsAsync(cachedOrg);
-            await LoadReposAndCollaboratorsAsync(cachedOrg);
-            await LoadExternalUsersAsync(cachedOrg);
-            await LoadUsersDetailsAsync(cachedOrg);
+            Log.WriteLine($"Loading members...");
+            var members = await GetCachedMembersAsync(orgName);
+            cachedOrg.Users.AddRange(members);
+
+            Log.WriteLine($"Loading repos...");
+            var repos = await GetCachedReposAsync(orgName);
+            cachedOrg.Repos.AddRange(repos);
+
+            Log.WriteLine($"Loading teams...");
+            var teams = await GetCachedTeamsAsync(orgName);
+            cachedOrg.Teams.AddRange(teams);
+
+            var repoNames = repos.Where(r => !r.IsArchived).Select(r => r.Name).ToArray();
+            var teamBySlug = teams.ToDictionary(t => t.Slug);
+            var teamSlugs = teamBySlug.Keys;
+
+            Log.WriteLine($"Loading team members...");
+            var teamMembers = await GetCachedTeamMembersAsync(orgName, teamSlugs);
+
+            foreach (var teamMember in teamMembers)
+            {
+                var team = teamBySlug[teamMember.TeamSlug];
+
+                team.MemberLogins.Add(teamMember.UserLogin);
+                if (teamMember.IsMaintainer)
+                    team.MaintainerLogins.Add(teamMember.UserLogin);
+            }
+
+            Log.WriteLine($"Loading externals...");
+            var externals = await GetCachedExternalsAsync(orgName, repoNames);
+            cachedOrg.Users.AddRange(externals);
+
+            Log.WriteLine($"Loading user access...");
+            var userAccess = await GetCachedUserAccessAsync(orgName, repoNames);
+            cachedOrg.Collaborators.AddRange(userAccess);
+
+            Log.WriteLine($"Loading team access...");
+            var teamAccesses = await GetCachedTeamAccessAsync(orgName, teamSlugs);
+
+            foreach (var teamAccess in teamAccesses)
+            {
+                var team = teamBySlug[teamAccess.TeamSlug];
+                team.Repos.Add(teamAccess);
+            }
+
+            var linkSet = await LoadLinkSetAsync();
+
+            foreach (var user in cachedOrg.Users)
+            {
+                if (linkSet.LinkByLogin.TryGetValue(user.Login, out var link))
+                    user.MicrosoftInfo = link.MicrosoftInfo;
+            }
 
             var finish = DateTimeOffset.Now;
             var duration = finish - start;
@@ -49,174 +101,6 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return cachedOrg;
         }
 
-        private async Task LoadMembersAsync(CachedOrg cachedOrg)
-        {
-            await GitHubClient.PrintProgressAsync(Log, "Loading owner list");
-            var owners = await GitHubClient.Organization.Member.GetAll(cachedOrg.Name, OrganizationMembersFilter.All, OrganizationMembersRole.Admin, ApiOptions.None);
-
-            await GitHubClient.PrintProgressAsync(Log, "Loading non-owner list");
-            var nonOwners = await GitHubClient.Organization.Member.GetAll(cachedOrg.Name, OrganizationMembersFilter.All, OrganizationMembersRole.Member, ApiOptions.None);
-
-            foreach (var owner in owners)
-            {
-                var member = new CachedUser
-                {
-                    Login = owner.Login,
-                    IsMember = true,
-                    IsOwner = true
-                };
-                cachedOrg.Users.Add(member);
-            }
-
-            foreach (var nonOwner in nonOwners)
-            {
-                var member = new CachedUser
-                {
-                    Login = nonOwner.Login,
-                    IsMember = true,
-                    IsOwner = false
-                };
-                cachedOrg.Users.Add(member);
-            }
-        }
-
-        private async Task LoadTeamsAsync(CachedOrg cachedOrg)
-        {
-            await GitHubClient.PrintProgressAsync(Log, "Loading team list");
-            var teams = await GitHubClient.Organization.Team.GetAll(cachedOrg.Name);
-            var i = 0;
-
-            foreach (var team in teams)
-            {
-                await GitHubClient.PrintProgressAsync(Log, "Loading team", team.Name, i++, teams.Count);
-
-                var cachedTeam = new CachedTeam
-                {
-                    Id = team.Id.ToString(),
-                    ParentId = team.Parent?.Id.ToString(),
-                    Name = team.Name,
-                    Description = team.Description,
-                    IsSecret = team.Privacy.Value == TeamPrivacy.Secret
-                };
-                cachedOrg.Teams.Add(cachedTeam);
-
-                var maintainerRequest = new TeamMembersRequest(TeamRoleFilter.Maintainer);
-                var maintainers = await GitHubClient.Organization.Team.GetAllMembers(team.Id, maintainerRequest);
-
-                foreach (var maintainer in maintainers)
-                    cachedTeam.MaintainerLogins.Add(maintainer.Login);
-
-                await GitHubClient.WaitForEnoughQuotaAsync(Log);
-
-                var memberRequest = new TeamMembersRequest(TeamRoleFilter.All);
-                var members = await GitHubClient.Organization.Team.GetAllMembers(team.Id, memberRequest);
-
-                foreach (var member in members)
-                    cachedTeam.MemberLogins.Add(member.Login);
-
-                await GitHubClient.WaitForEnoughQuotaAsync(Log);
-
-                foreach (var repo in await GitHubClient.Organization.Team.GetAllRepositories(team.Id))
-                {
-                    var permission = repo.Permissions.Admin
-                                        ? CachedPermission.Admin
-                                        : repo.Permissions.Push
-                                            ? CachedPermission.Push
-                                            : CachedPermission.Pull;
-
-                    var cachedRepoAccess = new CachedTeamAccess
-                    {
-                        RepoName = repo.Name,
-                        Permission = permission
-                    };
-                    cachedTeam.Repos.Add(cachedRepoAccess);
-                }
-            }
-        }
-
-        private async Task LoadReposAndCollaboratorsAsync(CachedOrg cachedOrg)
-        {
-            await GitHubClient.PrintProgressAsync(Log, "Loading repo list");
-            var repos = await GitHubClient.Repository.GetAllForOrg(cachedOrg.Name);
-            var i = 0;
-
-            foreach (var repo in repos)
-            {
-                await GitHubClient.PrintProgressAsync(Log, "Loading repo", repo.FullName, i++, repos.Count);
-
-                var cachedRepo = new CachedRepo
-                {
-                    Name = repo.Name,
-                    IsPrivate = repo.Private,
-                    IsArchived = repo.Archived,
-                    LastPush = repo.PushedAt ?? repo.CreatedAt,
-                    Description = repo.Description
-                };
-                cachedOrg.Repos.Add(cachedRepo);
-
-                try
-                {
-                    foreach (var user in await GitHubClient.Repository.Collaborator.GetAll(repo.Owner.Login, repo.Name))
-                    {
-                        var permission = user.Permissions.Admin
-                                            ? CachedPermission.Admin
-                                            : user.Permissions.Push
-                                                ? CachedPermission.Push
-                                                : CachedPermission.Pull;
-
-                        var cachedCollaborator = new CachedUserAccess
-                        {
-                            RepoName = cachedRepo.Name,
-                            UserLogin = user.Login,
-                            Permission = permission
-                        };
-                        cachedOrg.Collaborators.Add(cachedCollaborator);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.WriteLine($"error: {ex.Message} ({ex.GetType().FullName})");
-                }
-            }
-        }
-
-        private async Task LoadExternalUsersAsync(CachedOrg cachedOrg)
-        {
-            await GitHubClient.PrintProgressAsync(Log, "Loading outside collaborators");
-            var outsideCollaborators = await GitHubClient.Organization.OutsideCollaborator.GetAll(cachedOrg.Name, OrganizationMembersFilter.All, ApiOptions.None);
-
-            foreach (var user in outsideCollaborators)
-            {
-                var cachedUser = new CachedUser
-                {
-                    Login = user.Login,
-                    IsOwner = false,
-                    IsMember = false
-                };
-                cachedOrg.Users.Add(cachedUser);
-            }
-        }
-
-        private async Task LoadUsersDetailsAsync(CachedOrg cachedOrg)
-        {
-            var linkSet = await LoadLinkSetAsync();
-
-            var i = 0;
-
-            foreach (var cachedUser in cachedOrg.Users)
-            {
-                await GitHubClient.PrintProgressAsync(Log, "Loading user details", cachedUser.Login, i++, cachedOrg.Users.Count);
-
-                var user = await GitHubClient.User.Get(cachedUser.Login);
-                cachedUser.Name = user.Name;
-                cachedUser.Company = user.Company;
-                cachedUser.Email = user.Email;
-
-                if (linkSet.LinkByLogin.TryGetValue(cachedUser.Login, out var link))
-                    cachedUser.MicrosoftInfo = link?.MicrosoftInfo;
-            }
-        }
-
         private async Task<OspoLinkSet> LoadLinkSetAsync()
         {
             if (OspoClient == null)
@@ -224,6 +108,341 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             Log.WriteLine("Loading Microsoft link information...");
             return await OspoClient.GetAllAsync();
+        }
+
+        private async Task<IReadOnlyCollection<CachedRepo>> GetCachedReposAsync(string orgName)
+        {
+            var query = new Query()
+                .Organization(orgName)
+                .Repositories()
+                .AllPages()
+                .Select(r => new CachedRepo()
+                {
+                    Name = r.Name,
+                    LastPush = r.PushedAt ?? r.CreatedAt,
+                    IsPrivate = r.IsPrivate,
+                    IsArchived = r.IsArchived,
+                    IsTemplate = r.IsTemplate,
+                    Description = r.Description
+                });
+
+            var result = await Connection.Run(query);
+            return result.ToArray();
+        }
+
+        private async Task<IReadOnlyCollection<CachedTeam>> GetCachedTeamsAsync(string orgName)
+        {
+            var query = new Query()
+                .Organization(orgName)
+                .Teams()
+                .AllPages()
+                .Select(t => new CachedTeam()
+                {
+                    Name = t.Name,
+                    Id = t.Id.Value,
+                    Slug = t.Slug,
+                    ParentId = t.ParentTeam == null ? null : t.ParentTeam.Id.Value,
+                    Description = t.Description,
+                    IsSecret = t.Privacy == TeamPrivacy.Visible ? false : true
+                });
+
+            var result = await Connection.Run(query);
+            return result.ToArray();
+        }
+
+        private async Task<IReadOnlyCollection<CachedTeamMember>> GetCachedTeamMembersAsync(string orgName, IEnumerable<string> teamSlugs)
+        {
+            var query = new Query()
+                .Organization(orgName)
+                .Team(Var("teamSlug"))
+                .Members(first: 100, after: Var("after"), membership: TeamMembershipType.Immediate)
+                .Select(connection => new
+                {
+                    connection.PageInfo.EndCursor,
+                    connection.PageInfo.HasNextPage,
+                    connection.TotalCount,
+                    Items = connection.Edges.Select(e => new
+                    {
+                        e.Node.Login,
+                        e.Role
+                    }).ToList(),
+                }).Compile();
+
+            var result = new List<CachedTeamMember>();
+
+            foreach (var teamSlug in teamSlugs)
+            {
+                var vars = new Dictionary<string, object>
+                {
+                    { "after", null },
+                    { "teamSlug", teamSlug },
+                };
+
+                var current = await Connection.Run(query, vars);
+                vars["after"] = current.HasNextPage ? current.EndCursor : null;
+
+                while (vars["after"] != null)
+                {
+                    var page = await Connection.Run(query, vars);
+                    current.Items.AddRange(page.Items);
+                    vars["after"] = page.HasNextPage
+                                        ? page.EndCursor
+                                        : null;
+                }
+
+                foreach (var item in current.Items)
+                {
+                    var isMaintainer = item.Role switch
+                    {
+                        TeamMemberRole.Member => false,
+                        TeamMemberRole.Maintainer => true,
+                        _ => throw new NotImplementedException($"Unexpected role {item.Role}"),
+                    };
+                    var cachedTeamMember = new CachedTeamMember
+                    {
+                        TeamSlug = teamSlug,
+                        UserLogin = item.Login,
+                        IsMaintainer = isMaintainer
+                    };
+                    result.Add(cachedTeamMember);
+                }
+            }
+
+            return result.ToArray();
+        }
+
+        private async Task<IReadOnlyCollection<CachedTeamAccess>> GetCachedTeamAccessAsync(string orgName, IEnumerable<string> teamSlugs)
+        {
+            var query = new Query()
+                .Organization(orgName)
+                .Team(Var("teamSlug"))
+                .Repositories(first: 100, after: Var("after"))
+                .Select(connection => new
+                {
+                    connection.PageInfo.EndCursor,
+                    connection.PageInfo.HasNextPage,
+                    connection.TotalCount,
+                    Items = connection.Edges.Select(e => new
+                    {
+                        e.Node.Name,
+                        e.Permission
+                    }).ToList(),
+                }).Compile();
+
+            var result = new List<CachedTeamAccess>();
+
+            foreach (var teamSlug in teamSlugs)
+            {
+                var vars = new Dictionary<string, object>
+                {
+                    { "after", null },
+                    { "teamSlug", teamSlug },
+                };
+
+                var current = await Connection.Run(query, vars);
+                vars["after"] = current.HasNextPage ? current.EndCursor : null;
+
+                while (vars["after"] != null)
+                {
+                    var page = await Connection.Run(query, vars);
+                    current.Items.AddRange(page.Items);
+                    vars["after"] = page.HasNextPage
+                                        ? page.EndCursor
+                                        : null;
+                }
+
+                foreach (var item in current.Items)
+                {
+                    var cachedTeamMember = new CachedTeamAccess
+                    {
+                        TeamSlug = teamSlug,
+                        RepoName = item.Name,
+                        Permission = GetCachedPermission(item.Permission)
+                    };
+                    result.Add(cachedTeamMember);
+                }
+            }
+
+            return result.ToArray();
+        }
+
+        private async Task<IReadOnlyCollection<CachedUser>> GetCachedMembersAsync(string orgName)
+        {
+            var query = new Query()
+                .Organization(orgName)
+                .MembersWithRole(first: 100, after: Var("after"))
+                .Select(connection => new
+                {
+                    connection.PageInfo.EndCursor,
+                    connection.PageInfo.HasNextPage,
+                    connection.TotalCount,
+                    Items = connection.Edges.Select(e => new
+                    {
+                        e.Node.Login,
+                        e.Node.Name,
+                        e.Node.Company,
+                        e.Node.Email,
+                        e.Role,
+                    }).ToList(),
+                }).Compile();
+
+            var result = new List<CachedUser>();
+
+            var vars = new Dictionary<string, object>
+            {
+                { "after", null },
+            };
+
+            var current = await Connection.Run(query, vars);
+            vars["after"] = current.HasNextPage ? current.EndCursor : null;
+
+            while (vars["after"] != null)
+            {
+                var page = await Connection.Run(query, vars);
+                current.Items.AddRange(page.Items);
+                vars["after"] = page.HasNextPage
+                                    ? page.EndCursor
+                                    : null;
+            }
+
+            foreach (var item in current.Items)
+            {
+                var isMember = item.Role != null;
+                var isAdmin = item.Role switch
+                {
+                    OrganizationMemberRole.Member => false,
+                    OrganizationMemberRole.Admin => true,
+                    _ => throw new NotImplementedException($"Unexpected role {item.Role}"),
+                };
+                var cachedUser = new CachedUser
+                {
+                    Login = item.Login,
+                    Name = item.Name,
+                    Company = item.Company,
+                    Email = item.Email,
+                    IsOwner = isAdmin,
+                    IsMember = isMember,
+                };
+                result.Add(cachedUser);
+            }
+
+            return result.ToArray();
+        }
+
+        private async Task<IReadOnlyCollection<CachedUser>> GetCachedExternalsAsync(string orgName, IEnumerable<string> repoNames)
+        {
+            var query = new Query()
+                .Repository(Var("repoName"), orgName)
+                .Collaborators(affiliation: CollaboratorAffiliation.Outside)
+                .AllPages()
+                .Select(e => new
+                {
+                    e.Login,
+                    e.Name,
+                    e.Company,
+                    e.Email,
+                })
+                .Compile();
+
+            var seenLogins = new HashSet<string>();
+            var result = new List<CachedUser>();
+
+            foreach (var repoName in repoNames)
+            {
+                var vars = new Dictionary<string, object>
+                {
+                    { "repoName", repoName },
+                };
+
+                var queryResult = await Connection.Run(query, vars);
+
+                foreach (var item in queryResult)
+                {
+                    if (seenLogins.Add(item.Login))
+                    {
+                        var cachedUser = new CachedUser
+                        {
+                            Login = item.Login,
+                            Name = item.Name,
+                            Company = item.Company,
+                            Email = item.Email,
+                            IsOwner = false,
+                            IsMember = false
+                        };
+                        result.Add(cachedUser);
+                    }
+                }
+            }
+
+            return result.ToArray();
+        }
+
+        private async Task<IReadOnlyCollection<CachedUserAccess>> GetCachedUserAccessAsync(string orgName, IEnumerable<string> repoNames)
+        {
+            var query = new Query()
+                .Repository(Var("repoName"), orgName)
+                .Collaborators(first: 100, after: Var("after"), affiliation: CollaboratorAffiliation.Direct)
+                .Select(connection => new
+                {
+                    connection.PageInfo.EndCursor,
+                    connection.PageInfo.HasNextPage,
+                    connection.TotalCount,
+                    Items = connection.Edges.Select(e => new
+                    {
+                        e.Node.Login,
+                        e.Permission,
+                    }).ToList(),
+                }).Compile();
+
+            var result = new List<CachedUserAccess>();
+
+            foreach (var repoName in repoNames)
+            {
+                var vars = new Dictionary<string, object>
+                {
+                    { "after", null },
+                    { "repoName", repoName },
+                };
+
+                var current = await Connection.Run(query, vars);
+                vars["after"] = current.HasNextPage ? current.EndCursor : null;
+
+                while (vars["after"] != null)
+                {
+                    var page = await Connection.Run(query, vars);
+                    current.Items.AddRange(page.Items);
+                    vars["after"] = page.HasNextPage
+                                        ? page.EndCursor
+                                        : null;
+                }
+
+                foreach (var item in current.Items)
+                {
+                    var cachedPermission = GetCachedPermission(item.Permission);
+                    var cachedCollaborator = new CachedUserAccess
+                    {
+                        RepoName = repoName,
+                        UserLogin = item.Login,
+                        Permission = cachedPermission
+                    };
+                    result.Add(cachedCollaborator);
+                }
+            }
+
+            return result.ToArray();
+        }
+
+        private static CachedPermission GetCachedPermission(RepositoryPermission permission)
+        {
+            return permission switch
+            {
+                RepositoryPermission.Admin => CachedPermission.Admin,
+                RepositoryPermission.Maintain => CachedPermission.Maintain,
+                RepositoryPermission.Write => CachedPermission.Push,
+                RepositoryPermission.Triage => CachedPermission.Triage,
+                RepositoryPermission.Read => CachedPermission.Pull,
+                _ => throw new NotImplementedException($"Unexpected permision {permission}"),
+            };
         }
     }
 }

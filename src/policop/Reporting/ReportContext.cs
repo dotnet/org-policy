@@ -11,7 +11,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
     internal sealed class ReportContext
     {
         private static readonly IReadOnlyList<string> _repoTermColumns = new[] { "r:name" };
-        private static readonly IReadOnlyList<string> _teamTermColumns = new[] { "t:name", "t:full-name" };
+        private static readonly IReadOnlyList<string> _teamTermColumns = new[] { "t:slug", "t:name", "t:full-slug", "t:full-name", };
         private static readonly IReadOnlyList<string> _userTermColumns = new[] { "u:login", "u:name", "u:email" };
 
         public List<string> RepoTerms { get; } = new List<string>();

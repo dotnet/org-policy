@@ -20,7 +20,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 var isRepoOwnedByMicrosoft = repo.IsOwnedByMicrosoft();
                 if (isRepoOwnedByMicrosoft)
                 {
-                    foreach (var userAccess in repo.Users.Where(ua => ua.Describe().IsCollaborator))
+                    foreach (var userAccess in repo.Users)
                     {
                         var user = userAccess.User;
                         var permission = userAccess.Permission;

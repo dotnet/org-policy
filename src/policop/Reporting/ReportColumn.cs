@@ -36,7 +36,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             new RepoReportColumn(
                 "r:name",
                 "The name of the repo",
-                r => r.Name            ),
+                r => r.Name
+            ),
             new RepoReportColumn(
                 "r:private",
                 "Indicates whether the repo is private",
@@ -46,6 +47,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "r:archived",
                 "Indicates whether the repo is archived",
                 r => r.IsArchived ? "Yes" : "No"
+            ),
+            new RepoReportColumn(
+                "r:template",
+                "Indicates whether the repo is a template repo",
+                r => r.IsTemplate ? "Yes" : "No"
             ),
             new RepoReportColumn(
                 "r:last-push",
@@ -77,9 +83,19 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 t => t.Name
             ),
             new TeamReportColumn(
+                "t:slug",
+                "The team slug (the slug is the name that is used in the URL)",
+                t => t.Slug
+            ),
+            new TeamReportColumn(
                 "t:parent-name",
                 "The name of the parent team",
                 t => t.Parent?.Name
+            ),
+            new TeamReportColumn(
+                "t:full-slug",
+                "The slug of the team prefixed with all parent slugs",
+                t => t.GetFullSlug()
             ),
             new TeamReportColumn(
                 "t:full-name",

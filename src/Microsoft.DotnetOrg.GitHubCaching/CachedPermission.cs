@@ -3,7 +3,9 @@
     public enum CachedPermission
     {
         Pull,
+        Triage,
         Push,
+        Maintain,
         Admin
     }
 }

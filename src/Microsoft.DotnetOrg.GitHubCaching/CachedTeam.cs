@@ -8,6 +8,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
     public sealed class CachedTeam
     {
         public string Id { get; set; }
+        public string Slug { get; set; }
         public string Name { get; set; }
         public string ParentId { get; set; }
         public string Description { get; set; }
@@ -20,7 +21,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public CachedOrg Org { get; set; }
 
         [JsonIgnore]
-        public string Url => CachedOrg.GetTeamUrl(Org.Name, Name);
+        public string Url => CachedOrg.GetTeamUrl(Org.Name, Slug);
 
         [JsonIgnore]
         public CachedTeam Parent { get; set; }
@@ -33,6 +34,15 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         [JsonIgnore]
         public List<CachedUser> Members { get; } = new List<CachedUser>();
+
+        [JsonIgnore]
+        public List<CachedUser> EffectiveMembers { get; } = new List<CachedUser>();
+
+        public string GetFullSlug()
+        {
+            var teamSlugs = AncestorsAndSelf().Reverse().Select(t => t.Slug);
+            return string.Join("/", teamSlugs);
+        }
 
         public string GetFullName()
         {

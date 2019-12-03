@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 using Microsoft.DotnetOrg.Ospo;
 
-using Octokit;
+using Octokit.GraphQL;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
@@ -21,9 +20,10 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public List<CachedTeam> Teams { get; set; } = new List<CachedTeam>();
         public List<CachedRepo> Repos { get; set; } = new List<CachedRepo>();
         public List<CachedUserAccess> Collaborators { get; set; } = new List<CachedUserAccess>();
+        public List<CachedTeamAccess> TeamAccess { get; set; } = new List<CachedTeamAccess>();
         public List<CachedUser> Users { get; set; } = new List<CachedUser>();
 
-        internal void Initialize()
+        public void Initialize()
         {
             if (Version != CurrentVersion)
                 return;
@@ -97,6 +97,60 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 user.Org = this;
             }
+
+            foreach (var team in Teams)
+            {
+                var effectiveMembers = team.DescendentsAndSelf().SelectMany(t => t.Members).Distinct();
+                team.EffectiveMembers.AddRange(effectiveMembers);
+            }
+
+            var orgOwners = Users.Where(u => u.IsOwner).ToArray();
+
+            foreach (var repo in Repos)
+            {
+                var effectiveUsers = new Dictionary<CachedUser, CachedUserAccess>();
+
+                foreach (var orgOwner in orgOwners)
+                {
+                    effectiveUsers.Add(orgOwner, new CachedUserAccess
+                    {
+                        Repo = repo,
+                        RepoName = Name,
+                        User = orgOwner,
+                        UserLogin = orgOwner.Login,
+                        Permission = CachedPermission.Admin
+                    });
+                }
+
+                foreach (var userAccess in repo.Users)
+                {
+                    if (!userAccess.User.IsOwner)
+                        effectiveUsers.Add(userAccess.User, userAccess);
+                }
+
+                foreach (var teamAccess in repo.Teams)
+                {
+                    foreach (var user in teamAccess.Team.EffectiveMembers)
+                    {
+                        if (effectiveUsers.TryGetValue(user, out var userAccess))
+                        {
+                            if (userAccess.Permission >= teamAccess.Permission)
+                                continue;
+                        }
+
+                        effectiveUsers[user] = new CachedUserAccess
+                        {
+                            Repo = repo,
+                            RepoName = Name,
+                            User = user,
+                            UserLogin = user.Login,
+                            Permission = teamAccess.Permission
+                        };
+                    }
+                }
+
+                repo.EffectiveUsers.AddRange(effectiveUsers.Values);
+            }
         }
 
         public static string GetRepoUrl(string orgName, string repoName)
@@ -104,23 +158,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return $"https://github.com/{orgName}/{repoName}";
         }
 
-        public static string GetTeamUrl(string orgName, string teamName)
+        public static string GetTeamUrl(string orgName, string teamSlug)
         {
-            var sb = new StringBuilder();
-            foreach (var c in teamName)
-            {
-                if (char.IsLetterOrDigit(c) || c == '_')
-                {
-                    sb.Append(char.ToLower(c));
-                }
-                else
-                {
-                    sb.Append('-');
-                }
-            }
-
-            var teamNameFixed = sb.ToString();
-            return $"https://github.com/orgs/{orgName}/teams/{teamNameFixed}";
+            return $"https://github.com/orgs/{orgName}/teams/{teamSlug}";
         }
 
         public static string GetUserUrl(string login, string orgName)
@@ -128,12 +168,12 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return $"https://github.com/orgs/{orgName}/people/{login}";
         }
 
-        public static Task<CachedOrg> LoadAsync(GitHubClient gitHubClient,
+        public static Task<CachedOrg> LoadAsync(Connection connection,
                                                 string orgName,
                                                 TextWriter logWriter = null,
                                                 OspoClient ospoClient = null)
         {
-            var loader = new CacheLoader(gitHubClient, logWriter, ospoClient);
+            var loader = new CacheLoader(connection, logWriter, ospoClient);
             return loader.LoadAsync(orgName);
         }
 

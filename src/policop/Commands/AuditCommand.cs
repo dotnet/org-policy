@@ -70,7 +70,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                         writer.WriteLine();
                     }
 
-                    foreach (var userAccess in repo.Users)
+                    foreach (var userAccess in repo.EffectiveUsers)
                     {
                         var via = userAccess.Describe().ToString();
                         var userUrl = userAccess.User.Url;

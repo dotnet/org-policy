@@ -11,6 +11,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public CachedOrg Org => Repo.Org;
 
         [JsonIgnore]
+        public string TeamSlug { get; set; }
+
+        [JsonIgnore]
         public CachedRepo Repo { get; internal set; }
 
         [JsonIgnore]

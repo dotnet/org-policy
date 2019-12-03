@@ -31,9 +31,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var githubClient = await GitHubClientFactory.CreateAsync();
+            var connection = await GitHubClientFactory.CreateGraphAsync();
             var ospoClient = !_includeLinks ? null : await OspoClientFactory.CreateAsync();
-            var result = await CachedOrg.LoadAsync(githubClient, _orgName, Console.Out, ospoClient);
+            var result = await CachedOrg.LoadAsync(connection, _orgName, Console.Out, ospoClient);
             await CacheManager.StoreOrgAsync(result);
         }
     }

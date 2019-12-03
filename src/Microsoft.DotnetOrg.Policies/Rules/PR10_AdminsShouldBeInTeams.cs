@@ -34,9 +34,8 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 {
                     var user = userAccess.User;
                     var isAdmin = userAccess.Permission == CachedPermission.Admin;
-                    var isDirectlyAssigned = userAccess.Describe().IsCollaborator;
 
-                    if (isAdmin && isDirectlyAssigned)
+                    if (isAdmin)
                     {
                         yield return new PolicyViolation(
                             Descriptor,

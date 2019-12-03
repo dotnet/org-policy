@@ -8,19 +8,36 @@ using System.Threading.Tasks;
 
 using Octokit;
 
+using QConnection = Octokit.GraphQL.Connection;
+using QProductHeaderValue = Octokit.GraphQL.ProductHeaderValue;
+
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
     public static class GitHubClientFactory
     {
         public static async Task<GitHubClient> CreateAsync(string token = null, string scopes = "public_repo, read:org")
         {
-            var productInformation = new ProductHeaderValue(GetExeName());
-            var client = new GitHubClient(productInformation);
             if (string.IsNullOrEmpty(token))
                 token = await GetOrCreateTokenAsync(scopes);
 
-            client.Credentials = new Credentials(token);
+            var productInformation = new ProductHeaderValue(GetExeName());
+            var client = new GitHubClient(productInformation)
+            {
+                Credentials = new Credentials(token)
+            };
+
             return client;
+        }
+
+        public static async Task<QConnection> CreateGraphAsync(string token = null, string scopes = "public_repo, read:org")
+        {
+            if (string.IsNullOrEmpty(token))
+                token = await GetOrCreateTokenAsync(scopes);
+
+            var productInformation = new QProductHeaderValue(GetExeName());
+            var connection = new QConnection(productInformation, token);
+
+            return connection;
         }
 
         private static async Task<string> GetOrCreateTokenAsync(string scopes)

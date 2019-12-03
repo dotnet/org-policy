@@ -107,7 +107,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
-            var columns = _reportContext.GetColumns("r:name", "r:private", "r:archived", "r:description");
+            var columns = _reportContext.GetColumns("r:name", "r:private", "r:archived", "r:template", "r:description");
             OutputTable(rows, columns);
         }
 
@@ -119,7 +119,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
-            var columns = _reportContext.GetColumns("t:full-name", "t:marker", "t:ms-owned", "t:description");
+            var columns = _reportContext.GetColumns("t:full-slug", "t:marker", "t:ms-owned", "t:description");
             OutputTable(rows, columns);
         }
 
@@ -143,14 +143,15 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
-            var columns = _reportContext.GetColumns("r:name", "t:name", "rt:permission");
+            var columns = _reportContext.GetColumns("r:name", "t:slug", "rt:permission");
             OutputTable(rows, columns);
         }
 
         private void ListUserAccess(CachedOrg org)
         {
-            var rows = org.Collaborators
-                          .Select(c => new ReportRow(repo: c.Repo, user: c.User, userAccess: c))
+            var rows = org.Repos
+                          .SelectMany(r => r.EffectiveUsers)
+                          .Select(ua => new ReportRow(repo: ua.Repo, user: ua.User, userAccess: ua))
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
@@ -165,7 +166,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
-            var columns = _reportContext.GetColumns("t:name", "u:login", "tu:maintainer");
+            var columns = _reportContext.GetColumns("t:slug", "u:login", "tu:maintainer");
             OutputTable(rows, columns);
         }
 
@@ -181,7 +182,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                               .SelectMany(r => r.Teams.Where(ta => teamFilter(ta.Team)), (r, ta) => new ReportRow(repo: r, team: ta.Team, teamAccess: ta));
             var userRows = org.Repos
                               .Where(repoFilter)
-                              .SelectMany(r => r.Users.Where(ua => userFilter(ua.User)), (r, ua) => new ReportRow(repo: r, user: ua.User, userAccess: ua));
+                              .SelectMany(r => r.EffectiveUsers.Where(ua => userFilter(ua.User)), (r, ua) => new ReportRow(repo: r, user: ua.User, userAccess: ua));
             var rows = teamRows.Concat(userRows)
                                .Where(rowFilter)
                                .ToArray();

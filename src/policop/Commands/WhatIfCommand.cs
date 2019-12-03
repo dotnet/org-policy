@@ -114,7 +114,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
-            var columns = _reportContext.GetColumns("r:name", "t:name", "u:login", "ru:change");
+            var columns = _reportContext.GetColumns("r:name", "t:slug", "u:login", "ru:change");
             var document = _reportContext.CreateReport(rows, columns);
 
             if (!string.IsNullOrEmpty(_outputFileName))
