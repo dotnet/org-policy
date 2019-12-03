@@ -17,13 +17,13 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             var productInformation = new ProductHeaderValue(GetExeName());
             var client = new GitHubClient(productInformation);
             if (string.IsNullOrEmpty(token))
-                token = await GetTokenAsync(scopes);
+                token = await GetOrCreateTokenAsync(scopes);
 
             client.Credentials = new Credentials(token);
             return client;
         }
 
-        private static async Task<string> GetTokenAsync(string scopes)
+        private static async Task<string> GetOrCreateTokenAsync(string scopes)
         {
             var environmentToken = Environment.GetEnvironmentVariable("GITHUBTOKEN");
             if (!string.IsNullOrEmpty(environmentToken))

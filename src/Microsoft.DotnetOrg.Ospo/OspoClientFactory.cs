@@ -12,12 +12,12 @@ namespace Microsoft.DotnetOrg.Ospo
         public static async Task<OspoClient> CreateAsync(string token = null)
         {
             if (string.IsNullOrEmpty(token))
-                token = await GetTokenAsync();
+                token = await GetOrCreateTokenAsync();
 
             return new OspoClient(token);
         }
 
-        private static async Task<string> GetTokenAsync()
+        private static async Task<string> GetOrCreateTokenAsync()
         {
             var environmentToken = Environment.GetEnvironmentVariable("OSPOTOKEN");
             if (!string.IsNullOrEmpty(environmentToken))

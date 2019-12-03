@@ -12,12 +12,12 @@ namespace Microsoft.DotnetOrg.DevOps
         public static async Task<DevOpsClient> CreateAsync(string organization, string project, string token = null)
         {
             if (string.IsNullOrEmpty(token))
-                token = await GetTokenAsync(organization, project);
+                token = await GetOrCreateTokenAsync(organization, project);
 
             return new DevOpsClient(organization, project, token);
         }
 
-        private static async Task<string> GetTokenAsync(string organization, string project)
+        private static async Task<string> GetOrCreateTokenAsync(string organization, string project)
         {
             var environmentToken = Environment.GetEnvironmentVariable("DEVOPSTOKEN");
             if (!string.IsNullOrEmpty(environmentToken))
