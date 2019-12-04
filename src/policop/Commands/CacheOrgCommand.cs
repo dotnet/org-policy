@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.DotnetOrg.GitHubCaching;
@@ -25,16 +26,18 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override async Task ExecuteAsync()
         {
-            if (string.IsNullOrEmpty(_orgName))
-            {
-                Console.Error.WriteLine($"error: --org must be specified");
-                return;
-            }
+            var orgNames = !string.IsNullOrEmpty(_orgName)
+                ? new[] { _orgName }
+                : CacheManager.GetCachedOrgNames().ToArray();
 
             var connection = await GitHubClientFactory.CreateGraphAsync();
             var ospoClient = !_includeLinks ? null : await OspoClientFactory.CreateAsync();
-            var result = await CachedOrg.LoadAsync(connection, _orgName, Console.Out, ospoClient);
-            await CacheManager.StoreOrgAsync(result);
+
+            foreach (var orgName in orgNames)
+            {
+                var result = await CachedOrg.LoadAsync(connection, orgName, Console.Out, ospoClient);
+                await CacheManager.StoreOrgAsync(result);
+            }
         }
     }
 }

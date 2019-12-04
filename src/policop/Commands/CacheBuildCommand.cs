@@ -28,7 +28,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         {
             var orgNames = !string.IsNullOrEmpty(_orgName)
                 ? new[] { _orgName }
-                : CacheManager.GetOrgCaches().Select(c => Path.GetFileNameWithoutExtension(c.Name)).ToArray();
+                : CacheManager.GetCachedOrgNames().ToArray();
 
             var client = await DevOpsClientFactory.CreateAsync("dnceng", "internal");
             var builds = await client.GetBuildsAsync("653", resultFilter: "succeeded", reasonFilter: "schedule,manual");

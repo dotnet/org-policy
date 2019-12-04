@@ -11,6 +11,8 @@ namespace Microsoft.DotnetOrg.PolicyCop
 {
     internal static class CacheManager
     {
+        public static IEnumerable<string> GetCachedOrgNames() => GetOrgCaches().Select(fi => Path.GetFileNameWithoutExtension(fi.Name));
+
         public static FileInfo GetOrgCache(string orgName)
         {
             var exePath = Environment.GetCommandLineArgs()[0];
