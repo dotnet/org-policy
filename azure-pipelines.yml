@@ -52,10 +52,10 @@ jobs:
         checkArgs: --policy-repo dotnet/mono-policy-violations --update-issues
       xamarin:
         orgName: xamarin
-        checkArgs:
+        checkArgs: --policy-repo xamarin/org-policy-violations --update-issues
       xamarinhq:
         orgName: xamarinhq
-        checkArgs:
+        checkArgs: --policy-repo xamarinhq/org-policy-violations --update-issues
   steps:
   - checkout: none
   - task: DownloadPipelineArtifact@2
