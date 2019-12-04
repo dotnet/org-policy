@@ -19,7 +19,8 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             {
                 // Note: Even if we don't fallback to owners, we don't want owners to
                 //       to count towards the admin quota.
-                var numberOfAdmins = repo.GetAdministrators(fallbackToOwners: false).Count(u => !u.IsOwner);
+                var numberOfAdmins = repo.GetAdministrators(fallbackToOwners: false)
+                                          .Count(u => !u.IsOwner && !u.IsBot());
 
                 if (numberOfAdmins > Threshold)
                 {
