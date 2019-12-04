@@ -43,7 +43,7 @@ jobs:
     matrix:
       aspnet:
         orgName: aspnet
-        checkArgs: --policy-repo dotnet/aspnet-policy-violations --update-issues
+        checkArgs: --policy-repo aspnet/org-policy-violations --update-issues
       dotnet:
         orgName: dotnet
         checkArgs: --policy-repo dotnet/org-policy-violations --update-issues --assign-issues
