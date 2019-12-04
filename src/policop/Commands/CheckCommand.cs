@@ -104,7 +104,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private static void SaveVioloations(string orgName, string outputFileName, bool viewInExcel, ViolationReport report)
         {
-            var document = new CsvDocument("org", "status", "severity", "rule", "rule-title", "fingerprint", "violation", "repo", "user", "team", "assignees");
+            var document = new CsvDocument("fingerprint", "org", "status", "severity", "rule", "rule-title", "violation", "repo", "user", "team", "assignees");
 
             using (var writer = document.Append())
             {
@@ -113,12 +113,12 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     if (violation == null)
                         continue;
 
+                    writer.Write(violation.Fingerprint.ToString());
                     writer.Write(orgName);
                     writer.Write(status);
                     writer.Write(violation.Descriptor.Severity.ToString());
                     writer.Write(violation.Descriptor.DiagnosticId);
                     writer.Write(violation.Descriptor.Title);
-                    writer.Write(violation.Fingerprint.ToString());
                     writer.Write(violation.Title);
 
                     if (violation.Repo == null)
