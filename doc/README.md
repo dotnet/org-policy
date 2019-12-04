@@ -3,7 +3,7 @@
 Rule            | Severity | Title
 ----------------|----------|------------------------------------------------
 [PR01](PR01.md) | Error    | Microsoft employees should be linked
-[PR02](PR02.md) | Error    | Microsoft-owned repo should only grant 'pull' to externals
+[PR02](PR02.md) | Error    | Microsoft-owned repo should at most grant 'triage' to externals
 [PR03](PR03.md) | Error    | Microsoft-owned team should only contain Microsoft users
 [PR04](PR04.md) | Error    | Team should be owned by Microsoft
 [PR05](PR05.md) | Error    | Marker team should only grant 'read' access
