@@ -15,7 +15,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
         public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
         {
-            var allowedPermission = CachedPermission.Pull;
+            var allowedPermission = CachedPermission.Read;
             var microsoftTeam = context.Org.GetMicrosoftTeam();
 
             foreach (var team in context.Org.Teams)

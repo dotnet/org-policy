@@ -75,13 +75,21 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             {
                 newPermission = null;
             }
-            else if (_newPermissions == "pull")
+            else if (_newPermissions == "read")
             {
-                newPermission = CachedPermission.Pull;
+                newPermission = CachedPermission.Read;
             }
-            else if (_newPermissions == "push")
+            else if (_newPermissions == "triage")
             {
-                newPermission = CachedPermission.Push;
+                newPermission = CachedPermission.Triage;
+            }
+            else if (_newPermissions == "write")
+            {
+                newPermission = CachedPermission.Write;
+            }
+            else if (_newPermissions == "maintain")
+            {
+                newPermission = CachedPermission.Maintain;
             }
             else if (_newPermissions == "admin")
             {
@@ -89,7 +97,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
             else
             {
-                Console.Error.WriteLine($"error: permission can be 'none', 'pull', 'push' or 'admin' but not '{_newPermissions}'");
+                Console.Error.WriteLine($"error: permission can be 'none', 'read', 'triage', 'write', 'maintain' or 'admin' but not '{_newPermissions}'");
                 return;
             }
 

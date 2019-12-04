@@ -438,9 +438,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 RepositoryPermission.Admin => CachedPermission.Admin,
                 RepositoryPermission.Maintain => CachedPermission.Maintain,
-                RepositoryPermission.Write => CachedPermission.Push,
+                RepositoryPermission.Write => CachedPermission.Write,
                 RepositoryPermission.Triage => CachedPermission.Triage,
-                RepositoryPermission.Read => CachedPermission.Pull,
+                RepositoryPermission.Read => CachedPermission.Read,
                 _ => throw new NotImplementedException($"Unexpected permision {permission}"),
             };
         }

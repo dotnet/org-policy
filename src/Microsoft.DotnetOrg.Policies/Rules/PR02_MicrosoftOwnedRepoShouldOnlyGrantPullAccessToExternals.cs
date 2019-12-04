@@ -25,7 +25,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         var user = userAccess.User;
                         var permission = userAccess.Permission;
                         var userWorksForMicrosoft = user.IsMicrosoftUser();
-                        if (!userWorksForMicrosoft && permission != CachedPermission.Pull)
+                        if (!userWorksForMicrosoft && permission != CachedPermission.Read)
                         {
                             yield return new PolicyViolation(
                                 Descriptor,

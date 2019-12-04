@@ -2,9 +2,9 @@
 {
     public enum CachedPermission
     {
-        Pull,
+        Read,
         Triage,
-        Push,
+        Write,
         Maintain,
         Admin
     }

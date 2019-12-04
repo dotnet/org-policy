@@ -69,9 +69,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             //              https://github.com/octokit/octokit.net/issues/2036)
             //
             //       Rather, it only gives us effective permissions. This means that if a user
-            //       has 'admin' permissions through a team, but 'push' permissions by directly
+            //       has 'admin' permissions through a team, but 'write' permissions by directly
             //       being added to a repo, running what-if for this repo/team will (incorrectly)
-            //       conclude that the user was downgraded to 'pull' or lost access (if the repo
+            //       conclude that the user was downgraded to 'read' or lost access (if the repo
             //       is private).
             //
             //       However, the current code will work for cases where the permissions granted
@@ -99,7 +99,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
 
             if (maximumLevel == -1)
-                return new CachedWhatIfPermission(this, Repo.IsPrivate ? null : (CachedPermission?)CachedPermission.Pull);
+                return new CachedWhatIfPermission(this, Repo.IsPrivate ? null : (CachedPermission?)CachedPermission.Read);
 
             var maximumPermission = (CachedPermission)maximumLevel;
             return new CachedWhatIfPermission(this, maximumPermission);
