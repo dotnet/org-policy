@@ -292,15 +292,15 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
         }
 
-        private static async Task ReopenIssuesAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<(PolicyViolation, PolicyIssue)> violation)
+        private static async Task ReopenIssuesAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<(PolicyViolation, PolicyIssue)> violations)
         {
             var i = 0;
 
-            foreach (var reopenedViolation in violation)
+            foreach (var reopenedViolation in violations)
             {
                 var issue = reopenedViolation.Item2.Issue;
 
-                await client.PrintProgressAsync(Console.Out, "Reopening issue", issue.Title, i++, violation.Count);
+                await client.PrintProgressAsync(Console.Out, "Reopening issue", issue.Title, i++, violations.Count);
 
                 await client.Issue.Comment.Create(policyRepo.Owner, policyRepo.Name, issue.Number, "The violation still exists.");
 
