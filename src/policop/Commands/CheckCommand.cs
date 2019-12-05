@@ -175,6 +175,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             await CreateLabelsAsync(client, policyRepo, report.CreatedViolations);
             await CreateIssuesAsync(client, policyRepo, report.CreatedViolations, assignIssues);
             await ReopenIssuesAsync(client, policyRepo, report.ReopenedViolations);
+            await UpdateIssuesAsync(client, policyRepo, report);
             await CloseIssuesAsync(client, policyRepo, report.ClosedViolations);
         }
 
@@ -308,6 +309,32 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 {
                     State = ItemState.Open
                 };
+                await client.Issue.Update(policyRepo.Owner, policyRepo.Name, issue.Number, issueUpdate);
+            }
+        }
+
+        private static async Task UpdateIssuesAsync(GitHubClient client, RepoName policyRepo, ViolationReport report)
+        {
+            var updatedIssues = report.ExistingViolations.Concat(report.ReopenedViolations)
+                                                          .Where(t => t.Item1.Body != t.Item2.Issue.Body)
+                                                          .ToArray();
+
+            var i = 0;
+
+            foreach (var violation in updatedIssues)
+            {
+                var newBody = violation.Item1.Body;
+                var issue = violation.Item2.Issue;
+
+                await client.PrintProgressAsync(Console.Out, "Updating issue body", issue.Title, i++, updatedIssues.Length);
+
+                // Don't update titles or people will get annoyed because it breaks Outlook threading.
+
+                var issueUpdate = new IssueUpdate
+                {
+                    Body = newBody
+                };
+
                 await client.Issue.Update(policyRepo.Owner, policyRepo.Name, issue.Number, issueUpdate);
             }
         }
