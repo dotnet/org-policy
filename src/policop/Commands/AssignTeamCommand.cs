@@ -87,7 +87,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             {
                 repo = await client.Repository.Get(_orgName, _repoName);
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 repo = null;
             }
@@ -99,9 +99,15 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
 
             if (_unassign)
+            {
                 await client.Organization.Team.RemoveRepository(team.Id, _orgName, _repoName);
+                Console.Out.WriteLine($"Removed team '{_teamName}' from repo '{_repoName}'");
+            }
             else
+            {
                 await client.Organization.Team.AddRepository(team.Id, _orgName, _repoName, new RepositoryPermissionRequest(permission));
+                Console.Out.WriteLine($"Added team '{_teamName}' to repo '{_repoName}'");
+            }
         }
     }
 }

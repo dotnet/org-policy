@@ -106,9 +106,15 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 }
 
                 if (_unassign)
+                {
                     await client.Organization.Team.RemoveMembership(team.Id, _userName);
+                    Console.Out.WriteLine($"Removed user '{_userName}' from team '{_teamName}'");
+                }
                 else
+                {
                     await client.Organization.Team.AddOrEditMembership(team.Id, _userName, new UpdateTeamMembership(TeamRole.Member));
+                    Console.Out.WriteLine($"Added user '{_userName}' to team '{_teamName}'");
+                }
             }
             else if (!string.IsNullOrEmpty(_repoName))
             {
@@ -117,7 +123,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 {
                     repo = await client.Repository.Get(_orgName, _repoName);
                 }
-                catch (System.Exception)
+                catch (Exception)
                 {
                     repo = null;
                 }
@@ -129,9 +135,15 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 }
 
                 if (_unassign)
+                {
                     await client.Repository.Collaborator.Delete(_orgName, _repoName, _userName);
+                    Console.Out.WriteLine($"Removed user '{_userName}' from repo '{_repoName}'");
+                }
                 else
+                {
                     await client.Repository.Collaborator.Add(_orgName, _repoName, _userName, new CollaboratorRequest(permission));
+                    Console.Out.WriteLine($"Added user '{_userName}' to repo '{_repoName}'");
+                }
             }
         }
     }
