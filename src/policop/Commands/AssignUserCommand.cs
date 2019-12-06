@@ -28,7 +28,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             options.AddOrg(v => _orgName = v)
                    .Add("u=", "Specifies the user", v => _userName = v)
                    .Add("r=", "Specifies the repo", v => _repoName = v)
-                   .Add("t=", "Specifies the team", v => _teamName = v)                   
+                   .Add("t=", "Specifies the team", v => _teamName = v)
                    .Add("p=", "Sets the {permission} (default: read)", v => _permission = v)
                    .Add("d", "Unassigns the team", v => _unassign = true);
         }
@@ -147,5 +147,4 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
         }
     }
-
 }
