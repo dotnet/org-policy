@@ -15,6 +15,7 @@ Rule            | Severity | Title
 [PR11](PR11.md) | Warning  | Repos should have a sufficient number of admins
 [PR12](PR12.md) | Warning  | Bots should be in the 'bots' team
 [PR13](PR13.md) | Warning  | Collaborator access is superfluous
+[PR14](PR14.md) | Error  | Repo ownership must be explicit
 
 ## Process
 
