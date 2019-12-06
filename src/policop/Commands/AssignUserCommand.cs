@@ -1,0 +1,139 @@
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+using Microsoft.DotnetOrg.GitHubCaching;
+
+using Mono.Options;
+
+using Octokit;
+
+namespace Microsoft.DotnetOrg.PolicyCop.Commands
+{
+    internal sealed class AssignUserCommand : ToolCommand
+    {
+        private string _orgName;
+        private string _userName;
+        private string _repoName;
+        private string _teamName;
+        private string _permission;
+        private bool _unassign;
+
+        public override string Name => "assign-user";
+
+        public override string Description => "Assigns or unassigns a user to a repo or team";
+
+        public override void AddOptions(OptionSet options)
+        {
+            options.AddOrg(v => _orgName = v)
+                   .Add("u=", "Specifies the user", v => _userName = v)
+                   .Add("r=", "Specifies the repo", v => _repoName = v)
+                   .Add("t=", "Specifies the team", v => _teamName = v)                   
+                   .Add("p=", "Sets the {permission} (default: read)", v => _permission = v)
+                   .Add("d", "Unassigns the team", v => _unassign = true);
+        }
+
+        public override async Task ExecuteAsync()
+        {
+            if (string.IsNullOrEmpty(_orgName))
+            {
+                Console.Error.WriteLine($"error: --org must be specified");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_userName))
+            {
+                Console.Error.WriteLine($"error: -u must be specified");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(_repoName) && !string.IsNullOrEmpty(_teamName))
+            {
+                Console.Error.WriteLine($"error: cannot specify both -r and -t");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_repoName) && string.IsNullOrEmpty(_teamName))
+            {
+                Console.Error.WriteLine($"error: either -r or -t must be specified");
+                return;
+            }
+
+            Permission permission;
+
+            switch (_permission)
+            {
+                case null:
+                case "read":
+                    permission = Permission.Pull;
+                    break;
+                case "write":
+                    permission = Permission.Push;
+                    break;
+                case "admin":
+                    permission = Permission.Admin;
+                    break;
+                default:
+                    Console.Error.WriteLine($"error: permission can be 'read', 'write', or 'admin' but not '{_permission}'");
+                    return;
+            }
+
+            var client = await GitHubClientFactory.CreateAsync();
+
+            User user;
+
+            try
+            {
+                user = await client.User.Get(_userName);
+            }
+            catch (Exception)
+            {
+                Console.Error.WriteLine($"error: user '{_userName}' doesn't exist");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(_teamName))
+            {
+                var teams = await client.Organization.Team.GetAll(_orgName);
+
+                var team = teams.SingleOrDefault(t => string.Equals(t.Name, _teamName, StringComparison.OrdinalIgnoreCase) ||
+                                                       string.Equals(t.Slug, _teamName, StringComparison.OrdinalIgnoreCase));
+
+                if (team == null)
+                {
+                    Console.Error.WriteLine($"error: team '{_teamName}' doesn't exist");
+                    return;
+                }
+
+                if (_unassign)
+                    await client.Organization.Team.RemoveMembership(team.Id, _userName);
+                else
+                    await client.Organization.Team.AddOrEditMembership(team.Id, _userName, new UpdateTeamMembership(TeamRole.Member));
+            }
+            else if (!string.IsNullOrEmpty(_repoName))
+            {
+                Repository repo;
+                try
+                {
+                    repo = await client.Repository.Get(_orgName, _repoName);
+                }
+                catch (System.Exception)
+                {
+                    repo = null;
+                }
+
+                if (repo == null)
+                {
+                    Console.Error.WriteLine($"error: repo '{_orgName}/{_repoName}' doesn't exist");
+                    return;
+                }
+
+                if (_unassign)
+                    await client.Repository.Collaborator.Delete(_orgName, _repoName, _userName);
+                else
+                    await client.Repository.Collaborator.Add(_orgName, _repoName, _userName, new CollaboratorRequest(permission));
+            }
+        }
+    }
+
+}
