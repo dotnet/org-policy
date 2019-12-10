@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Microsoft.Csv;
 using Microsoft.DotnetOrg.Ospo;
 
 using Mono.Options;
@@ -12,6 +12,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
     internal sealed class MsLookupCommand : ToolCommand
     {
         private readonly List<string> _terms = new List<string>();
+        private bool _viewInExcel;
 
         public override string Name => "ms-lookup";
 
@@ -19,7 +20,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override void AddOptions(OptionSet options)
         {
-            options.Add("<>", v => _terms.Add(v));
+            options.Add("<>", v => _terms.Add(v))
+                   .Add("excel", "Shows the results in Excel", v => _viewInExcel = true);
         }
 
         public override async Task ExecuteAsync()
@@ -33,17 +35,28 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var client = await OspoClientFactory.CreateAsync();
             var linkSet = await client.GetAllAsync();
 
-            foreach (var link in linkSet.Links)
-            {
-                var anyMatch = _terms.Any(t => IsMatch(link, t));
-                if (!anyMatch)
-                    continue;
+            var document = new CsvDocument("GitHub", "Name", "Alias", "Email");
 
-                Console.WriteLine($"@{link.GitHubInfo.Login}");
-                Console.WriteLine($"{link.MicrosoftInfo.PreferredName}");
-                Console.WriteLine($"{link.MicrosoftInfo.Alias}");
-                Console.WriteLine($"{link.MicrosoftInfo.EmailAddress}");
+            using (var writer = document.Append())
+            {
+                foreach (var link in linkSet.Links)
+                {
+                    var anyMatch = _terms.Any(t => IsMatch(link, t));
+                    if (!anyMatch)
+                        continue;
+
+                    writer.Write($"{link.GitHubInfo.Login}");
+                    writer.Write($"{link.MicrosoftInfo.PreferredName}");
+                    writer.Write($"{link.MicrosoftInfo.Alias}");
+                    writer.Write($"{link.MicrosoftInfo.EmailAddress}");
+                    writer.WriteLine();
+                }
             }
+
+            if (_viewInExcel)
+                document.ViewInExcel();
+            else
+                document.PrintToConsole();
         }
 
         private static bool IsMatch(OspoLink link, string term)
