@@ -38,6 +38,11 @@ namespace Microsoft.DotnetOrg.Policies
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "bots", StringComparison.OrdinalIgnoreCase));
         }
 
+        public static CachedTeam GetExternalCiAccessTeam(this CachedOrg org)
+        {
+            return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "external-ci-access", StringComparison.OrdinalIgnoreCase));
+        }
+
         public static bool IsMarkerTeam(this CachedTeam team)
         {
             var org = team.Org;
@@ -46,7 +51,8 @@ namespace Microsoft.DotnetOrg.Policies
                    team == org.GetMicrosoftTeam() ||
                    team == org.GetMicrosoftVendorsTeam() ||
                    team == org.GetMicrosoftBotsTeam() ||
-                   team == org.GetBotsTeam();
+                   team == org.GetBotsTeam() ||
+                   team == org.GetExternalCiAccessTeam();
         }
 
         public static bool IsOwnedByMicrosoft(this CachedOrg org)
