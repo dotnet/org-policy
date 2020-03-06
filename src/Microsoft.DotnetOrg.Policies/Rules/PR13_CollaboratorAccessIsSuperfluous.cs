@@ -54,7 +54,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         {
                             yield return new PolicyViolation(
                                 Descriptor,
-                                title: $"Collborator access for user '{user.Login}' is superfluous",
+                                title: $"Collaborator access for user '{user.Login}' is superfluous",
                                 body: $@"
                                     In repo {repo.Markdown()} the user {user.Markdown()} was granted {permission.Markdown()} as a collaborator but the user is an organization owner.
 
@@ -77,7 +77,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         var teamListMarkdown = string.Join(", ", teams);
                         yield return new PolicyViolation(
                             Descriptor,
-                            title: $"Collborator access for user '{user.Login}' is superfluous",
+                            title: $"Collaborator access for user '{user.Login}' is superfluous",
                             body: $@"
                                 In repo {repo.Markdown()} the user {user.Markdown()} was granted {permission.Markdown()} as a collaborator but the user already has {teamPermission.Markdown()} permissions via the team(s) {teamListMarkdown}.
 
