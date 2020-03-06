@@ -30,7 +30,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("r=", "Specifies the repo", v => _repoName = v)
                    .Add("t=", "Specifies the team", v => _teamName = v)
                    .Add("p=", "Sets the {permission} (default: read)", v => _permission = v)
-                   .Add("d", "Unassigns the team", v => _unassign = true);
+                   .Add("d", "Unassigns the user or team", v => _unassign = true);
         }
 
         public override async Task ExecuteAsync()
