@@ -16,6 +16,9 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             const int Threshold = 2;
             foreach (var repo in context.Org.Repos)
             {
+                if (!repo.IsOwnedByMicrosoft())
+                    continue;
+
                 var isArchived = repo.IsArchived;
                 var numberOfAdmins = repo.GetAdministrators(fallbackToOwners: false).Count();
 
