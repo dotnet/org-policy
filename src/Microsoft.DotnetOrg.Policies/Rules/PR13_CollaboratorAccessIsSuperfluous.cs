@@ -47,18 +47,24 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                     if (user.IsOwner)
                     {
-                        yield return new PolicyViolation(
-                            Descriptor,
-                            title: $"Collborator access for user '{user.Login}' is superfluous",
-                            body: $@"
-                                In repo {repo.Markdown()} the user {user.Markdown()} was granted {permission.Markdown()} as a collaborator but the user is an organization owner.
+                        // We want owner rules to only apply to Microsoft repos. The reason being that
+                        // if the owner status is removed, the permissions for the repo should remain.
+                        // This generally doesn't apply to Microsoft-owned repos.
+                        if (repo.IsOwnedByMicrosoft())
+                        {
+                            yield return new PolicyViolation(
+                                Descriptor,
+                                title: $"Collborator access for user '{user.Login}' is superfluous",
+                                body: $@"
+                                    In repo {repo.Markdown()} the user {user.Markdown()} was granted {permission.Markdown()} as a collaborator but the user is an organization owner.
 
-                                You should remove the collaborator access.
-                            ",
-                            org: context.Org,
-                            repo: repo,
-                            user: user
-                        );
+                                    You should remove the collaborator access.
+                                ",
+                                org: context.Org,
+                                repo: repo,
+                                user: user
+                            );
+                        }
                     }
                     else if (orgOwnersOrTeamUsers.TryGetValue(user, out var teamUserAccess) &&
                              permission <= teamUserAccess.Permission)
