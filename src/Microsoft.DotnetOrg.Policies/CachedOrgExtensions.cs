@@ -55,6 +55,21 @@ namespace Microsoft.DotnetOrg.Policies
                    team == org.GetExternalCiAccessTeam();
         }
 
+        public static bool IsUnderDotNetFoundation(this CachedOrg org)
+        {
+            return string.Equals(org.Name, "dotnet", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(org.Name, "aspnet", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(org.Name, "mono", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool IsUnderDotNetFoundation(this CachedRepo repo)
+        {
+            if (string.Equals(repo.FullName, "microsoft/msbuild", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            return repo.Org.IsUnderDotNetFoundation();
+        }
+
         public static bool IsOwnedByMicrosoft(this CachedOrg org)
         {
             // dotnet and mono aren't fully owned by MS
