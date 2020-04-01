@@ -13,7 +13,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             foreach (var repo in context.Org.Repos)
             {
@@ -37,15 +37,14 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                     if (isAdmin)
                     {
-                        yield return new PolicyViolation(
+                        context.ReportViolation(
                             Descriptor,
-                            title: $"Admin access for '{user.Login}' in repo '{repo.Name}' should be granted via a team",
-                            body: $@"
+                            $"Admin access for '{user.Login}' in repo '{repo.Name}' should be granted via a team",
+                            $@"
                                 The user {user.Markdown()} shouldn't be directly added as an admin for repo {repo.Markdown()}. Instead, the user should be in a team that is granted `admin` permissions.
 
                                 {recommendation}
                             ",
-                            org: context.Org,
                             repo: repo,
                             user: user
                         );

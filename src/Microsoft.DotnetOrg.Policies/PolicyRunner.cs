@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotnetOrg.Policies
 {
@@ -18,15 +19,16 @@ namespace Microsoft.DotnetOrg.Policies
                                         .ToList();
         }
 
-        public static IReadOnlyList<PolicyViolation> Run(PolicyAnalysisContext context)
+        public static Task RunAsync(PolicyAnalysisContext context)
         {
             var rules = GetRules();
-            return Run(context, rules);
+            return RunAsync(context, rules);
         }
 
-        public static IReadOnlyList<PolicyViolation> Run(PolicyAnalysisContext context, IEnumerable<PolicyRule> rules)
+        public static Task RunAsync(PolicyAnalysisContext context, IEnumerable<PolicyRule> rules)
         {
-            return rules.SelectMany(r => r.GetViolations(context)).ToArray();
+            var ruleTasks = rules.Select(r => r.GetViolationsAsync(context));
+            return Task.WhenAll(ruleTasks);
         }
     }
 }

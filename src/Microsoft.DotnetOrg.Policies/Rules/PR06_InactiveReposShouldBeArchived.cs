@@ -11,7 +11,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Warning
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             var now = DateTimeOffset.Now;
             var threshold = TimeSpan.FromDays(365);
@@ -22,13 +22,12 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 var inactivity = now - repo.LastPush;
                 if (!alreadyArchived && inactivity > threshold)
                 {
-                    yield return new PolicyViolation(
+                    context.ReportViolation(
                         Descriptor,
                         title: $"Inactive repo '{repo.Name}' should be archived",
                         body: $@"
                             The last push to repo {repo.Markdown()} is more than {threshold.TotalDays:N0} days ago. It should be archived.
                         ",
-                        org: context.Org,
                         repo: repo
                     );
                 }

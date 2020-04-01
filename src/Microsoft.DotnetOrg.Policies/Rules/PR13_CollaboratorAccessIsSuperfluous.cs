@@ -13,7 +13,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Warning
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             foreach (var repo in context.Org.Repos)
             {
@@ -52,15 +52,14 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         // This generally doesn't apply to Microsoft-owned repos.
                         if (repo.IsOwnedByMicrosoft())
                         {
-                            yield return new PolicyViolation(
+                            context.ReportViolation(
                                 Descriptor,
-                                title: $"Collaborator access for user '{user.Login}' is superfluous",
-                                body: $@"
+                                $"Collaborator access for user '{user.Login}' is superfluous",
+                                $@"
                                     In repo {repo.Markdown()} the user {user.Markdown()} was granted {permission.Markdown()} as a collaborator but the user is an organization owner.
 
                                     You should remove the collaborator access.
                                 ",
-                                org: context.Org,
                                 repo: repo,
                                 user: user
                             );
@@ -75,16 +74,14 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                                               .Select(ta => ta.Team.Markdown());
 
                         var teamListMarkdown = string.Join(", ", teams);
-                        yield return new PolicyViolation(
+                        context.ReportViolation(
                             Descriptor,
-                            title: $"Collaborator access for user '{user.Login}' is superfluous",
-                            body: $@"
+                            $"Collaborator access for user '{user.Login}' is superfluous",
+                            $@"
                                 In repo {repo.Markdown()} the user {user.Markdown()} was granted {permission.Markdown()} as a collaborator but the user already has {teamPermission.Markdown()} permissions via the team(s) {teamListMarkdown}.
 
                                 You should remove the collaborator access.
                             ",
-                            org: context.Org,
-                            repo: repo,
                             user: user
                         );
                     }

@@ -10,11 +10,11 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Warning
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             var botsTeam = context.Org.GetBotsTeam();
             if (botsTeam == null)
-                yield break;
+                return;
 
             foreach (var user in context.Org.Users)
             {
@@ -22,16 +22,15 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 var isPotentiallyABot = user.IsPotentiallyABot();
                 if (!isKnownBot && isPotentiallyABot)
                 {
-                    yield return new PolicyViolation(
+                    context.ReportViolation(
                         Descriptor,
-                        title: $"User '{user.Login}' should be marked as a bot",
-                        body: $@"
+                        $"User '{user.Login}' should be marked as a bot",
+                        $@"
                             The user {user.Markdown()} appears to be a bot.
 
                             * If this is in fact a human, mark this issue as `policy-override` and close the issue
                             * If this is a bot, add it to the team {botsTeam.Markdown()}
                         ",
-                        org: context.Org,
                         team: botsTeam,
                         user: user
                     );

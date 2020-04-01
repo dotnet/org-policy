@@ -11,7 +11,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Warning
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             const int Threshold = 2;
             foreach (var repo in context.Org.Repos)
@@ -24,13 +24,12 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                 if (!isArchived && numberOfAdmins < Threshold)
                 {
-                    yield return new PolicyViolation(
+                    context.ReportViolation(
                         Descriptor,
-                        title: $"Repo '{repo.Name}' needs more admins",
-                        body: $@"
+                        $"Repo '{repo.Name}' needs more admins",
+                        $@"
                             The repo {repo.Markdown()} has {numberOfAdmins} admins (excluding organization owners). It is recommended to have at least {Threshold} admins.
                         ",
-                        org: context.Org,
                         repo: repo
                     );
                 }

@@ -10,7 +10,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             foreach (var team in context.Org.Teams)
             {
@@ -22,17 +22,16 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         var isMicrosoftUser = user.IsMicrosoftUser();
                         if (!isMicrosoftUser)
                         {
-                            yield return new PolicyViolation(
+                            context.ReportViolation(
                                 Descriptor,
-                                title: $"Microsoft owned team '{team.Name}' shouldn't contain '{user.Login}'",
-                                body: $@"
+                                $"Microsoft owned team '{team.Name}' shouldn't contain '{user.Login}'",
+                                $@"
                                     Microsoft owned team {team.Markdown()} shouldn't contain user {user.Markdown()} because they are not an employee.
 
                                     * If this is a Microsoft user, they need to [link](https://docs.opensource.microsoft.com/tools/github/accounts/linking.html) their account.
                                     * If this team is supposed to represent Microsoft and non-Microsoft, the team shouldn't be owned by Microsoft
                                     * If this isn't a Microsoft user, they need to be removed from this team.
                                 ",
-                                org: context.Org,
                                 team: team,
                                 user: user
                             );

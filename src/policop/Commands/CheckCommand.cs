@@ -81,7 +81,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                 : await GitHubClientFactory.CreateAsync();
 
             var context = new PolicyAnalysisContext(org);
-            var violations = PolicyRunner.Run(context);
+            await PolicyRunner.RunAsync(context);
+            var violations = context.GetViolations();
 
             var report = gitHubClient == null
                             ? ViolationReport.Create(violations)

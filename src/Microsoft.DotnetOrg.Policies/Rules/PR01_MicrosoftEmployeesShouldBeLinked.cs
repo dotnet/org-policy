@@ -10,7 +10,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             foreach (var user in context.Org.Users)
             {
@@ -19,15 +19,14 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                 if (userClaimsToBeWorkingForMicrosoft && !isMicrosoftUser)
                 {
-                    yield return new PolicyViolation(
+                    context.ReportViolation(
                         Descriptor,
-                        title: $"Microsoft-user '{user.Login}' should be linked",
-                        body: $@"
+                        $"Microsoft-user '{user.Login}' should be linked",
+                        $@"
                             User {user.Markdown()} appears to be a Microsoft employee. They should be [linked](https://opensource.microsoft.com/link) to a Microsoft account.
 
                             For more details, see [documentation](https://docs.opensource.microsoft.com/tools/github/accounts/linking.html).
                         ",
-                        org: context.Org,
                         user: user
                     );
                 }

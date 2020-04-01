@@ -11,7 +11,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             const int Threshold = 10;
 
@@ -21,13 +21,12 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                 if (numberOfMaintainers > Threshold)
                 {
-                    yield return new PolicyViolation(
+                    context.ReportViolation(
                         Descriptor,
-                        title: $"Team '{team.Name}' has too many maintainers",
-                        body: $@"
+                        $"Team '{team.Name}' has too many maintainers",
+                        $@"
                             The team {team.Markdown()} has {numberOfMaintainers} maintainers. Reduce the number of maintainers to {Threshold} or less.
                         ",
-                        org: context.Org,
                         team: team
                     );
                 }

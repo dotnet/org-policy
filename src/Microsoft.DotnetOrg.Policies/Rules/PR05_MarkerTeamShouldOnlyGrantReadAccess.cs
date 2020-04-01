@@ -12,7 +12,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             foreach (var repo in context.Org.Repos)
             {
@@ -22,15 +22,14 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                     if (team.IsMarkerTeam() &&
                         teamAccess.Permission != CachedPermission.Read)
                     {
-                        yield return new PolicyViolation(
+                        context.ReportViolation(
                             Descriptor,
-                            title: $"Repo '{repo.Name}' should only grant '{team.Name}' with 'read' permissions",
-                            body: $@"
+                            $"Repo '{repo.Name}' should only grant '{team.Name}' with 'read' permissions",
+                            $@"
                                 The marker team {team.Markdown()} is only used to indicate ownership. It should only ever grant `read` permissions.
 
                                 Change the permissions for {team.Markdown()} in repo {repo.Markdown()} to `read`.
                             ",
-                            org: context.Org,
                             repo: repo,
                             team: team
                         );

@@ -11,7 +11,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             const int Threshold = 10;
 
@@ -24,13 +24,12 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                 if (numberOfAdmins > Threshold)
                 {
-                    yield return new PolicyViolation(
+                    context.ReportViolation(
                         Descriptor,
-                        title: $"Repo '{repo.Name}' has too many admins",
-                        body: $@"
+                        $"Repo '{repo.Name}' has too many admins",
+                        $@"
                             The repo {repo.Markdown()} has {numberOfAdmins} admins. Reduce the number of admins to {Threshold} or less.
                         ",
-                        org: context.Org,
                         repo: repo
                     );
                 }

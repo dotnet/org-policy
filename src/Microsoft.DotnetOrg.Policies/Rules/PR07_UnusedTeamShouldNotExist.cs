@@ -10,19 +10,18 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Warning
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             foreach (var team in context.Org.Teams)
             {
                 if (team.IsUnused())
                 {
-                    yield return new PolicyViolation(
+                    context.ReportViolation(
                         Descriptor,
-                        title: $"Unused team '{team.Name}' should be removed",
-                        body: $@"
+                        $"Unused team '{team.Name}' should be removed",
+                        $@"
                             Team {team.Markdown()} doesn't have any associated repos nor nested teams. It should either be used or removed.
                         ",
-                        org: context.Org,
                         team: team
                     );
                 }

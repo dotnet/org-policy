@@ -13,17 +13,17 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             // If the entire org is owned by Microsoft, we don't need explicit ownership
             if (context.Org.IsOwnedByMicrosoft())
-                yield break;
+                return;
 
             var microsoftTeam = context.Org.GetMicrosoftTeam();
             var nonMicrosoftTeam = context.Org.GetNonMicrosoftTeam();
 
             if (microsoftTeam == null || nonMicrosoftTeam == null)
-                yield break;
+                return;
 
             foreach (var repo in context.Org.Repos)
             {
@@ -39,16 +39,15 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 {
                     var permission = CachedPermission.Read;
 
-                    yield return new PolicyViolation(
+                    context.ReportViolation(
                         Descriptor,
-                        title: $"Repo '{repo.Name}' must indicate ownership",
-                        body: $@"
+                        $"Repo '{repo.Name}' must indicate ownership",
+                        $@"
                             The repo {repo.Markdown()} needs to indicate whether it's owned by Microsoft.
 
                             * **Owned by Microsoft**. Assign the team {microsoftTeam.Markdown()} with {permission.Markdown()} permissions.
                             * **Not owned by Microsoft**. Assign the team {nonMicrosoftTeam.Markdown()} with {permission.Markdown()} permissions.
                         ",
-                        org: context.Org,
                         repo: repo
                     );
                 }

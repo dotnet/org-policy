@@ -14,7 +14,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override IEnumerable<PolicyViolation> GetViolations(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             foreach (var repo in context.Org.Repos)
             {
@@ -28,7 +28,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         var userWorksForMicrosoft = user.IsMicrosoftUser();
                         if (!userWorksForMicrosoft && permission > _maxPermission)
                         {
-                            yield return new PolicyViolation(
+                            context.ReportViolation(
                                 Descriptor,
                                 title: $"Non-Microsoft contributor '{user.Login}' should at most have '{_maxPermission.ToString().ToLower()}' permission for '{repo.Name}'",
                                 body: $@"
@@ -39,7 +39,6 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                                     * If this is a Microsoft user, they need to [link](https://docs.opensource.microsoft.com/tools/github/accounts/linking.html) their account.
                                     * If this isn't a Microsoft user, their permission needs to be changed to `triage`.
                                 ",
-                                org: context.Org,
                                 repo: repo,
                                 user: user
                             );
