@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -80,9 +81,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                 ? null
                                 : await GitHubClientFactory.CreateAsync();
 
+            var stopwatch = Stopwatch.StartNew();
+
             var context = new PolicyAnalysisContext(org);
             await PolicyRunner.RunAsync(context);
             var violations = context.GetViolations();
+
+            stopwatch.Stop();
 
             var report = gitHubClient == null
                             ? ViolationReport.Create(violations)
@@ -98,6 +103,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             Console.WriteLine($"   Created violations: {report.CreatedViolations.Count:N0}");
             Console.WriteLine($"  Reopened violations: {report.ReopenedViolations.Count:N0}");
             Console.WriteLine($"    Closed violations: {report.ClosedViolations.Count:N0}");
+            Console.WriteLine($"             Duration: {stopwatch.Elapsed}");
         }
 
         private static readonly string AreaViolationLabel = "area-violation";
