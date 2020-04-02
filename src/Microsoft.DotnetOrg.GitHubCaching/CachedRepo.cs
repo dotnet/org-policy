@@ -20,6 +20,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public string Url => CachedOrg.GetRepoUrl(Org.Name, Name);
 
         [JsonIgnore]
+        public string FullName => $"{Org.Name}/{Name}";
+
+        [JsonIgnore]
         public List<CachedTeamAccess> Teams { get; } = new List<CachedTeamAccess>();
 
         [JsonIgnore]
