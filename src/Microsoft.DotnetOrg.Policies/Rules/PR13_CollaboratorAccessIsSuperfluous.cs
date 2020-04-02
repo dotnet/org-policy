@@ -82,6 +82,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                                 You should remove the collaborator access.
                             ",
+                            repo: repo,
                             user: user
                         );
                     }
