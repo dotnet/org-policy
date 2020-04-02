@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Csv;
@@ -22,6 +24,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private bool _updateIssues;
         private bool _assignIssues;
         private bool _viewInExcel;
+        private string _writeIssuesTo;
 
         public override string Name => "check";
 
@@ -34,7 +37,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
                    .Add("policy-repo=", "The GitHub {repo} policy violations should be filed in.", v => _policyRepo = v)
                    .Add("update-issues", "Will create, repopen and closed policy violations.", v => _updateIssues = true)
-                   .Add("assign-issues", "If specified, it will assign issues as well", v => _assignIssues = true);
+                   .Add("assign-issues", "If specified, it will assign issues as well", v => _assignIssues = true)
+                   .Add("write-issues-to=", "The {path} to a directory in which to save new issues", v => _writeIssuesTo = v);
         }
 
         public override async Task ExecuteAsync()
@@ -94,6 +98,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                             : await CreateViolationReportAsync(gitHubClient, policyRepo, violations);
 
             SaveVioloations(_orgName, _outputFileName, _viewInExcel, report);
+
+            if (_writeIssuesTo != null)
+                WriteIssues(_writeIssuesTo, report);
 
             if (_updateIssues)
                 await UpdateIssuesAsync(gitHubClient, policyRepo, report, _assignIssues);
@@ -155,6 +162,35 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             if (viewInExcel)
                 document.ViewInExcel();
+        }
+
+        private void WriteIssues(string directoryPath, ViolationReport report)
+        {
+            Directory.CreateDirectory(directoryPath);
+
+            foreach (var violation in report.CreatedViolations)
+            {
+                var sb = new StringBuilder();
+                sb.Append("# ");
+                sb.Append(violation.Title);
+                sb.AppendLine();
+                sb.AppendLine();
+                sb.Append(violation.Body);
+                sb.AppendLine();
+                sb.AppendLine();
+                sb.AppendLine("## Assignees");
+                sb.AppendLine();
+                foreach (var user in violation.Assignees)
+                {
+                    sb.Append("* ");
+                    sb.Append(user.Markdown());
+                    sb.AppendLine();
+                }
+
+                var fileName = $"{violation.DiagnosticId} {violation.Title} ({violation.Fingerprint}).md";
+                var path = Path.Combine(directoryPath, fileName);
+                File.WriteAllText(path, sb.ToString());
+            }
         }
 
         private static async Task<ViolationReport> CreateViolationReportAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<PolicyViolation> violations)
