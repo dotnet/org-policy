@@ -44,6 +44,16 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 r => r.IsPrivate ? "Yes" : "No"
             ),
             new RepoReportColumn(
+                "r:fork",
+                "Indicates whether the repo is a fork",
+                r => r.IsFork ? "Yes" : "No"
+            ),
+            new RepoReportColumn(
+                "r:mirror",
+                "Indicates whether the repo is a mirror",
+                r => r.IsMirror ? "Yes" : "No"
+            ),
+            new RepoReportColumn(
                 "r:archived",
                 "Indicates whether the repo is archived",
                 r => r.IsArchived ? "Yes" : "No"

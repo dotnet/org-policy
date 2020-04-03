@@ -13,7 +13,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 {
     public sealed class CachedOrg
     {
-        public static int CurrentVersion = 7;
+        public static int CurrentVersion = 8;
 
         public int Version { get; set; }
         public string Name { get; set; }

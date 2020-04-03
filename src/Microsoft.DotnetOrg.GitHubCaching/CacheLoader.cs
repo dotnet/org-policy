@@ -121,6 +121,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     Name = r.Name,
                     LastPush = r.PushedAt ?? r.CreatedAt,
                     IsPrivate = r.IsPrivate,
+                    IsFork = r.IsFork,
+                    IsMirror = r.IsMirror,
                     IsArchived = r.IsArchived,
                     IsTemplate = r.IsTemplate,
                     Description = r.Description
