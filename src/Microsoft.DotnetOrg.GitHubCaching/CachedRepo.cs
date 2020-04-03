@@ -10,8 +10,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public bool IsPrivate { get; set; }
         public bool IsArchived { get; set; }
         public bool IsTemplate { get; set; }
-        public bool IsFork { get; internal set; }
-        public bool IsMirror { get; internal set; }
+        public bool IsFork { get; set; }
+        public bool IsMirror { get; set; }
         public DateTimeOffset LastPush { get; set; }
         public string Description { get; set; }
 
