@@ -2,7 +2,7 @@
 {
     internal sealed class PR01_MicrosoftEmployeesShouldBeLinked : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR01",
             "Microsoft employees should be linked",
             PolicySeverity.Error

@@ -4,7 +4,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR08_TooManyRepoAdmins : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR08",
             "Too many repo admins",
             PolicySeverity.Error

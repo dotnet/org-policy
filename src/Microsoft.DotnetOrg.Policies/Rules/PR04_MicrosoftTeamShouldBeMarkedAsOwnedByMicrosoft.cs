@@ -6,7 +6,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR04_MicrosoftTeamShouldBeMarkedAsOwnedByMicrosoft : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR04",
             "Team should be owned by Microsoft",
             PolicySeverity.Error

@@ -9,7 +9,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
     //       Will be enabled after merges of CoCs is complete 
     internal abstract class PR15_RepoMustHaveACodeOfConduct : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR15",
             "Repo must have a Code of Conduct",
             PolicySeverity.Error

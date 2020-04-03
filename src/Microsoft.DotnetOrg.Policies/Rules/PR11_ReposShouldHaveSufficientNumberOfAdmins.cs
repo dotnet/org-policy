@@ -4,7 +4,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR11_ReposShouldHaveSufficientNumberOfAdmins : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR11",
             "Repos should have a sufficient number of admins",
             PolicySeverity.Warning

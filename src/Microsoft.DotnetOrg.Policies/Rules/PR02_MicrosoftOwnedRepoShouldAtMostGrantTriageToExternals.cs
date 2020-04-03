@@ -6,7 +6,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
     {
         private const CachedPermission _maxPermission = CachedPermission.Triage;
 
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR02",
             $"Microsoft-owned repo should at most grant '{_maxPermission.ToString().ToLower()}' to externals",
             PolicySeverity.Error

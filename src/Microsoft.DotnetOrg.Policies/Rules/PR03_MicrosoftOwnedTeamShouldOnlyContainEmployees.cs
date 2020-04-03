@@ -2,7 +2,7 @@
 {
     internal sealed class PR03_MicrosoftOwnedTeamShouldOnlyContainEmployees : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR03",
             "Microsoft-owned team should only contain Microsoft users",
             PolicySeverity.Error

@@ -4,7 +4,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR06_InactiveReposShouldBeArchived : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR06",
             "Inactive repos should be archived",
             PolicySeverity.Warning

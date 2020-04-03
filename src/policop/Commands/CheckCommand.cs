@@ -25,6 +25,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private bool _assignIssues;
         private bool _viewInExcel;
         private string _writeIssuesTo;
+        private SortedSet<string> _includedRuleIds = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        private ICollection<string> _activeTerms;
 
         public override string Name => "check";
 
@@ -38,7 +40,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("policy-repo=", "The GitHub {repo} policy violations should be filed in.", v => _policyRepo = v)
                    .Add("update-issues", "Will create, repopen and closed policy violations.", v => _updateIssues = true)
                    .Add("assign-issues", "If specified, it will assign issues as well", v => _assignIssues = true)
-                   .Add("write-issues-to=", "The {path} to a directory in which to save new issues", v => _writeIssuesTo = v);
+                   .Add("write-issues-to=", "The {path} to a directory in which to save new issues", v => _writeIssuesTo = v)
+                   .Add("r|rule", "Include rule {id}", v => _activeTerms = _includedRuleIds)
+                   .Add("<>", v => _activeTerms?.Add(v));
         }
 
         public override async Task ExecuteAsync()
@@ -85,10 +89,22 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                 ? null
                                 : await GitHubClientFactory.CreateAsync();
 
+            var includedRules = PolicyRunner.GetRules().ToList();
+            var existingRules = includedRules.Select(r => r.Descriptor.DiagnosticId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (_includedRuleIds.Count > 0)
+            {
+                var invalidRuleIds = _includedRuleIds.Where(r => !existingRules.Contains(r));
+                foreach (var invalidRuleId in invalidRuleIds)
+                    Console.Error.WriteLine($"warning: policy rule '{invalidRuleId}' doesn't exist");
+
+                includedRules.RemoveAll(r => !_includedRuleIds.Contains(r.Descriptor.DiagnosticId));
+            }
+
             var stopwatch = Stopwatch.StartNew();
 
             var context = new PolicyAnalysisContext(org);
-            await PolicyRunner.RunAsync(context);
+            await PolicyRunner.RunAsync(context, includedRules);
             var violations = context.GetViolations();
 
             stopwatch.Stop();

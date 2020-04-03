@@ -7,7 +7,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR14_RepoOwnershipMustBeExplicit : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR14",
             "Repo ownership must be explicit",
             PolicySeverity.Error

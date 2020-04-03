@@ -11,7 +11,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
     //       Will be enabled after merges of CoCs is complete 
     internal abstract class PR16_ReposMustLinkCorrectCodeOfConduct: PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR16",
             "Repos must link correct Code of Conduct",
             PolicySeverity.Error

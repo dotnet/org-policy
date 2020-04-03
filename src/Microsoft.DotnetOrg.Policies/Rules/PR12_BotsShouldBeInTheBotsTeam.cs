@@ -2,7 +2,7 @@
 {
     internal sealed class PR12_BotsShouldBeInTheBotsTeam : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR12",
             "Bots should be in the 'bots' team",
             PolicySeverity.Warning

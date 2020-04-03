@@ -2,7 +2,7 @@
 {
     internal sealed class PR07_UnusedTeamShouldNotExist : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR07",
             "Unused team should be removed",
             PolicySeverity.Warning

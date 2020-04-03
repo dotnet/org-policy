@@ -7,7 +7,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR13_CollaboratorAccessIsSuperfluous : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR13",
             "Collaborator access is superfluous",
             PolicySeverity.Warning

@@ -6,7 +6,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR10_AdminsShouldBeInTeams : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR10",
             "Admins should be in teams",
             PolicySeverity.Error

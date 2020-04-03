@@ -4,7 +4,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR05_MarkerTeamShouldOnlyGrantReadAccess : PolicyRule
     {
-        public static PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR05",
             "Marker team should only grant 'read' access",
             PolicySeverity.Error
