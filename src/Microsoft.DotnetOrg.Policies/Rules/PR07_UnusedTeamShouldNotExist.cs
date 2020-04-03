@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Microsoft.DotnetOrg.Policies.Rules
+﻿namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR07_UnusedTeamShouldNotExist : PolicyRule
     {
