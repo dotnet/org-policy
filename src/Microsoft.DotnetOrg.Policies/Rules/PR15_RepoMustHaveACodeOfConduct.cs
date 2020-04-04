@@ -32,6 +32,12 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (repo.IsPrivate || repo.IsArchived)
                     continue;
 
+                // Let's also exclude forks and mirrors because adding a file to
+                // these repos isn't always practical (as they usually belong to
+                // other communities).
+                if (repo.IsFork || repo.IsMirror)
+                    continue;
+
                 var coc = await client.GetCodeOfConduct(repo.Org.Name, repo.Name);
                 if (coc != null)
                     continue;
