@@ -5,9 +5,7 @@ using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    // TODO: Marked abstract to disable.
-    //       Will be enabled after merges of CoCs is complete 
-    internal abstract class PR15_RepoMustHaveACodeOfConduct : PolicyRule
+    internal sealed class PR15_RepoMustHaveACodeOfConduct : PolicyRule
     {
         public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR15",
