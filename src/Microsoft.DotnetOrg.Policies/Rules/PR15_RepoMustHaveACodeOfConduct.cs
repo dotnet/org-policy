@@ -16,8 +16,9 @@ namespace Microsoft.DotnetOrg.Policies.Rules
         public override async Task GetViolationsAsync(PolicyAnalysisContext context)
         {
             // TODO: Enable for other orgs
-            //       aspnet, mono, xamarin, xamarinhq
-            if (!string.Equals(context.Org.Name, "dotnet", StringComparison.OrdinalIgnoreCase))
+            //       mono, xamarin, xamarinhq
+            if (!string.Equals(context.Org.Name, "aspnet", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(context.Org.Name, "dotnet", StringComparison.OrdinalIgnoreCase))
                 return;
 
             // This rule is not scoped to anyone because both Microsoft and .NET Foundation
