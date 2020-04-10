@@ -7,9 +7,7 @@ using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
-    // TODO: Marked abstract to disable.
-    //       Will be enabled after merges of CoCs is complete 
-    internal abstract class PR16_ReposMustLinkCorrectCodeOfConduct: PolicyRule
+    internal sealed class PR16_ReposMustLinkCorrectCodeOfConduct: PolicyRule
     {
         public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR16",
@@ -20,8 +18,9 @@ namespace Microsoft.DotnetOrg.Policies.Rules
         public override async Task GetViolationsAsync(PolicyAnalysisContext context)
         {
             // TODO: Enable for other orgs
-            //       aspnet, mono, xamarin, xamarinhq
-            if (!string.Equals(context.Org.Name, "dotnet", StringComparison.OrdinalIgnoreCase))
+            //       mono, xamarin, xamarinhq
+            if (!string.Equals(context.Org.Name, "aspnet", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(context.Org.Name, "dotnet", StringComparison.OrdinalIgnoreCase))
                 return;
 
             var probedFoundationCoCReferences = new[]
