@@ -107,7 +107,18 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 return new OspoLinkSet();
 
             Log.WriteLine("Loading Microsoft link information...");
-            return await OspoClient.GetAllAsync();
+            var result = await OspoClient.GetAllAsync();
+
+            if (result.Links.Count == 0)
+            {
+                throw new OspoException(
+                    "The OSPO result set is empty. " +
+                    "This very likely indicates a temporary issue with linking service. " +
+                    "We have failed the build to avoid cascading errors due to missing" +
+                    "linking data.");
+            }
+
+            return result;
         }
 
         private async Task<IReadOnlyCollection<CachedRepo>> GetCachedReposAsync(string orgName)
