@@ -86,7 +86,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                         if (protectionSettings?.RequiredStatusChecks != null)
                         {
                             var contexts = protectionSettings.RequiredStatusChecks.Contexts.ToList();
-                            var matchingContexts = contexts.Where(c => _statusCheck == "*" || string.Equals(c, _statusCheck, StringComparison.OrdinalIgnoreCase)).ToArray();
+                            var matchingContexts = contexts.Where(c => _statusCheck == "*" || string.Equals(c, _statusCheck, StringComparison.OrdinalIgnoreCase))
+                                                           .ToArray();
 
                             foreach (var context in matchingContexts)
                             {
