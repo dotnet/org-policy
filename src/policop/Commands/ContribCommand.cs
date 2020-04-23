@@ -76,6 +76,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                           group c by c.Author.Login into g
                           select (Login: g.Key, Commits: g.Count(), LinkTask: ospoClient.GetAsync(g.Key)))
                           .OrderByDescending(r => r.Commits)
+                          .ThenBy(r => r.Login)
                           .ToArray();
 
             await Task.WhenAll(report.Select(r => r.LinkTask));
