@@ -32,9 +32,6 @@ namespace Microsoft.DotnetOrg.Ospo
         public async Task<OspoLink> GetAsync(string gitHubLogin)
         {
             var result = await GetAsJsonAsync<OspoLink>($"people/links/github/{gitHubLogin}");
-            if (result != null)
-                FixUpEmail(result);
-
             return result;
         }
 
@@ -47,23 +44,6 @@ namespace Microsoft.DotnetOrg.Ospo
 
             linkSet.Initialize();
             return linkSet;
-        }
-
-        private static void FixUpEmail(OspoLink link)
-        {
-            // For some interesting reason, some people have their
-            // email in the PreferredName field...
-
-            var ms = link.MicrosoftInfo;
-
-            if (ms.PreferredName != null && ms.PreferredName.Contains("@"))
-            {
-                if (string.IsNullOrEmpty(ms.EmailAddress))
-                {
-                    ms.EmailAddress = ms.PreferredName;
-                    ms.PreferredName = null;
-                }
-            }
         }
 
         private async Task<T> GetAsJsonAsync<T>(string requestUri)
