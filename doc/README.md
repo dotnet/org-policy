@@ -17,7 +17,7 @@ Rule            | Severity | Title
 [PR13](PR13.md) | Warning  | Collaborator access is superfluous
 [PR14](PR14.md) | Error    | Repo ownership must be explicit
 [PR15](PR15.md) | Error    | Repo must have a Code of Conduct
-[PR15](PR16.md) | Error    | Repos must link correct Code of Conduct
+[PR16](PR16.md) | Error    | Repos must link correct Code of Conduct
 
 ## Process
 
