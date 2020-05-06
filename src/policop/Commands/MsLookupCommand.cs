@@ -70,11 +70,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                 ? term.Substring(0, term.IndexOf('@'))
                                 : term;
 
-            return string.Equals(link.GitHubInfo.Id.ToString(), term, StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(link.GitHubInfo.Login, login, StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(link.MicrosoftInfo.Alias, aliasText, StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(link.MicrosoftInfo.EmailAddress, term, StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(link.MicrosoftInfo.PreferredName, term, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(link.GitHubInfo?.Id.ToString(), term, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(link.GitHubInfo?.Login, login, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(link.MicrosoftInfo?.Alias, aliasText, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(link.MicrosoftInfo?.EmailAddress, term, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(link.MicrosoftInfo?.PreferredName, term, StringComparison.OrdinalIgnoreCase);
         }
     }
 }
