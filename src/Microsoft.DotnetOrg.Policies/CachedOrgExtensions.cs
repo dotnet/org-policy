@@ -122,6 +122,9 @@ namespace Microsoft.DotnetOrg.Policies
             if (user.MicrosoftInfo != null)
                 return true;
 
+            if (user.IsKnownMicrosoftServiceAccount())
+                return true;
+
             var teams = new[]
             {
                 user.Org.GetMicrosoftVendorsTeam(),
@@ -129,6 +132,24 @@ namespace Microsoft.DotnetOrg.Policies
             };
 
             return teams.Any(t => t != null && t.EffectiveMembers.Contains(user));
+        }
+
+        private static bool IsKnownMicrosoftServiceAccount(this CachedUser user)
+        {
+            // Due to a recent security push in the Microsoft org, many
+            // service accounts have been demoted to external contributors
+            // which means they can't be team members anymore. Thus only
+            // checking membership in the microsoft-bots team doesn't work
+            // anymore.
+            //
+            // Solution: we'll hard code them here.
+
+            var knownServiceAccounts = new[]
+            {
+                "cxwtool"
+            };
+
+            return knownServiceAccounts.Any(a => string.Equals(user.Login, a, StringComparison.OrdinalIgnoreCase));
         }
 
         public static string GetName(this CachedUser user)
@@ -160,6 +181,9 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool IsBot(this CachedUser user)
         {
+            if (user.IsKnownMicrosoftServiceAccount())
+                return true;
+
             var team = user.Org.GetBotsTeam();
             return team != null && team.EffectiveMembers.Contains(user);
         }
