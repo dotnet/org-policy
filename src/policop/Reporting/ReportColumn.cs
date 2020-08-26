@@ -8,6 +8,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
     internal abstract class ReportColumn
     {
+        private static Random _random = new Random();
+
         public ReportColumn(string name, string description)
         {
             Name = name;
@@ -87,6 +89,34 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "r:admins",
                 "Names and emails of admins",
                 r => string.Join("; ", r.GetAdministrators().Select(u => u.GetEmailName()))
+            ),
+            new RepoReportColumn(
+                "r:assign-admin",
+                "Randomly selects an admin",
+                r =>
+                {
+                    // First, let's only look at MS admins
+                    var admins = r.GetAdministrators()
+                                  .Where(a => !string.IsNullOrEmpty(a.MicrosoftInfo?.EmailAddress))
+                                  .Select(u => u.GetEmailName())
+                                  .ToArray();
+
+                    // If we don't find any let's look at anyone with an email
+                    if (admins.Length == 0)
+                    {
+                        admins = r.GetAdministrators()
+                                  .Where(a => !string.IsNullOrEmpty(a.GetEmail()))
+                                  .Select(u => u.GetEmailName())
+                                  .ToArray();
+
+                        // OK, we're out of luck
+                        if (admins.Length == 0)
+                            return string.Empty;
+                    }
+
+                    // Now assign an random one
+                    return admins[_random.Next(0, admins.Length)];
+                }
             ),
             new RepoReportColumn(
                 "r:description",
