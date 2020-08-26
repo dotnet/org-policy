@@ -459,7 +459,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
             catch (Exception ex) when (attempt < ErrorRetryCount)
             {
-                Console.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
+                Log.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
                 attempt++;
                 goto TryAgain;
             }
@@ -476,7 +476,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
             catch (Exception ex) when (attempt < ErrorRetryCount)
             {
-                Console.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
+                Log.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
                 attempt++;
                 goto TryAgain;
             }
