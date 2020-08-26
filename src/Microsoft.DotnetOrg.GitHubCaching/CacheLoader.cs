@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.DotnetOrg.Ospo;
 
 using Octokit.GraphQL;
+using Octokit.GraphQL.Core;
 using Octokit.GraphQL.Model;
 
 using static Octokit.GraphQL.Variable;
@@ -15,6 +16,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 {
     internal sealed class CacheLoader
     {
+
         public CacheLoader(Connection connection, TextWriter logWriter, OspoClient ospoClient)
         {
             Connection = connection;
@@ -22,6 +24,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             OspoClient = ospoClient;
         }
 
+        public int ErrorRetryCount { get; set; } = 3;
         public Connection Connection { get; }
         public TextWriter Log { get; }
         public OspoClient OspoClient { get; }
@@ -139,7 +142,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     Description = r.Description
                 });
 
-            var result = await Connection.Run(query);
+            var result = await RunQueryWithRetry(query);
             return result.ToArray();
         }
 
@@ -159,7 +162,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     IsSecret = t.Privacy == TeamPrivacy.Visible ? false : true
                 });
 
-            var result = await Connection.Run(query);
+            var result = await RunQueryWithRetry(query);
             return result.ToArray();
         }
 
@@ -191,12 +194,12 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     { "teamSlug", teamSlug },
                 };
 
-                var current = await Connection.Run(query, vars);
+                var current = await RunQueryWithRetry(query, vars);
                 vars["after"] = current.HasNextPage ? current.EndCursor : null;
 
                 while (vars["after"] != null)
                 {
-                    var page = await Connection.Run(query, vars);
+                    var page = await RunQueryWithRetry(query, vars);
                     current.Items.AddRange(page.Items);
                     vars["after"] = page.HasNextPage
                                         ? page.EndCursor
@@ -252,12 +255,12 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     { "teamSlug", teamSlug },
                 };
 
-                var current = await Connection.Run(query, vars);
+                var current = await RunQueryWithRetry(query, vars);
                 vars["after"] = current.HasNextPage ? current.EndCursor : null;
 
                 while (vars["after"] != null)
                 {
-                    var page = await Connection.Run(query, vars);
+                    var page = await RunQueryWithRetry(query, vars);
                     current.Items.AddRange(page.Items);
                     vars["after"] = page.HasNextPage
                                         ? page.EndCursor
@@ -306,12 +309,12 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 { "after", null },
             };
 
-            var current = await Connection.Run(query, vars);
+            var current = await RunQueryWithRetry(query, vars);
             vars["after"] = current.HasNextPage ? current.EndCursor : null;
 
             while (vars["after"] != null)
             {
-                var page = await Connection.Run(query, vars);
+                var page = await RunQueryWithRetry(query, vars);
                 current.Items.AddRange(page.Items);
                 vars["after"] = page.HasNextPage
                                     ? page.EndCursor
@@ -367,7 +370,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     { "repoName", repoName },
                 };
 
-                var queryResult = await Connection.Run(query, vars);
+                var queryResult = await RunQueryWithRetry(query, vars);
 
                 foreach (var item in queryResult)
                 {
@@ -417,12 +420,12 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     { "repoName", repoName },
                 };
 
-                var current = await Connection.Run(query, vars);
+                var current = await RunQueryWithRetry(query, vars);
                 vars["after"] = current.HasNextPage ? current.EndCursor : null;
 
                 while (vars["after"] != null)
                 {
-                    var page = await Connection.Run(query, vars);
+                    var page = await RunQueryWithRetry(query, vars);
                     current.Items.AddRange(page.Items);
                     vars["after"] = page.HasNextPage
                                         ? page.EndCursor
@@ -443,6 +446,40 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
 
             return result.ToArray();
+        }
+
+        private async Task<IEnumerable<T>> RunQueryWithRetry<T>(IQueryableList<T> query)
+        {
+            var attempt = 1;
+
+        TryAgain:
+            try
+            {
+                return await Connection.Run(query);
+            }
+            catch (Exception ex) when (attempt < ErrorRetryCount)
+            {
+                Console.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
+                attempt++;
+                goto TryAgain;
+            }
+        }
+
+        private async Task<T> RunQueryWithRetry<T>(ICompiledQuery<T> query, Dictionary<string, object> variables)
+        {
+            var attempt = 1;
+
+        TryAgain:
+            try
+            {
+                return await Connection.Run(query, variables);
+            }
+            catch (Exception ex) when (attempt < ErrorRetryCount)
+            {
+                Console.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
+                attempt++;
+                goto TryAgain;
+            }
         }
 
         private static CachedPermission GetCachedPermission(RepositoryPermission permission)
