@@ -19,6 +19,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private bool _listUsers;
         private List<string> _activeTerms;
         private bool _viewInExcel;
+        private string _outputFileName;
         private readonly ReportContext _reportContext = new ReportContext();
 
         public override string Name => "list";
@@ -34,6 +35,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
                    .Add("c", "Column names to include", v => _activeTerms = _reportContext.IncludedColumns)
                    .Add("f", "Extra filters", v => _activeTerms = _reportContext.ColumnFilters)
+                   .Add("o|out=", "Specifies the output {path}", v => _outputFileName = v)
                    .Add("<>", v => _activeTerms?.Add(v));
         }
 
@@ -203,14 +205,12 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             if (document.Keys.Count == 0 || document.Rows.Count == 0)
                 return;
 
-            if (_viewInExcel)
-            {
+            if (_outputFileName != null)
+                document.Save(_outputFileName);
+            else if (_viewInExcel)
                 document.ViewInExcel();
-            }
             else
-            {
                 document.PrintToConsole();
-            }
         }
     }
 }
