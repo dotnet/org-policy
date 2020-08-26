@@ -23,13 +23,23 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             return All.SingleOrDefault(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
-        public static IEnumerable<ReportColumn> All => RepoColumns.Cast<ReportColumn>()
-                                                                  .Concat(TeamColumns)
-                                                                  .Concat(UserColumns)
-                                                                  .Concat(TeamMembershipColumns)
-                                                                  .Concat(TeamAccessColumns)
-                                                                  .Concat(UserAccessColumns)
-                                                                  .Concat(AuditColumns);
+        public static IEnumerable<ReportColumn> All => OrgColumns.Cast<ReportColumn>()
+                                                                 .Concat(RepoColumns)
+                                                                 .Concat(TeamColumns)
+                                                                 .Concat(UserColumns)
+                                                                 .Concat(TeamMembershipColumns)
+                                                                 .Concat(TeamAccessColumns)
+                                                                 .Concat(UserAccessColumns)
+                                                                 .Concat(AuditColumns);
+
+        public static IReadOnlyList<ReportColumn> OrgColumns { get; } = new[]
+        {
+            new OrgReportColumn(
+                "o:name",
+                "The name of the org",
+                o => o.Name
+            ),
+        };
 
         public static IReadOnlyList<ReportColumn> RepoColumns { get; } = new[]
         {

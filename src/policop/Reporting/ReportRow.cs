@@ -14,6 +14,19 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             WhatIfPermission = whatIfPermission;
         }
 
+        public CachedOrg Org
+        {
+            get
+            {
+                if (Repo != null) return Repo.Org;
+                if (Team != null) return Team.Org;
+                if (User != null) return User.Org;
+                if (UserAccess != null) return UserAccess.Org;
+                if (TeamAccess != null) return TeamAccess.Org;
+                return null;
+            }
+        }
+
         public CachedRepo Repo { get; }
         public CachedTeam Team { get; }
         public CachedUser User { get; }

@@ -39,6 +39,14 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("<>", v => _activeTerms?.Add(v));
         }
 
+        private IEnumerable<string> GetOrgNames()
+        {
+            if (_orgName == "*")
+                return CacheManager.GetCachedOrgNames();
+
+            return new[] { _orgName };
+        }
+
         public override async Task ExecuteAsync()
         {
             if (string.IsNullOrEmpty(_orgName))
@@ -53,9 +61,14 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var org = await CacheManager.LoadOrgAsync(_orgName);
+            var orgNames = GetOrgNames();
 
-            if (org == null)
+            var orgTasks = orgNames.Select(o => CacheManager.LoadOrgAsync(o)).ToArray();
+            await Task.WhenAll(orgTasks);
+
+            var orgs = orgTasks.Select(t => t.Result).ToArray();
+
+            if (orgs.Length == 1 && orgs[0] == null)
             {
                 Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
                 return;
@@ -70,133 +83,141 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 case 1:
                     if (_listRepos)
                     {
-                        ListRepos(org);
+                        ListRepos(orgs);
                     }
                     else if (_listTeams)
                     {
-                        ListTeams(org);
+                        ListTeams(orgs);
                     }
                     else if (_listUsers)
                     {
-                        ListUsers(org);
+                        ListUsers(orgs);
                     }
                     return;
                 case 2:
                     if (_listRepos && _listTeams)
                     {
-                        ListTeamAccess(org);
+                        ListTeamAccess(orgs);
                     }
                     else if (_listRepos && _listUsers)
                     {
-                        ListUserAccess(org);
+                        ListUserAccess(orgs);
                     }
                     else if (_listTeams && _listUsers)
                     {
-                        ListTeamMembers(org);
+                        ListTeamMembers(orgs);
                     }
                     return;
                 case 3:
-                    ListAuditMembers(org);
+                    ListAuditMembers(orgs);
                     return;
             }
         }
 
-        private void ListRepos(CachedOrg org)
+        private void ListRepos(IReadOnlyList<CachedOrg> orgs)
         {
-            var rows = org.Repos
-                          .OrderBy(r => r.Name)
-                          .Select(r => new ReportRow(repo: r))
-                          .Where(_reportContext.CreateRowFilter())
-                          .ToArray();
+            var rows = orgs.SelectMany(o => o.Repos)
+                           .OrderBy(r => r.Name)
+                           .Select(r => new ReportRow(repo: r))
+                           .Where(_reportContext.CreateRowFilter())
+                           .ToArray();
 
-            var columns = _reportContext.GetColumns("r:name", "r:private", "r:archived", "r:template", "r:description");
+            var columns = GetColumns("r:name", "r:private", "r:archived", "r:template", "r:description");
             OutputTable(rows, columns);
         }
 
-        private void ListTeams(CachedOrg org)
+        private void ListTeams(IReadOnlyList<CachedOrg> orgs)
         {
-            var rows = org.Teams
-                          .OrderBy(t => t.GetFullName())
-                          .Select(t => new ReportRow(team: t))
-                          .Where(_reportContext.CreateRowFilter())
-                          .ToArray();
+            var rows = orgs.SelectMany(o => o.Teams)
+                           .OrderBy(t => t.GetFullName())
+                           .Select(t => new ReportRow(team: t))
+                           .Where(_reportContext.CreateRowFilter())
+                           .ToArray();
 
-            var columns = _reportContext.GetColumns("t:full-slug", "t:marker", "t:ms-owned", "t:description");
+            var columns = GetColumns("t:full-slug", "t:marker", "t:ms-owned", "t:description");
             OutputTable(rows, columns);
         }
 
-        private void ListUsers(CachedOrg org)
+        private void ListUsers(IReadOnlyList<CachedOrg> orgs)
         {
-            var rows = org.Users
-                          .OrderBy(u => u.Login)
-                          .Select(u => new ReportRow(user: u))
-                          .Where(_reportContext.CreateRowFilter())
-                          .ToArray();
+            var rows = orgs.SelectMany(o => o.Users)
+                           .OrderBy(u => u.Login)
+                           .Select(u => new ReportRow(user: u))
+                           .Where(_reportContext.CreateRowFilter())
+                           .ToArray();
 
-            var columns = _reportContext.GetColumns("u:login", "u:name", "u:ms-linked", "u:email");
+            var columns = GetColumns("u:login", "u:name", "u:ms-linked", "u:email");
             OutputTable(rows, columns);
         }
 
-        private void ListTeamAccess(CachedOrg org)
+        private void ListTeamAccess(IReadOnlyList<CachedOrg> orgs)
         {
-            var rows = org.Teams
-                          .SelectMany(t => t.Repos)
-                          .Select(ta => new ReportRow(repo: ta.Repo, team: ta.Team, teamAccess: ta))
-                          .Where(_reportContext.CreateRowFilter())
-                          .ToArray();
+            var rows = orgs.SelectMany(o => o.Teams)
+                           .SelectMany(t => t.Repos)
+                           .Select(ta => new ReportRow(repo: ta.Repo, team: ta.Team, teamAccess: ta))
+                           .Where(_reportContext.CreateRowFilter())
+                           .ToArray();
 
-            var columns = _reportContext.GetColumns("r:name", "t:slug", "rt:permission");
+            var columns = GetColumns("r:name", "t:slug", "rt:permission");
             OutputTable(rows, columns);
         }
 
-        private void ListUserAccess(CachedOrg org)
+        private void ListUserAccess(IReadOnlyList<CachedOrg> orgs)
         {
-            var rows = org.Repos
-                          .SelectMany(r => r.EffectiveUsers)
-                          .Select(ua => new ReportRow(repo: ua.Repo, user: ua.User, userAccess: ua))
-                          .Where(_reportContext.CreateRowFilter())
-                          .ToArray();
+            var rows = orgs.SelectMany(o => o.Repos)
+                           .SelectMany(r => r.EffectiveUsers)
+                           .Select(ua => new ReportRow(repo: ua.Repo, user: ua.User, userAccess: ua))
+                           .Where(_reportContext.CreateRowFilter())
+                           .ToArray();
 
-            var columns = _reportContext.GetColumns("r:name", "u:login", "ru:permission", "ru:reason");
+            var columns = GetColumns("r:name", "u:login", "ru:permission", "ru:reason");
             OutputTable(rows, columns);
         }
 
-        private void ListTeamMembers(CachedOrg org)
+        private void ListTeamMembers(IReadOnlyList<CachedOrg> orgs)
         {
-            var rows = org.Teams
-                          .SelectMany(t => t.Members.Select(m => new ReportRow(team: t, user: m)))
-                          .Where(_reportContext.CreateRowFilter())
-                          .ToArray();
+            var rows = orgs.SelectMany(o => o.Teams)
+                           .SelectMany(t => t.Members.Select(m => new ReportRow(team: t, user: m)))
+                           .Where(_reportContext.CreateRowFilter())
+                           .ToArray();
 
-            var columns = _reportContext.GetColumns("t:slug", "u:login", "tu:maintainer");
+            var columns = GetColumns("t:slug", "u:login", "tu:maintainer");
             OutputTable(rows, columns);
         }
 
-        private void ListAuditMembers(CachedOrg org)
+        private void ListAuditMembers(IReadOnlyList<CachedOrg> orgs)
         {
             var repoFilter = _reportContext.CreateRepoFilter();
             var teamFilter = _reportContext.CreateTeamFilter();
             var userFilter = _reportContext.CreateUserFilter();
             var rowFilter = _reportContext.CreateRowFilter();
 
-            var teamRows = org.Repos
-                              .Where(repoFilter)
-                              .SelectMany(r => r.Teams.Where(ta => teamFilter(ta.Team)), (r, ta) => new ReportRow(repo: r, team: ta.Team, teamAccess: ta));
-            var userRows = org.Repos
-                              .Where(repoFilter)
-                              .SelectMany(r => r.EffectiveUsers.Where(ua => userFilter(ua.User)), (r, ua) => new ReportRow(repo: r, user: ua.User, userAccess: ua));
+            var teamRows = orgs.SelectMany(o => o.Repos)
+                               .Where(repoFilter)
+                               .SelectMany(r => r.Teams.Where(ta => teamFilter(ta.Team)), (r, ta) => new ReportRow(repo: r, team: ta.Team, teamAccess: ta));
+            var userRows = orgs.SelectMany(o => o.Repos)
+                               .Where(repoFilter)
+                               .SelectMany(r => r.EffectiveUsers.Where(ua => userFilter(ua.User)), (r, ua) => new ReportRow(repo: r, user: ua.User, userAccess: ua));
             var rows = teamRows.Concat(userRows)
                                .Where(rowFilter)
                                .ToArray();
 
-            var columns = _reportContext.GetColumns("r:name",
-                                                    "r:private",
-                                                    "r:last-push",
-                                                    "rtu:principal-kind",
-                                                    "rtu:principal",
-                                                    "rtu:permission",
-                                                    "ru:reason");
+            var columns = GetColumns("r:name",
+                                     "r:private",
+                                     "r:last-push",
+                                     "rtu:principal-kind",
+                                     "rtu:principal",
+                                     "rtu:permission",
+                                     "ru:reason");
             OutputTable(rows, columns);
+        }
+
+        private IReadOnlyList<ReportColumn> GetColumns(params string[] names)
+        {
+            if (_orgName == "*")
+                names = new[] { "o:name" }.Concat(names).ToArray();
+
+            return _reportContext.GetColumns(names);
         }
 
         private void OutputTable(IReadOnlyCollection<ReportRow> rows, IReadOnlyList<ReportColumn> columns)
