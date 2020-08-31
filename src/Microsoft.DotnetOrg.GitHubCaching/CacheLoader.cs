@@ -458,6 +458,13 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 return await Connection.Run(query);
             }
+            catch (Octokit.AbuseException ex) when (attempt < ErrorRetryCount)
+            {
+                Log.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
+                await Task.Delay(TimeSpan.FromMinutes(30));
+                attempt++;
+                goto TryAgain;
+            }
             catch (Exception ex) when (attempt < ErrorRetryCount)
             {
                 Log.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
