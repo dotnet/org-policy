@@ -139,7 +139,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     IsMirror = r.IsMirror,
                     IsArchived = r.IsArchived,
                     IsTemplate = r.IsTemplate,
-                    Description = r.Description
+                    Description = r.Description,
+                    Branches = r.Refs("refs/heads/", null, null, null, null, null, null).AllPages().Select(r => r.Name).ToList()
                 });
 
             var result = await RunQueryWithRetry(query);

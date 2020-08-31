@@ -14,6 +14,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public bool IsMirror { get; set; }
         public DateTimeOffset LastPush { get; set; }
         public string Description { get; set; }
+        public IReadOnlyList<string> Branches { get; set; }
 
         [JsonIgnore]
         public CachedOrg Org { get; set; }

@@ -245,6 +245,11 @@ namespace Microsoft.DotnetOrg.Policies
             return result;
         }
 
+        public static bool HasMainBranch(this CachedRepo repo)
+        {
+            return repo.Branches.Any(n => string.Equals(n, "main", StringComparison.OrdinalIgnoreCase));
+        }
+
         public static string Markdown(this CachedRepo repo)
         {
             return $"[{repo.Name}]({repo.Url})";

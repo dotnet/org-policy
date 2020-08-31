@@ -123,6 +123,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "Description of the repo",
                 r => r.Description
             ),
+            new RepoReportColumn(
+                "r:migrated-to-main",
+                "Indicates whether the repo uses main or master",
+                r => r.HasMainBranch() ? "Yes" : "No"
+            ),
         };
 
         public static IReadOnlyList<ReportColumn> TeamColumns { get; } = new[]
