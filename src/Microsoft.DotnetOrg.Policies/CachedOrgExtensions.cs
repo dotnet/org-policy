@@ -250,9 +250,9 @@ namespace Microsoft.DotnetOrg.Policies
             return string.Equals(repo.DefaultBranch, "archive", StringComparison.OrdinalIgnoreCase);
         }
 
-        public static bool HasMainBranch(this CachedRepo repo)
+        public static bool HasMasterBranch(this CachedRepo repo)
         {
-            return repo.Branches.Any(n => string.Equals(n, "main", StringComparison.OrdinalIgnoreCase));
+            return repo.Branches.Any(n => string.Equals(n, "master", StringComparison.OrdinalIgnoreCase));
         }
 
         public static string Markdown(this CachedRepo repo)

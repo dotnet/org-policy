@@ -129,9 +129,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 r => r.Description
             ),
             new RepoReportColumn(
-                "r:migrated-to-main",
-                "Indicates whether the repo uses main or master",
-                r => r.HasMainBranch() ? "Yes" : "No"
+                "r:has-master",
+                "Indicates whether the repo still has a branch called 'master'",
+                r => r.HasMasterBranch() ? "Yes" : "No"
             ),
         };
 
