@@ -140,6 +140,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     IsArchived = r.IsArchived,
                     IsTemplate = r.IsTemplate,
                     Description = r.Description,
+                    DefaultBranch = r.DefaultBranchRef.Name,
                     Branches = r.Refs("refs/heads/", null, null, null, null, null, null).AllPages().Select(r => r.Name).ToList()
                 });
 

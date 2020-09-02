@@ -71,6 +71,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 r => r.IsArchived ? "Yes" : "No"
             ),
             new RepoReportColumn(
+                "r:soft-archived",
+                "Indicates whether the repo is soft archived, i.e. wheter it use 'archive' as the default branch",
+                r => r.IsSoftArchived() ? "Yes" : "No"
+            ),
+            new RepoReportColumn(
                 "r:template",
                 "Indicates whether the repo is a template repo",
                 r => r.IsTemplate ? "Yes" : "No"
