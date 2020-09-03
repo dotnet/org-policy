@@ -140,12 +140,34 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     IsArchived = r.IsArchived,
                     IsTemplate = r.IsTemplate,
                     Description = r.Description,
-                    DefaultBranch = r.DefaultBranchRef.Name,
-                    Branches = r.Refs("refs/heads/", null, null, null, null, null, null).AllPages().Select(r => r.Name).ToList()
+                    // This would be nice, but it doesn't work.
+                    // https://github.com/octokit/octokit.graphql.net/issues/242
+                    // DefaultBranch = r.DefaultBranchRef.Name,
+                    // Branches = r.Refs("refs/heads/", null, null, null, null, null, null).AllPages().Select(r => r.Name).ToList()
                 });
 
-            var result = await RunQueryWithRetry(query);
-            return result.ToArray();
+            var result = (await RunQueryWithRetry(query)).ToArray();
+
+            var repoQueryArguments = new Dictionary<string, object>();
+            var repoQuery = new Query()
+                .Repository(Var("repo"), orgName)
+                .Select(r => new
+                {
+                    DefaultBranch = r.DefaultBranchRef == null ? "" : r.DefaultBranchRef.Name,
+                    Branches = r.Refs("refs/heads/", null, null, null, null, null, null).AllPages().Select(r => r.Name).ToList()
+                })
+                .Compile();
+
+            foreach (var repo in result)
+            {
+                repoQueryArguments["repo"] = repo.Name;
+
+                var branchInfo = await RunQueryWithRetry(repoQuery, repoQueryArguments);
+                repo.DefaultBranch = branchInfo.DefaultBranch;
+                repo.Branches = branchInfo.Branches;
+            }
+
+            return result;
         }
 
         private async Task<IReadOnlyCollection<CachedTeam>> GetCachedTeamsAsync(string orgName)
