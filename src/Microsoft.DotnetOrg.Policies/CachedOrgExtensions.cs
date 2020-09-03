@@ -64,9 +64,6 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool IsUnderDotNetFoundation(this CachedRepo repo)
         {
-            if (string.Equals(repo.FullName, "microsoft/msbuild", StringComparison.OrdinalIgnoreCase))
-                return true;
-
             return repo.Org.IsUnderDotNetFoundation();
         }
 
