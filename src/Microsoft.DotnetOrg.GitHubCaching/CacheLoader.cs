@@ -472,38 +472,36 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return result.ToArray();
         }
 
-        private async Task<IEnumerable<T>> RunQueryWithRetry<T>(IQueryableList<T> query)
+        private Task<IEnumerable<T>> RunQueryWithRetry<T>(IQueryableList<T> query)
         {
-            var attempt = 1;
-
-        TryAgain:
-            try
-            {
-                return await Connection.Run(query);
-            }
-            catch (Octokit.AbuseException ex) when (attempt < ErrorRetryCount)
-            {
-                Log.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
-                await Task.Delay(TimeSpan.FromMinutes(30));
-                attempt++;
-                goto TryAgain;
-            }
-            catch (Exception ex) when (attempt < ErrorRetryCount)
-            {
-                Log.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
-                attempt++;
-                goto TryAgain;
-            }
+            return RunQueryWithRetry(() => Connection.Run(query));
         }
 
-        private async Task<T> RunQueryWithRetry<T>(ICompiledQuery<T> query, Dictionary<string, object> variables)
+        private Task<T> RunQueryWithRetry<T>(ICompiledQuery<T> query, Dictionary<string, object> variables)
+        {
+            return RunQueryWithRetry(() => Connection.Run(query, variables));
+        }
+
+        private async Task<T> RunQueryWithRetry<T>(Func<Task<T>> func)
         {
             var attempt = 1;
 
         TryAgain:
             try
             {
-                return await Connection.Run(query, variables);
+                return await func();
+            }
+            catch (NullReferenceException ex) when (ex.Source == "Octokit")
+            {
+                Log.WriteLine($"error: API quota exceeded");
+                await Task.Delay(TimeSpan.FromMinutes(65));
+                goto TryAgain;
+            }
+            catch (Octokit.AbuseException ex)
+            {
+                Log.WriteLine($"error: {ex.Message}");
+                await Task.Delay(TimeSpan.FromMinutes(30));
+                goto TryAgain;
             }
             catch (Exception ex) when (attempt < ErrorRetryCount)
             {
