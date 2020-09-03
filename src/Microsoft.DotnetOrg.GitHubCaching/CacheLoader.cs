@@ -507,6 +507,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 Log.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
                 attempt++;
+                await Task.Delay(TimeSpan.FromMinutes(5));
                 goto TryAgain;
             }
         }
