@@ -491,7 +491,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 return await func();
             }
-            catch (NullReferenceException ex) when (ex.Source == "Octokit")
+            catch (Exception ex) when (IndicatesApiQuotaExceeded(ex))
             {
                 Log.WriteLine($"error: API quota exceeded");
                 await Task.Delay(TimeSpan.FromMinutes(65));
@@ -510,6 +510,12 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 await Task.Delay(TimeSpan.FromMinutes(5));
                 goto TryAgain;
             }
+        }
+
+        private static bool IndicatesApiQuotaExceeded(Exception ex)
+        {
+            return ex is NullReferenceException &&
+                   string.Equals(ex.TargetSite.DeclaringType.Assembly.GetName().Name, "Octokit", StringComparison.OrdinalIgnoreCase);
         }
 
         private static CachedPermission GetCachedPermission(RepositoryPermission permission)
