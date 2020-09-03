@@ -16,7 +16,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
         {
             foreach (var repo in context.Org.Repos)
             {
-                if (!repo.IsOwnedByMicrosoft())
+                if (repo.IsArchived || !repo.IsOwnedByMicrosoft())
                     continue;
 
                 var adminTeams = repo.Teams.Where(ta => ta.Permission == CachedPermission.Admin)

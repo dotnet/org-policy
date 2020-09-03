@@ -16,6 +16,9 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
             foreach (var repo in context.Org.Repos)
             {
+                if (repo.IsArchived)
+                    continue;
+
                 // Note: Even if we don't fallback to owners, we don't want owners to
                 //       to count towards the admin quota.
                 var numberOfAdmins = repo.GetAdministrators(fallbackToOwners: false)

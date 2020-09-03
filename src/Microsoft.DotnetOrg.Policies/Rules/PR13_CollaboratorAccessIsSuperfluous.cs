@@ -17,6 +17,9 @@ namespace Microsoft.DotnetOrg.Policies.Rules
         {
             foreach (var repo in context.Org.Repos)
             {
+                if (repo.IsArchived)
+                    continue;
+
                 var orgOwnersOrTeamUsers = new Dictionary<CachedUser, CachedUserAccess>();
 
                 foreach (var teamAccess in repo.Teams)
