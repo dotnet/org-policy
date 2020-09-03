@@ -50,6 +50,9 @@ jobs:
       mono:
         orgName: mono
         checkArgs: --policy-repo dotnet/mono-policy-violations --update-issues
+      nuget:
+        orgName: nuget
+        checkArgs: --policy-repo dotnet/nuget-policy-violations --update-issues
       xamarin:
         orgName: xamarin
         checkArgs: --policy-repo xamarin/org-policy-violations --update-issues
