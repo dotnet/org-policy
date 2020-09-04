@@ -48,9 +48,15 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         public static async Task<Readme> GetReadme(this GitHubClient client, string owner, string repo)
         {
+        retry:
             try
             {
                 return await client.Repository.Content.GetReadme(owner, repo);
+            }
+            catch (AbuseException ex)
+            {
+                await ex.HandleAsync();
+                goto retry;
             }
             catch (NotFoundException)
             {
@@ -60,6 +66,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         public static async Task<GitHubCodeOfConduct> GetCodeOfConduct(this GitHubClient client, string owner, string repo)
         {
+        retry:
             try
             {
                 var uri = new Uri(client.Connection.BaseAddress, $"/repos/{owner}/{repo}/community/code_of_conduct");
@@ -73,6 +80,11 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
                 return response.Body;
             }
+            catch (AbuseException ex)
+            {
+                await ex.HandleAsync();
+                goto retry;
+            }
             catch (NotFoundException)
             {
                 return null;
@@ -81,6 +93,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         public static async Task<RepositoryContent> GetContributing(this GitHubClient client, string owner, string repo)
         {
+        retry:
             try
             {
                 var profileUri = new Uri(client.Connection.BaseAddress, $"/repos/{owner}/{repo}/community/profile");
@@ -121,10 +134,24 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 var response = await client.Connection.GetResponse<RepositoryContent>(uri);
                 return response.Body;
             }
+            catch (AbuseException ex)
+            {
+                await ex.HandleAsync();
+                goto retry;
+            }
             catch (NotFoundException)
             {
                 return null;
             }
+        }
+
+        public static async Task HandleAsync(this AbuseException exception)
+        {
+            var retrySeconds = exception.RetryAfterSeconds ?? 120;
+            Console.WriteLine($"Abuse detection triggered. Waiting for {retrySeconds} seconds before retrying.");
+
+            var delay = TimeSpan.FromSeconds(retrySeconds);
+            await Task.Delay(delay);
         }
     }
 }

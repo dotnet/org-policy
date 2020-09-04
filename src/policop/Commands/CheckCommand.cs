@@ -325,11 +325,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 }
                 catch (AbuseException ex)
                 {
-                    var retrySeconds = ex.RetryAfterSeconds ?? 120;
-                    Console.WriteLine($"Abuse detection triggered. Waiting for {retrySeconds} seconds before retrying.");
-
-                    var delay = TimeSpan.FromSeconds(retrySeconds);
-                    await Task.Delay(delay);
+                    await ex.HandleAsync();
                     goto retry;
                 }
             }

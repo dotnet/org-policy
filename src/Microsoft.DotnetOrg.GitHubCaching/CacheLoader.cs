@@ -499,8 +499,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
             catch (Octokit.AbuseException ex)
             {
-                Log.WriteLine($"error: {ex.Message}");
-                await Task.Delay(TimeSpan.FromMinutes(30));
+                await ex.HandleAsync();
                 goto TryAgain;
             }
             catch (Exception ex) when (attempt < ErrorRetryCount)
