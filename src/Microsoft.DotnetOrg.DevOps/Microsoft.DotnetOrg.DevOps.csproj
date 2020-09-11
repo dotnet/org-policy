@@ -6,12 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="4.6.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Security">
-      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Security.dll</HintPath>
-    </Reference>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.6.0" />
   </ItemGroup>
 
 </Project>
