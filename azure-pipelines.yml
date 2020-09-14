@@ -26,6 +26,7 @@ jobs:
     inputs:
       solution: '$(sln)'
       msbuildArguments: '/p:OutDir=$(outDir)'
+      maximumCpuCount: true
   - task: PublishBuildArtifacts@1
     condition: eq(variables['system.pullrequest.isfork'], false)
 - job: Validate
