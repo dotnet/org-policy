@@ -48,7 +48,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                     $@"
                         The repo {repo.Markdown()} needs to include a file that links to the Code of Conduct.
 
-                        For more details, see [PR15](https://github.com/dotnet/org-policy/blob/master/doc/PR15.md).
+                        For more details, see [PR15](https://github.com/dotnet/org-policy/blob/main/doc/PR15.md).
                     ",
                     repo: repo
                 );

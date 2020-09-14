@@ -105,7 +105,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                     $@"
                         The repo {repo.Markdown()} is a {kind} project. Thus, it should only reference the {kind} Code of Conduct.
 
-                        For more details, see [PR15](https://github.com/dotnet/org-policy/blob/master/doc/PR15.md).
+                        For more details, see [PR15](https://github.com/dotnet/org-policy/blob/main/doc/PR15.md).
 
                         Affected files: {linkedFileList}
                     ",
