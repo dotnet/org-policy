@@ -18,15 +18,15 @@ variables:
 jobs:
 - job: Build
   steps:
-  - task: NuGetToolInstaller@1
-  - task: NuGetCommand@2
+  - task: UseDotNet@2
     inputs:
-      restoreSolution: '$(sln)'
-  - task: MSBuild@1
+      packageType: 'sdk'
+      version: '5.x'
+  - task: DotNetCoreCLI@2
     inputs:
-      solution: '$(sln)'
-      msbuildArguments: '/p:OutDir=$(outDir)'
-      maximumCpuCount: true
+      command: 'build'
+      projects: '$(sln)'
+      arguments: '/p:OutDir=$(outDir)'
   - task: PublishBuildArtifacts@1
     condition: eq(variables['system.pullrequest.isfork'], false)
 - job: Validate
