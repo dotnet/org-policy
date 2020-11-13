@@ -23,19 +23,42 @@ namespace Microsoft.DotnetOrg.DevOps
             if (!string.IsNullOrEmpty(environmentToken))
                 return environmentToken;
 
+            string token = null;
+
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
             {
-                var text = File.ReadAllText(tokenFileName).Trim();
-                return text;
+                token = File.ReadAllText(tokenFileName).Trim();
+
+                if (!await IsValidAsync(organization, project, token))
+                {
+                    Console.Error.WriteLine("error: Azure DevOps token isn't valid anymore");
+                    token = null;
+                }
             }
-            else
+            
+            if (token == null)
             {
-                var token = await CreateTokenAsync(organization, project);
+                token = await CreateTokenAsync(organization, project);
                 var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);
                 Directory.CreateDirectory(tokenFileDirectory);
                 File.WriteAllText(tokenFileName, token);
-                return token;
+            }
+
+            return token;
+        }
+
+        private static async Task<bool> IsValidAsync(string organization, string project, string token)
+        {
+            var client = new DevOpsClient(organization, project, token);
+            try
+            {
+                await client.CheckAsync();
+                return true;
+            }
+            catch (DevOpsUnauthorizedException)
+            {
+                return false;
             }
         }
 

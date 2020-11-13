@@ -31,15 +31,26 @@ namespace Microsoft.DotnetOrg.DevOps
 
         public string Project { get; }
 
-        public async Task<IReadOnlyList<DevOpsBuild>> GetBuildsAsync(string definitionId, string resultFilter = null, string reasonFilter = null)
+        public Task CheckAsync()
         {
-            var uri = $"build/builds?definitions={definitionId}&api-version=5.0";
+            return GetBuildsAsync(top: 1);
+        }
+
+        public async Task<IReadOnlyList<DevOpsBuild>> GetBuildsAsync(string definitionId = null, string resultFilter = null, string reasonFilter = null, int? top = null)
+        {
+            var uri = $"build/builds?api-version=5.0";
+
+            if (!string.IsNullOrEmpty(definitionId))
+                uri += $"&definitions={definitionId}";
 
             if (!string.IsNullOrEmpty(resultFilter))
                 uri += $"&resultFilter={resultFilter}";
 
             if (!string.IsNullOrEmpty(reasonFilter))
                 uri += $"&reasonFilter={reasonFilter}";
+
+            if (top != null)
+                uri += $"&$top={top}";
 
             var results = await GetAsJsonAsync<Result<IReadOnlyList<DevOpsBuild>>>(uri);
             return results.Value;
@@ -100,6 +111,9 @@ namespace Microsoft.DotnetOrg.DevOps
         {
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
             var response = await _httpClient.SendAsync(request);
+
+            if (response.Content.Headers.ContentType?.MediaType != "application/json")
+                throw new DevOpsUnauthorizedException();
 
             response.EnsureSuccessStatusCode();
 

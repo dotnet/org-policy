@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,13 +19,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             if (string.IsNullOrEmpty(token))
                 token = await GetOrCreateTokenAsync(scopes);
 
-            var productInformation = new ProductHeaderValue(GetExeName());
-            var client = new GitHubClient(productInformation)
-            {
-                Credentials = new Credentials(token)
-            };
-
-            return client;
+            return Create(token);
         }
 
         public static async Task<QConnection> CreateGraphAsync(string token = null, string scopes = "public_repo, read:org")
@@ -46,20 +39,53 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             if (!string.IsNullOrEmpty(environmentToken))
                 return environmentToken;
 
+            string token = null;
+
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
             {
-                var text = File.ReadAllText(tokenFileName).Trim();
-                return text;
+                token = File.ReadAllText(tokenFileName).Trim();
+                if (!await IsValidAsync(token))
+                {
+                    Console.Error.WriteLine("error: GitHub token isn't valid anymore");
+                    token = null;
+                }
             }
-            else
+
+            if (token == null)
             {
-                var token = await CreateTokenAsync(scopes, isRenewal: false);
+                token = await CreateTokenAsync(scopes, isRenewal: false);
                 var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);
                 Directory.CreateDirectory(tokenFileDirectory);
                 File.WriteAllText(tokenFileName, token);
-                return token;
             }
+
+            return token;
+        }
+
+        private static async Task<bool> IsValidAsync(string token)
+        {
+            var client = Create(token);
+            try
+            {
+                await client.User.Current();
+                return true;
+            }
+            catch (AuthorizationException)
+            {
+                return false;
+            }
+        }
+
+        private static GitHubClient Create(string token)
+        {
+            var productInformation = new ProductHeaderValue(GetExeName());
+            var client = new GitHubClient(productInformation)
+            {
+                Credentials = new Credentials(token)
+            };
+
+            return client;
         }
 
         private static string GetExeName()

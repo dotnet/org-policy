@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,19 +22,41 @@ namespace Microsoft.DotnetOrg.Ospo
             if (!string.IsNullOrEmpty(environmentToken))
                 return environmentToken;
 
+            string token = null;
+
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
             {
-                var text = File.ReadAllText(tokenFileName).Trim();
-                return text;
+                token = File.ReadAllText(tokenFileName).Trim();
+                if (!await IsValidAsync(token))
+                {
+                    Console.Error.WriteLine("error: OSPO token isn't valid anymore");
+                    token = null;
+                }
             }
-            else
+
+            if (token == null)
             {
-                var token = await CreateTokenAsync();
+                token = await CreateTokenAsync();
                 var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);
                 Directory.CreateDirectory(tokenFileDirectory);
                 File.WriteAllText(tokenFileName, token);
-                return token;
+            }
+
+            return token;
+        }
+
+        private static async Task<bool> IsValidAsync(string token)
+        {
+            var client = new OspoClient(token);
+            try
+            {
+                await client.GetAsync("dotnet-bot");
+                return true;
+            }
+            catch (OspoUnauthorizedException)
+            {
+                return false;
             }
         }
 
