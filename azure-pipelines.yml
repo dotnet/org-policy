@@ -14,6 +14,7 @@ variables:
   sln: $(Build.Repository.LocalPath)\src\Microsoft.DotnetOrg.Policies.sln
   outDir: $(Build.ArtifactStagingDirectory)\
   policop: $(Pipeline.Workspace)\drop\policop.exe
+  netversion: 5.x
 
 jobs:
 - job: Build
@@ -21,7 +22,7 @@ jobs:
   - task: UseDotNet@2
     inputs:
       packageType: 'sdk'
-      version: '5.x'
+      version: '$(netversion)'
   - task: DotNetCoreCLI@2
     inputs:
       command: 'build'
@@ -62,6 +63,10 @@ jobs:
         checkArgs: --policy-repo xamarinhq/org-policy-violations --update-issues
   steps:
   - checkout: none
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'runtime'
+      version: '$(netversion)'
   - task: DownloadPipelineArtifact@2
   - script: $(policop) cache-org --org $(orgName) --with-ms-links
     displayName: Cache org
