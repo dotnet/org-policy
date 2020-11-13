@@ -8,6 +8,7 @@ using Microsoft.DotnetOrg.GitHubCaching;
 using Microsoft.DotnetOrg.Ospo;
 
 using Mono.Options;
+using Octokit;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
@@ -17,6 +18,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private string _repoName;
         private List<string> _refs = new List<string>();
         private bool _viewInExcel;
+        private string _since;
         private bool _nonMicrosoftOnly;
         private bool _markdown;
 
@@ -31,6 +33,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                    .Add("non-microsoft-only", "Only shows non-Microsoft folks", v => _nonMicrosoftOnly = true)
                    .Add("markdown", "Renders result as Markdown", v => _markdown = true)
                    .Add("excel", "Shows the results in Excel", v => _viewInExcel = true)
+                   .Add("since=", "Show contributions since a particular point in time", v => _since = v)
                    .Add("<>", v => _refs.Add(v));
         }
 
@@ -60,32 +63,75 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            if (_refs.Count != 2)
+            DateTime? since = null;
+
+            if (_since != null)
             {
-                Console.Error.WriteLine("error: need two refs to compare");
-                return;
+                if (!DateTime.TryParse(_since, out var s))
+                {
+                    Console.Error.WriteLine("error: --since must be a valid date");
+                    return;
+                }
+
+                since = s;
+            }
+
+            if (since != null)
+            {
+                if (_refs.Count != 1)
+                {
+                    Console.Error.WriteLine("error: need a single argument with the ref to compare to");
+                    return;
+                }
+            }
+            else
+            {
+                if (_refs.Count != 2)
+                {
+                    Console.Error.WriteLine("error: need two arguments with the refs to compare against each other");
+                    return;
+                }
             }
 
             var client = await GitHubClientFactory.CreateAsync();
-            var result = await client.Repository.Commit.Compare(_orgName, _repoName, _refs[0], _refs[1]);
+
+            IReadOnlyList<GitHubCommit> commits;
+
+            if (since != null)
+            {
+                var commitRequest = new CommitRequest
+                {
+                    Sha = _refs[0],
+                    Since = since
+                };
+                Console.WriteLine($"Looking for commits in {commitRequest.Sha} since {commitRequest.Since}...");
+                commits = await client.Repository.Commit.GetAll(_orgName, _repoName, commitRequest);
+            }
+            else
+            {
+                Console.WriteLine($"Looking for commits between {_refs[0]} and {_refs[1]}...");
+                var result = await client.Repository.Commit.Compare(_orgName, _repoName, _refs[0], _refs[1]);
+                commits = result.Commits;
+            }
+
+            Console.WriteLine($"Found {commits.Count} commits. Filtering out commits by Microsoft employees...");
 
             var ospoClient = await OspoClientFactory.CreateAsync();
+            var allMicrosofties = await ospoClient.GetAllAsync();
 
-            var report = (from c in result.Commits
-                          where c.Author?.Login != null
+            var report = (from c in commits
+                          where c.Author?.Login != null && !IsBot(c.Author.Login)
                           group c by c.Author.Login into g
-                          select (Login: g.Key, Commits: g.Count(), LinkTask: ospoClient.GetAsync(g.Key)))
+                          select (Login: g.Key, Commits: g.Count(), Link: allMicrosofties.LinkByLogin.GetValueOrDefault(g.Key)))
                           .OrderByDescending(r => r.Commits)
                           .ThenBy(r => r.Login)
                           .ToArray();
-
-            await Task.WhenAll(report.Select(r => r.LinkTask));
 
             if (_markdown)
             {
                 foreach (var row in report)
                 {
-                    if (IsMicrosoft(row.Login, await row.LinkTask) && _nonMicrosoftOnly)
+                    if (IsMicrosoft(row.Login, row.Link) && _nonMicrosoftOnly)
                         continue;
 
                     Console.WriteLine($"[{row.Login} ({row.Commits})](https://github.com/{_orgName}/{_repoName}/commits/{_refs[1]}?author={row.Login})");
@@ -99,7 +145,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 {
                     foreach (var row in report)
                     {
-                        var isMicrosoft = IsMicrosoft(row.Login, await row.LinkTask);
+                        var isMicrosoft = IsMicrosoft(row.Login, row.Link);
                         if (isMicrosoft && _nonMicrosoftOnly)
                             continue;
 
@@ -115,6 +161,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 else
                     document.PrintToConsole();
             }
+        }
+
+        private bool IsBot(string login)
+        {
+            return login.EndsWith("[bot]", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsMicrosoft(string login, OspoLink link)
