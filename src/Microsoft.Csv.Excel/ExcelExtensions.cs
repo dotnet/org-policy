@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -13,7 +14,8 @@ namespace Microsoft.Csv
     {
         public static bool IsExcelInstalled()
         {
-            return Registry.ClassesRoot.OpenSubKey("Excel.Application") != null;
+            return OperatingSystem.IsWindows() &&
+                   Registry.ClassesRoot.OpenSubKey("Excel.Application") != null;
         }
 
         private static void AssertExcelIsInstalled()
@@ -33,6 +35,7 @@ namespace Microsoft.Csv
         public static void ViewInExcel(this CsvDocument csvDocument)
         {
             AssertExcelIsInstalled();
+            Debug.Assert(OperatingSystem.IsWindows());
 
             var a = new Application();
             try
@@ -51,6 +54,7 @@ namespace Microsoft.Csv
         public static void SaveToExcel(this CsvDocument csvDocument, string fileName)
         {
             AssertExcelIsInstalled();
+            Debug.Assert(OperatingSystem.IsWindows());
 
             var a = new Application();
             try

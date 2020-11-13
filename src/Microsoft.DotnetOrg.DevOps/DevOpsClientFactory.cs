@@ -26,10 +26,7 @@ namespace Microsoft.DotnetOrg.DevOps
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
             {
-                var encryptedBytesText = File.ReadAllText(tokenFileName).Trim();
-                var encryptedBytes = Convert.FromBase64String(encryptedBytesText);
-                var textBytes = ProtectedData.Unprotect(encryptedBytes, null, DataProtectionScope.CurrentUser);
-                var text = Encoding.UTF8.GetString(textBytes);
+                var text = File.ReadAllText(tokenFileName).Trim();
                 return text;
             }
             else
@@ -37,12 +34,7 @@ namespace Microsoft.DotnetOrg.DevOps
                 var token = await CreateTokenAsync(organization, project);
                 var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);
                 Directory.CreateDirectory(tokenFileDirectory);
-
-                var textBytes = Encoding.UTF8.GetBytes(token);
-                var encryptedBytes = ProtectedData.Protect(textBytes, null, DataProtectionScope.CurrentUser);
-                var encryptedBytesText = Convert.ToBase64String(encryptedBytes);
-                File.WriteAllText(tokenFileName, encryptedBytesText);
-
+                File.WriteAllText(tokenFileName, token);
                 return token;
             }
         }
