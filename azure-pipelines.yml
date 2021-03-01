@@ -58,9 +58,6 @@ jobs:
       xamarin:
         orgName: xamarin
         checkArgs: --policy-repo xamarin/org-policy-violations --update-issues
-      xamarinhq:
-        orgName: xamarinhq
-        checkArgs: --policy-repo xamarinhq/org-policy-violations --update-issues
   steps:
   - checkout: none
   - task: UseDotNet@2
