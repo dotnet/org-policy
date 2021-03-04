@@ -253,6 +253,11 @@ namespace Microsoft.DotnetOrg.Policies
             return repo.Branches.Any(n => string.Equals(n, "master", StringComparison.OrdinalIgnoreCase));
         }
 
+        public static bool MigratedToMainBranch(this CachedRepo repo)
+        {
+            return !repo.HasMasterBranch() || repo.IsArchived || repo.IsSoftArchived();
+        }
+
         public static string Markdown(this CachedRepo repo)
         {
             return $"[{repo.Name}]({repo.Url})";

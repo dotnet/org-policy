@@ -51,6 +51,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 r => r.Name
             ),
             new RepoReportColumn(
+                "r:full-name",
+                "The name of the org and repo, separated by a slash",
+                r => $"{r.Org.Name}/{r.Name}"
+            ),
+            new RepoReportColumn(
                 "r:private",
                 "Indicates whether the repo is private",
                 r => r.IsPrivate ? "Yes" : "No"
@@ -132,6 +137,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "r:has-master",
                 "Indicates whether the repo still has a branch called 'master'",
                 r => r.HasMasterBranch() ? "Yes" : "No"
+            ),
+            new RepoReportColumn(
+                "r:migrated-to-main",
+                "Indicates whether the repo is considered having migrated to using a 'main' branch",
+                r => r.MigratedToMainBranch() ? "Yes" : "No"
             ),
         };
 
