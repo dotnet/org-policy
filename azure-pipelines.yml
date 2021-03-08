@@ -55,9 +55,6 @@ jobs:
       nuget:
         orgName: nuget
         checkArgs: --policy-repo dotnet/nuget-policy-violations --update-issues
-      xamarin:
-        orgName: xamarin
-        checkArgs: --policy-repo xamarin/org-policy-violations --update-issues
   steps:
   - checkout: none
   - task: UseDotNet@2
