@@ -143,6 +143,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "Indicates whether the repo is considered having migrated to using a 'main' branch",
                 r => r.MigratedToMainBranch() ? "Yes" : "No"
             ),
+            new RepoReportColumn(
+                "r:migration-to-main-status",
+                "The status of the main migration ('Pending', 'Completed', or 'Archived')",
+                r => r.MigrationToMainStatus()
+            ),
         };
 
         public static IReadOnlyList<ReportColumn> TeamColumns { get; } = new[]

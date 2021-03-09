@@ -257,6 +257,17 @@ namespace Microsoft.DotnetOrg.Policies
             return !repo.HasMasterBranch() || repo.IsArchived || repo.IsSoftArchived();
         }
 
+        public static string MigrationToMainStatus(this CachedRepo repo)
+        {
+            if (repo.IsArchived || repo.IsSoftArchived())
+                return "Archived";
+
+            if (repo.MigratedToMainBranch())
+                return "Completed";
+
+            return "Pending";
+        }
+
         public static string Markdown(this CachedRepo repo)
         {
             return $"[{repo.Name}]({repo.Url})";
