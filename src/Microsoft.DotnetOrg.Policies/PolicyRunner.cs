@@ -21,7 +21,7 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static Task RunAsync(PolicyAnalysisContext context)
         {
-            var rules = GetRules();
+            var rules = GetRules().Where(r => r.Descriptor.Severity > PolicySeverity.Hidden);
             return RunAsync(context, rules);
         }
 
