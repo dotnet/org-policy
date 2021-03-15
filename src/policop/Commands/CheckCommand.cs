@@ -90,10 +90,19 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                 : await GitHubClientFactory.CreateAsync();
 
             var includedRules = PolicyRunner.GetRules().ToList();
-            var existingRules = includedRules.Select(r => r.Descriptor.DiagnosticId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var existingRules = includedRules.Select(r => r.Descriptor.DiagnosticId)
+                                             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            if (_includedRuleIds.Count > 0)
+            if (_includedRuleIds.Count == 0)
             {
+                // If we weren't given a list of rules, we only include rules
+                // that aren't hidden.
+                includedRules.RemoveAll(r => r.Descriptor.Severity <= PolicySeverity.Hidden);
+            }
+            else
+            {
+                // Otherwise we include the rules specified, regardless of their
+                // severity.
                 var invalidRuleIds = _includedRuleIds.Where(r => !existingRules.Contains(r));
                 foreach (var invalidRuleId in invalidRuleIds)
                     Console.Error.WriteLine($"warning: policy rule '{invalidRuleId}' doesn't exist");

@@ -2,7 +2,8 @@
 {
     public enum PolicySeverity
     {
-        Error,
-        Warning
+        Hidden,
+        Warning,
+        Error
     }
 }
