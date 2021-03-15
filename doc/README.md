@@ -19,6 +19,7 @@ Rule            | Severity | Title
 [PR15](PR15.md) | Error    | Repo must have a Code of Conduct
 [PR16](PR16.md) | Error    | Repos must link correct Code of Conduct
 [PR17](PR17.md) | Warning  | Teams should have a sufficient number of maintainers
+[PR18](PR18.md) | Warning  | Repos shouldn't use deprecated branch names
 
 ## Process
 
