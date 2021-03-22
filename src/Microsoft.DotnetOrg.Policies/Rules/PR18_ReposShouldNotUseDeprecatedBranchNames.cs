@@ -19,7 +19,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
             foreach (var repo in context.Org.Repos)
             {
-                if (repo.IsArchived || repo.IsSoftArchived())
+                if (repo.IsArchivedOrSoftArchived())
                     continue;
 
                 if (repo.IsFork)

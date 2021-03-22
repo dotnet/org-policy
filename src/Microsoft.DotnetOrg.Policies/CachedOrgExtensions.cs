@@ -247,6 +247,11 @@ namespace Microsoft.DotnetOrg.Policies
             return string.Equals(repo.DefaultBranch, "archive", StringComparison.OrdinalIgnoreCase);
         }
 
+        public static bool IsArchivedOrSoftArchived(this CachedRepo repo)
+        {
+            return repo.IsArchived || repo.IsSoftArchived();
+        }
+
         public static bool HasMasterBranch(this CachedRepo repo)
         {
             return repo.Branches.Any(n => string.Equals(n, "master", StringComparison.OrdinalIgnoreCase));

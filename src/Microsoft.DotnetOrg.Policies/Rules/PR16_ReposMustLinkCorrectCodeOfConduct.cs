@@ -41,7 +41,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
             foreach (var repo in context.Org.Repos)
             {
-                if (repo.IsPrivate || repo.IsArchived)
+                if (repo.IsPrivate || repo.IsArchivedOrSoftArchived())
                     continue;
 
                 // Let's also exclude forks and mirrors because adding a file to
