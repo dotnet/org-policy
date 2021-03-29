@@ -72,14 +72,21 @@ namespace Microsoft.DotnetOrg.Policies
             using (var fingerprintBytes = new MemoryStream())
             using (var md5 = MD5.Create())
             {
+                // NOTE: If you add more pieces of information later, it is vitally important
+                //       that you only add them when they aren't null. Otherwise, this will
+                //       change the fingerprint of all existing violations.
+
                 using (var writer = new StreamWriter(fingerprintBytes, Encoding.UTF8, 2048, leaveOpen: true))
                 {
                     writer.WriteLine(diagnosticId);
                     writer.WriteLine(repo?.Org.Name);
                     writer.WriteLine(repo?.Name);
-                    writer.WriteLine(branch?.Name);
                     writer.WriteLine(user?.Login);
                     writer.WriteLine(team?.Name);
+
+                    // Additional fields:
+                    if (branch != null)
+                        writer.WriteLine($"branch = {branch.Name}");
                 }
 
                 fingerprintBytes.Position = 0;
