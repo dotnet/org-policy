@@ -7,7 +7,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
         public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR18",
             "Repos shouldn't use deprecated branch names",
-            PolicySeverity.Warning
+            PolicySeverity.Hidden
         );
 
         public override void GetViolations(PolicyAnalysisContext context)
