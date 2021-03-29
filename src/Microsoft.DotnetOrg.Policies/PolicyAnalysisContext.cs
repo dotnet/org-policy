@@ -20,6 +20,7 @@ namespace Microsoft.DotnetOrg.Policies
                                     string title,
                                     string body,
                                     CachedRepo repo = null,
+                                    CachedBranch branch = null,
                                     CachedTeam team = null,
                                     CachedUser user = null,
                                     IReadOnlyCollection<CachedUser> assignees = null)
@@ -29,6 +30,7 @@ namespace Microsoft.DotnetOrg.Policies
                                                 body,
                                                 Org,
                                                 repo,
+                                                branch,
                                                 team,
                                                 user,
                                                 assignees);

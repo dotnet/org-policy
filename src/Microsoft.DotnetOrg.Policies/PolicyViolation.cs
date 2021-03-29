@@ -16,16 +16,18 @@ namespace Microsoft.DotnetOrg.Policies
                                string body,
                                CachedOrg org,
                                CachedRepo repo = null,
+                               CachedBranch branch = null,
                                CachedTeam team = null,
                                CachedUser user = null,
                                IReadOnlyCollection<CachedUser> assignees = null)
         {
             Descriptor = descriptor;
-            Fingerprint = ComputeFingerprint(descriptor.DiagnosticId, repo, user, team);
+            Fingerprint = ComputeFingerprint(descriptor.DiagnosticId, repo, branch, user, team);
             Title = title;
             Body = UnindentAndTrim(body);
             Org = org;
             Repo = repo;
+            Branch = branch;
             Team = team;
             User = user;
             Assignees = ComputeAssignees(org, repo, team, user, assignees);
@@ -38,6 +40,7 @@ namespace Microsoft.DotnetOrg.Policies
         public CachedOrg Org { get; }
         public string Body { get; }
         public CachedRepo Repo { get; }
+        public CachedBranch Branch { get; }
         public CachedTeam Team { get; }
         public CachedUser User { get; }
         public IReadOnlyCollection<CachedUser> Assignees { get; }
@@ -64,7 +67,7 @@ namespace Microsoft.DotnetOrg.Policies
             return result.ToArray();
         }
 
-        private static Guid ComputeFingerprint(string diagnosticId, CachedRepo repo, CachedUser user, CachedTeam team)
+        private static Guid ComputeFingerprint(string diagnosticId, CachedRepo repo, CachedBranch branch, CachedUser user, CachedTeam team)
         {
             using (var fingerprintBytes = new MemoryStream())
             using (var md5 = MD5.Create())
@@ -74,6 +77,7 @@ namespace Microsoft.DotnetOrg.Policies
                     writer.WriteLine(diagnosticId);
                     writer.WriteLine(repo?.Org.Name);
                     writer.WriteLine(repo?.Name);
+                    writer.WriteLine(branch?.Name);
                     writer.WriteLine(user?.Login);
                     writer.WriteLine(team?.Name);
                 }

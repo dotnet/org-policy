@@ -32,15 +32,16 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 {
                     foreach (var (deprecatedName, preferredName) in deprecatedBranchNames)
                     {
-                        if (branch.Contains(deprecatedName, StringComparison.OrdinalIgnoreCase))
+                        if (branch.Name.Contains(deprecatedName, StringComparison.OrdinalIgnoreCase))
                         {
                             context.ReportViolation(
                                 Descriptor,
-                                $"Repo '{repo.Name}' uses deprecated branch name '{branch}'",
+                                $"Repo '{repo.Name}' uses deprecated branch name '{branch.Name}'",
                                 $@"
-                                    The repo {repo.Markdown()} contains the branch '{branch}' which contains the deprecated branch name {deprecatedName}. It should use the name '{preferredName}'.
+                                    The repo {repo.Markdown()} contains the branch {branch.Markdown()} which contains the deprecated branch name '{deprecatedName}'. It should use the name '{preferredName}'.
                                 ",
-                                repo: repo
+                                repo: repo,
+                                branch: branch
                             );
                         }
                     }

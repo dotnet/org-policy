@@ -154,7 +154,13 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 .Select(r => new
                 {
                     DefaultBranch = r.DefaultBranchRef == null ? "" : r.DefaultBranchRef.Name,
-                    Branches = r.Refs("refs/heads/", null, null, null, null, null, null).AllPages().Select(r => r.Name).ToList()
+                    Branches = r.Refs("refs/heads/", null, null, null, null, null, null).AllPages().Select(r => 
+                    new CachedBranch
+                    {
+                        Prefix = r.Prefix,
+                        Name = r.Name,
+                        Hash = r.Id.Value
+                    }).ToList()
                 })
                 .Compile();
 

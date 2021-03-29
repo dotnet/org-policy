@@ -13,7 +13,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 {
     public sealed class CachedOrg
     {
-        public static int CurrentVersion = 8;
+        public static int CurrentVersion = 9;
 
         public int Version { get; set; }
         public string Name { get; set; }
@@ -35,6 +35,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             foreach (var repo in Repos)
             {
                 repo.Org = this;
+
+                foreach (var branch in repo.Branches)
+                    branch.Repo = repo;
             }
 
             foreach (var team in Teams)
@@ -156,6 +159,11 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public static string GetRepoUrl(string orgName, string repoName)
         {
             return $"https://github.com/{orgName}/{repoName}";
+        }
+
+        public static string GetBranchUrl(string orgName, string repoName, string branchName)
+        {
+            return $"https://github.com/{orgName}/{repoName}/tree/{branchName}";
         }
 
         public static string GetTeamUrl(string orgName, string teamSlug)

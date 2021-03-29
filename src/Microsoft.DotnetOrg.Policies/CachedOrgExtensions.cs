@@ -254,7 +254,7 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool HasMasterBranch(this CachedRepo repo)
         {
-            return repo.Branches.Any(n => string.Equals(n, "master", StringComparison.OrdinalIgnoreCase));
+            return repo.Branches.Any(n => string.Equals(n.Name, "master", StringComparison.OrdinalIgnoreCase));
         }
 
         public static bool MigratedToMainBranch(this CachedRepo repo)
@@ -276,6 +276,11 @@ namespace Microsoft.DotnetOrg.Policies
         public static string Markdown(this CachedRepo repo)
         {
             return $"[{repo.Name}]({repo.Url})";
+        }
+
+        public static string Markdown(this CachedBranch branch)
+        {
+            return $"[{branch.Name}]({branch.Url})";
         }
 
         public static string Markdown(this CachedTeam team)

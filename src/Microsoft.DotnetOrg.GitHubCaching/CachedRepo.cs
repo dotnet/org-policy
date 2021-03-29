@@ -15,7 +15,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public DateTimeOffset LastPush { get; set; }
         public string Description { get; set; }
         public string DefaultBranch { get; set; }
-        public IReadOnlyList<string> Branches { get; set; }
+        public IReadOnlyList<CachedBranch> Branches { get; set; }
 
         [JsonIgnore]
         public CachedOrg Org { get; set; }
