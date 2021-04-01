@@ -59,6 +59,7 @@ jobs:
       packageType: 'runtime'
       version: '$(netversion)'
   - task: DownloadBuildArtifacts@0
+    artifactName: 'drop'
   - script: $(policop) cache-org --org $(orgName) --with-ms-links
     displayName: Cache org
     env:
