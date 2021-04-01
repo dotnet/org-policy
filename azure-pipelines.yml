@@ -10,7 +10,7 @@ variables:
   buildConfiguration: Release
   sln: $(Build.Repository.LocalPath)\src\Microsoft.DotnetOrg.Policies.sln
   outDir: $(Build.ArtifactStagingDirectory)\
-  policop: $(Pipeline.Workspace)\drop\policop.exe
+  policop: $(System.ArtifactsDirectory)\drop\policop.exe
   netversion: 5.x
 
 jobs:
