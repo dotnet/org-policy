@@ -46,7 +46,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            var age = DateTimeOffset.UtcNow - build.FinishTime;
+            var buildTime = build.FinishTime;
+            var age = DateTimeOffset.UtcNow - buildTime;
             Console.Error.WriteLine($"Caching build from {age.Humanize()} ago...");
 
             foreach (var orgName in orgNames)
@@ -57,6 +58,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 try
                 {
                     await DownloadArtifactFileAsync(client, build, remoteFileName, localFileName);
+                    File.SetLastWriteTimeUtc(localFileName, buildTime.DateTime);
                     Console.Error.WriteLine($"{orgName} -> {localFileName}");
                 }
                 catch (Exception ex)

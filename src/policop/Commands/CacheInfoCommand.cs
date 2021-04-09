@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 
+using Humanizer.Bytes;
 using Microsoft.Csv;
 
 using Mono.Options;
@@ -21,7 +22,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         public override Task ExecuteAsync()
         {
             var orgCaches = CacheManager.GetOrgCaches().ToArray();
-            var document = new CsvDocument("org", "date", "size", "path");
+            var document = new CsvDocument("org", "date", "time", "size", "path");
 
             using (var writer = document.Append())
             {
@@ -29,7 +30,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 {
                     writer.Write(Path.GetFileNameWithoutExtension(orgCache.Name));
                     writer.Write(orgCache.LastWriteTime.ToShortDateString());
-                    writer.Write($"{orgCache.Length / (1024 * 1024):N0} MB");
+                    writer.Write(orgCache.LastWriteTime.ToShortTimeString());
+                    writer.Write(new ByteSize(orgCache.Length).ToString("N0"));
                     writer.Write(orgCache.FullName);
                     writer.WriteLine();
                 }
