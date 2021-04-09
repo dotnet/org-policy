@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Humanizer.Core" Version="2.8.26" />
     <PackageReference Include="Markdig" Version="0.22.0" />
     <PackageReference Include="Mono.Options" Version="6.6.0.161" />
   </ItemGroup>

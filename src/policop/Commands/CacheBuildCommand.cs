@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Humanizer;
 using Microsoft.DotnetOrg.DevOps;
 
 using Mono.Options;
@@ -45,6 +45,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
                 return;
             }
+
+            var age = DateTimeOffset.UtcNow - build.FinishTime;
+            Console.Error.WriteLine($"Caching build from {age.Humanize()} ago...");
 
             foreach (var orgName in orgNames)
             {
