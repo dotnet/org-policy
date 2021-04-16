@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <Platform>x86</Platform>
+    <Platforms>x86;x86</Platforms>
     <RootNamespace>Microsoft.DotnetOrg.PolicyCop</RootNamespace>
   </PropertyGroup>
 
