@@ -143,7 +143,8 @@ namespace Microsoft.DotnetOrg.Policies
 
             var knownServiceAccounts = new[]
             {
-                "cxwtool"
+                "cxwtool",
+                "VSC-Service-Account"
             };
 
             return knownServiceAccounts.Any(a => string.Equals(user.Login, a, StringComparison.OrdinalIgnoreCase));
