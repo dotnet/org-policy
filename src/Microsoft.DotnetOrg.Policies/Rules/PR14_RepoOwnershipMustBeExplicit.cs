@@ -30,6 +30,10 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (repo.IsArchived)
                     continue;
 
+                // These repos don't live long. There is no point in enforcing ownership semantics.
+                if (repo.IsTemporaryForkForSecurityAdvisory())
+                    continue;
+
                 var microsoftTeamIsAssigned = repo.Teams.Any(ta => ta.Team == microsoftTeam);
                 var nonMicrosoftTeamIsAssigned = repo.Teams.Any(ta => ta.Team == nonMicrosoftTeam);
 

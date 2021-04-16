@@ -274,6 +274,13 @@ namespace Microsoft.DotnetOrg.Policies
             return "Pending";
         }
 
+        public static bool IsTemporaryForkForSecurityAdvisory(this CachedRepo repo)
+        {
+            return repo.IsPrivate &&
+                   repo.IsFork &&
+                   repo.Name.Contains("-ghsa-", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static string Markdown(this CachedRepo repo)
         {
             return $"[{repo.Name}]({repo.Url})";
