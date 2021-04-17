@@ -277,7 +277,6 @@ namespace Microsoft.DotnetOrg.Policies
         public static bool IsTemporaryForkForSecurityAdvisory(this CachedRepo repo)
         {
             return repo.IsPrivate &&
-                   repo.IsFork &&
                    repo.Name.Contains("-ghsa-", StringComparison.OrdinalIgnoreCase);
         }
 
