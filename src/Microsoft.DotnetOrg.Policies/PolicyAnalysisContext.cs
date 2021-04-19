@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 using Microsoft.DotnetOrg.GitHubCaching;
@@ -11,6 +12,9 @@ namespace Microsoft.DotnetOrg.Policies
 
         public PolicyAnalysisContext(CachedOrg org)
         {
+            if (org is null)
+                throw new ArgumentNullException(nameof(org));
+
             Org = org;
         }
 
@@ -19,11 +23,11 @@ namespace Microsoft.DotnetOrg.Policies
         public void ReportViolation(PolicyDescriptor descriptor,
                                     string title,
                                     string body,
-                                    CachedRepo repo = null,
-                                    CachedBranch branch = null,
-                                    CachedTeam team = null,
-                                    CachedUser user = null,
-                                    IReadOnlyCollection<CachedUser> assignees = null)
+                                    CachedRepo? repo = null,
+                                    CachedBranch? branch = null,
+                                    CachedTeam? team = null,
+                                    CachedUser? user = null,
+                                    IReadOnlyCollection<CachedUser>? assignees = null)
         {
             var violation = new PolicyViolation(descriptor,
                                                 title,

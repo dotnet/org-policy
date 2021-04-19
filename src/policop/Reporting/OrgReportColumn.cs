@@ -14,7 +14,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             _selector = selector;
         }
 
-        public override string GetValue(ReportRow row)
+        public override string? GetValue(ReportRow row)
         {
             return row.Org is null ? null : GetValue(row.Org);
         }

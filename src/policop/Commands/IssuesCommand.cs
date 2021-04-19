@@ -14,8 +14,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class IssuesCommand : ToolCommand
     {
-        private string _orgName;
-        private string _repoName;
+        private string? _orgName;
+        private string? _repoName;
         private readonly List<string> _labels = new List<string>();
         private bool _viewInExcel;
 

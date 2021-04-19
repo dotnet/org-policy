@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotnetOrg.Ospo
 {
+#pragma warning disable CS8618 // This is a serialized type.
     public sealed class OspoLinkSet
     {
         public OspoLinkSet()
@@ -20,4 +21,5 @@ namespace Microsoft.DotnetOrg.Ospo
         [JsonIgnore]
         public IReadOnlyDictionary<string, OspoLink> LinkByLogin { get; set; } = new Dictionary<string, OspoLink>();
     }
+#pragma warning restore CS8618
 }

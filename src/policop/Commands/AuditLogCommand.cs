@@ -15,9 +15,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class AuditLogCommand : ToolCommand
     {
-        private string _orgName;
+        private string? _orgName;
         private bool _viewInExcel;
-        private string _outputFileName;
+        private string? _outputFileName;
         private readonly List<string> _phrases = new();
 
         public override string Name => "audit-log";

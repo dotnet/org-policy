@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 
 namespace Microsoft.Csv
@@ -17,6 +18,9 @@ namespace Microsoft.Csv
         public CsvTextWriter(TextWriter textWriter, CsvSettings settings)
             : base(settings)
         {
+            if (textWriter is null)
+                throw new ArgumentNullException(nameof(textWriter));
+
             _textWriter = textWriter;
             _textDelimiters = new char[] { settings.Delimiter, settings.TextQualifier, '\r', '\n' };
         }

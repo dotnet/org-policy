@@ -79,7 +79,9 @@ namespace Microsoft.DotnetOrg.PolicyCop
                                   .GetTypes()
                                   .Where(t => typeof(ToolCommand).IsAssignableFrom(t) &&
                                               !t.IsAbstract && t.GetConstructor(Array.Empty<Type>()) is not null)
-                                  .Select(t => (ToolCommand)Activator.CreateInstance(t))
+                                  .Select(t => (ToolCommand?)Activator.CreateInstance(t))
+                                  .Where(t => t is not null)
+                                  .Select(t => t!)
                                   .OrderBy(t => t.Name)
                                   .ToArray();
         }

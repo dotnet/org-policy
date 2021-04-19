@@ -8,37 +8,37 @@ namespace Microsoft.DotnetOrg.Policies
 {
     public static class CachedOrgExtensions
     {
-        public static CachedTeam GetExternalPartnerTeam(this CachedOrg org)
+        public static CachedTeam? GetExternalPartnerTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "external-partner", StringComparison.OrdinalIgnoreCase));
         }
 
-        public static CachedTeam GetNonMicrosoftTeam(this CachedOrg org)
+        public static CachedTeam? GetNonMicrosoftTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "non-microsoft", StringComparison.OrdinalIgnoreCase));
         }
 
-        public static CachedTeam GetMicrosoftTeam(this CachedOrg org)
+        public static CachedTeam? GetMicrosoftTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft", StringComparison.OrdinalIgnoreCase));
         }
 
-        public static CachedTeam GetMicrosoftVendorsTeam(this CachedOrg org)
+        public static CachedTeam? GetMicrosoftVendorsTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft-vendors", StringComparison.OrdinalIgnoreCase));
         }
 
-        public static CachedTeam GetMicrosoftBotsTeam(this CachedOrg org)
+        public static CachedTeam? GetMicrosoftBotsTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "microsoft-bots", StringComparison.OrdinalIgnoreCase));
         }
 
-        public static CachedTeam GetBotsTeam(this CachedOrg org)
+        public static CachedTeam? GetBotsTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "bots", StringComparison.OrdinalIgnoreCase));
         }
 
-        public static CachedTeam GetExternalCiAccessTeam(this CachedOrg org)
+        public static CachedTeam? GetExternalCiAccessTeam(this CachedOrg org)
         {
             return org.Teams.SingleOrDefault(t => string.Equals(t.Name, "external-ci-access", StringComparison.OrdinalIgnoreCase));
         }

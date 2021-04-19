@@ -16,8 +16,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 {
     internal sealed class CacheLoader
     {
-
-        public CacheLoader(Connection connection, TextWriter logWriter, OspoClient ospoClient)
+        public CacheLoader(Connection connection, TextWriter? logWriter, OspoClient? ospoClient)
         {
             Connection = connection;
             Log = logWriter ?? Console.Out;
@@ -27,7 +26,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public int ErrorRetryCount { get; set; } = 3;
         public Connection Connection { get; }
         public TextWriter Log { get; }
-        public OspoClient OspoClient { get; }
+        public OspoClient? OspoClient { get; }
 
         public async Task<CachedOrg> LoadAsync(string orgName)
         {
@@ -148,7 +147,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             var result = (await RunQueryWithRetry(query)).ToArray();
 
-            var repoQueryArguments = new Dictionary<string, object>();
+            var repoQueryArguments = new Dictionary<string, object?>();
             var repoQuery = new Query()
                 .Repository(Var("repo"), orgName)
                 .Select(r => new
@@ -218,7 +217,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             foreach (var teamSlug in teamSlugs)
             {
-                var vars = new Dictionary<string, object>
+                var vars = new Dictionary<string, object?>
                 {
                     { "after", null },
                     { "teamSlug", teamSlug },
@@ -279,7 +278,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             foreach (var teamSlug in teamSlugs)
             {
-                var vars = new Dictionary<string, object>
+                var vars = new Dictionary<string, object?>
                 {
                     { "after", null },
                     { "teamSlug", teamSlug },
@@ -334,7 +333,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             var result = new List<CachedUser>();
 
-            var vars = new Dictionary<string, object>
+            var vars = new Dictionary<string, object?>
             {
                 { "after", null },
             };
@@ -395,7 +394,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             foreach (var repoName in repoNames)
             {
-                var vars = new Dictionary<string, object>
+                var vars = new Dictionary<string, object?>
                 {
                     { "repoName", repoName },
                 };
@@ -444,7 +443,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             foreach (var repoName in repoNames)
             {
-                var vars = new Dictionary<string, object>
+                var vars = new Dictionary<string, object?>
                 {
                     { "after", null },
                     { "repoName", repoName },
@@ -483,7 +482,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return RunQueryWithRetry(() => Connection.Run(query));
         }
 
-        private Task<T> RunQueryWithRetry<T>(ICompiledQuery<T> query, Dictionary<string, object> variables)
+        private Task<T> RunQueryWithRetry<T>(ICompiledQuery<T> query, Dictionary<string, object?> variables)
         {
             return RunQueryWithRetry(() => Connection.Run(query, variables));
         }

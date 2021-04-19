@@ -5,12 +5,13 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
+#pragma warning disable CS8618 // This is a serialized type.
     public sealed class CachedTeam
     {
         public string Id { get; set; }
         public string Slug { get; set; }
         public string Name { get; set; }
-        public string ParentId { get; set; }
+        public string? ParentId { get; set; }
         public string Description { get; set; }
         public bool IsSecret { get; set; }
         public SortedSet<string> MaintainerLogins { get; set; } = new SortedSet<string>();
@@ -75,4 +76,5 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
         }
     }
+#pragma warning restore CS8618
 }

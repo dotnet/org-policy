@@ -20,7 +20,7 @@ namespace Microsoft.Csv
         {
         }
 
-        public abstract IEnumerable<string> Read();
+        public abstract IEnumerable<string>? Read();
 
         public CsvSettings Settings { get; set; }
     }

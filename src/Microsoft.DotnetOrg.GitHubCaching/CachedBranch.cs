@@ -2,6 +2,7 @@
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
+#pragma warning disable CS8618 // This is a serialized type.
     public sealed class CachedBranch
     {
         public string Prefix { get; set; }
@@ -9,7 +10,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public string Hash { get; set; }
 
         [JsonIgnore]
-        public CachedOrg Org => Repo?.Org;
+        public CachedOrg Org => Repo?.Org!;
 
         [JsonIgnore]
         public CachedRepo Repo { get; set; }
@@ -22,4 +23,5 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return Name;
         }
     }
+#pragma warning restore CS8618
 }

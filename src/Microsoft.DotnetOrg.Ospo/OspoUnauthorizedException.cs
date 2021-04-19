@@ -11,12 +11,12 @@ namespace Microsoft.DotnetOrg.Ospo
         {
         }
 
-        public OspoUnauthorizedException(string message)
+        public OspoUnauthorizedException(string? message)
             : base(message)
         {
         }
 
-        public OspoUnauthorizedException(string message, Exception inner)
+        public OspoUnauthorizedException(string? message, Exception? inner)
             : base(message, inner)
         {
         }

@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.DotnetOrg.GitHubCaching
 {
-    public struct CachedWhatIfPermission
+    public readonly struct CachedWhatIfPermission
     {
         public CachedWhatIfPermission(CachedUserAccess userAccess, CachedPermission? newPermissions)
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,9 +14,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class SetParentTeamCommand : ToolCommand
     {
-        private string _orgName;
-        private string _teamName;
-        private string _parentTeam;
+        private string? _orgName;
+        private string? _teamName;
+        private string? _parentTeam;
         private bool _unassign;
 
         public override string Name => "set-parent-team";
@@ -53,7 +54,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var client = await GitHubClientFactory.CreateAsync();
             var teams = await client.Organization.Team.GetAll(_orgName);
 
-            Team FindTeam(string name)
+            Team? FindTeam(string name)
             {
                 var lastSlash = name.LastIndexOf('/');
                 if (lastSlash >= 0)
@@ -64,7 +65,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
 
             var team = FindTeam(_teamName);
-            var parentTeam = (Team) null;
+            var parentTeam = (Team?) null;
 
             if (team is null)
             {
@@ -92,6 +93,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
             else
             {
+                Debug.Assert(parentTeam is not null);
                 updateTeam.ParentTeamId = parentTeam.Id;
                 await client.Organization.Team.Update(team.Id, updateTeam);
                 Console.Out.WriteLine($"Set parent of '{team.Slug}' to '{parentTeam.Slug}'");

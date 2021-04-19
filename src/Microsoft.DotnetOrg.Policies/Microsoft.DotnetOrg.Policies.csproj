@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net50</TargetFramework>
+    <Nullable>Enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

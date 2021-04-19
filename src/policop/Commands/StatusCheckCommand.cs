@@ -10,10 +10,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class StatusCheckCommand : ToolCommand
     {
-        private string _orgName;
-        private string _repoName;
+        private string? _orgName;
+        private string? _repoName;
         private string _branchName = "*";
-        private string _statusCheck;
+        private string? _statusCheck;
         private bool _disable;
 
         public override string Name => "status-check";

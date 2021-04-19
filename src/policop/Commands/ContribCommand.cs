@@ -14,11 +14,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class ContribCommand : ToolCommand
     {
-        private string _orgName;
-        private string _repoName;
+        private string? _orgName;
+        private string? _repoName;
         private List<string> _refs = new List<string>();
         private bool _viewInExcel;
-        private string _since;
+        private string? _since;
         private bool _nonMicrosoftOnly;
         private bool _markdown;
 

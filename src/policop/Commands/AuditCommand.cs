@@ -9,8 +9,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class AuditCommand : ToolCommand
     {
-        private string _orgName;
-        private string _outputFileName;
+        private string? _orgName;
+        private string? _outputFileName;
         private bool _viewInExcel;
 
         public override string Name => "audit";

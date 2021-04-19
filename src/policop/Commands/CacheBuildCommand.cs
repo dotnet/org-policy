@@ -11,8 +11,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class CacheBuildCommand : ToolCommand
     {
-        private string _orgName;
-        private string _buildId;
+        private string? _orgName;
+        private string? _buildId;
 
         public override string Name => "cache-build";
 
@@ -69,10 +69,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         }
 
         private static async Task DownloadArtifactFileAsync(DevOpsClient client, DevOpsBuild build, string remoteFileName, string localFileName)
-        {
+        {         
             using (var remoteStream = await client.GetArtifactFileAsync(build.Id, "drop", remoteFileName))
             {
-                var directory = Path.GetDirectoryName(localFileName);
+                if (remoteStream is null)
+                    return;
+
+                var directory = Path.GetDirectoryName(localFileName)!;
                 Directory.CreateDirectory(directory);
 
                 using (var localStream = File.Create(localFileName))

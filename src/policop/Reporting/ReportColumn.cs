@@ -18,9 +18,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 
         public string Name { get; }
         public string Description { get; }
-        public abstract string GetValue(ReportRow row);
+        public abstract string? GetValue(ReportRow row);
 
-        public static ReportColumn Get(string name)
+        public static ReportColumn? Get(string name)
         {
             return All.SingleOrDefault(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
         }

@@ -11,7 +11,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class CacheOrgCommand : ToolCommand
     {
-        private string _orgName;
+        private string? _orgName;
         private bool _includeLinks;
 
         public override string Name => "cache-org";
@@ -36,7 +36,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             foreach (var orgName in orgNames)
             {
                 var result = await CachedOrg.LoadAsync(connection, orgName, Console.Out, ospoClient);
-                await CacheManager.StoreOrgAsync(result);
+                if (result is not null)
+                    await CacheManager.StoreOrgAsync(result);
             }
         }
     }

@@ -2,9 +2,9 @@
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
-    internal struct ReportRow
+    internal readonly struct ReportRow
     {
-        public ReportRow(CachedRepo repo = null, CachedTeam team = null, CachedUser user = null, CachedUserAccess userAccess = null, CachedTeamAccess teamAccess = null, CachedWhatIfPermission? whatIfPermission = null)
+        public ReportRow(CachedRepo? repo = null, CachedTeam? team = null, CachedUser? user = null, CachedUserAccess? userAccess = null, CachedTeamAccess? teamAccess = null, CachedWhatIfPermission? whatIfPermission = null)
         {
             Repo = repo;
             Team = team;
@@ -14,7 +14,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             WhatIfPermission = whatIfPermission;
         }
 
-        public CachedOrg Org
+        public CachedOrg? Org
         {
             get
             {
@@ -27,11 +27,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             }
         }
 
-        public CachedRepo Repo { get; }
-        public CachedTeam Team { get; }
-        public CachedUser User { get; }
-        public CachedUserAccess UserAccess { get; }
-        public CachedTeamAccess TeamAccess { get; }
+        public CachedRepo? Repo { get; }
+        public CachedTeam? Team { get; }
+        public CachedUser? User { get; }
+        public CachedUserAccess? UserAccess { get; }
+        public CachedTeamAccess? TeamAccess { get; }
         public CachedWhatIfPermission? WhatIfPermission { get; }
     }
 }

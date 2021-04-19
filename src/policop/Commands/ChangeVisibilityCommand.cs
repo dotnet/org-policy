@@ -11,8 +11,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class ChangeVisibilityCommand : ToolCommand
     {
-        private string _orgName;
-        private string _repoName;
+        private string? _orgName;
+        private string? _repoName;
         private bool _makePrivate;
         private bool _makePublic;
 

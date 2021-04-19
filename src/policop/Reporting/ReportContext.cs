@@ -37,7 +37,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 
         private Func<TCache, bool> CreateFilter<TColumn, TCache>(IReadOnlyCollection<string> terms,
                                                                  IReadOnlyCollection<string> termColumns,
-                                                                 Func<TColumn, TCache, string> valueSelector)
+                                                                 Func<TColumn, TCache, string?> valueSelector)
             where TColumn : ReportColumn
         {
             var termFilters = SelectedTypedColumns<TColumn>(ParseTermFilters(terms, termColumns));
@@ -205,7 +205,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             if (column is null)
                 Console.Error.WriteLine($"error: column '{name}' isn't valid");
 
-            return new KeyValuePair<ReportColumn, string>(column, value);
+            return new KeyValuePair<ReportColumn, string>(column!, value);
         }
 
         private static Func<ReportRow, bool> CreateConjunctionFilter(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> columnFilters)

@@ -46,7 +46,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return Task.CompletedTask;
         }
 
-        public static async Task<Readme> GetReadme(this GitHubClient client, string owner, string repo)
+        public static async Task<Readme?> GetReadme(this GitHubClient client, string owner, string repo)
         {
         retry:
             try
@@ -64,7 +64,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
         }
 
-        public static async Task<GitHubCodeOfConduct> GetCodeOfConduct(this GitHubClient client, string owner, string repo)
+        public static async Task<GitHubCodeOfConduct?> GetCodeOfConduct(this GitHubClient client, string owner, string repo)
         {
         retry:
             try
@@ -91,7 +91,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
         }
 
-        public static async Task<RepositoryContent> GetContributing(this GitHubClient client, string owner, string repo)
+        public static async Task<RepositoryContent?> GetContributing(this GitHubClient client, string owner, string repo)
         {
         retry:
             try

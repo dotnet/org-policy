@@ -12,11 +12,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class AssignUserCommand : ToolCommand
     {
-        private string _orgName;
-        private string _userName;
-        private string _repoName;
-        private string _teamName;
-        private string _permission;
+        private string? _orgName;
+        private string? _userName;
+        private string? _repoName;
+        private string? _teamName;
+        private string? _permission;
         private bool _unassign;
 
         public override string Name => "assign-user";
@@ -118,7 +118,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
             else if (!string.IsNullOrEmpty(_repoName))
             {
-                Repository repo;
+                Repository? repo;
                 try
                 {
                     repo = await client.Repository.Get(_orgName, _repoName);

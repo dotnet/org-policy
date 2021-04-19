@@ -1,7 +1,7 @@
 ﻿namespace Microsoft.DotnetOrg.DevOps
 {
-    internal class Result<T>
+    internal sealed class Result<T>
     {
-        public T Value { get; set; }
+        public T? Value { get; set; }
     }
 }

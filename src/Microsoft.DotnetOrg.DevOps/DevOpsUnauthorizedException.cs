@@ -10,12 +10,12 @@ namespace Microsoft.DotnetOrg.DevOps
         {
         }
 
-        public DevOpsUnauthorizedException(string message)
+        public DevOpsUnauthorizedException(string? message)
             : base(message)
         {
         }
 
-        public DevOpsUnauthorizedException(string message, Exception inner)
+        public DevOpsUnauthorizedException(string? message, Exception? inner)
             : base(message, inner)
         {
         }

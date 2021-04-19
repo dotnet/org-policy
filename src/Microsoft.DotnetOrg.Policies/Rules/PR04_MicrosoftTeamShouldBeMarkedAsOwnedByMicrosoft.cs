@@ -16,6 +16,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
         {
             var maxNonMicrosoftPermission = CachedPermission.Triage;
             var microsoftTeam = context.Org.GetMicrosoftTeam();
+            var microsoftTeamMarkdown = microsoftTeam?.Markdown() ?? "Microsoft";
 
             foreach (var team in context.Org.Teams)
             {
@@ -30,7 +31,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                         $@"
                             Team {team.Markdown()} grants at least one Microsoft-owned repo more than {maxNonMicrosoftPermission.Markdown()} permissions. The team must be owned by Microsoft.
 
-                            To indicate that the team is owned by Microsoft, ensure that one of the parent teams is {microsoftTeam.Markdown()}.
+                            To indicate that the team is owned by Microsoft, ensure that one of the parent teams is {microsoftTeamMarkdown}.
                         ",
                         team: team
                     );

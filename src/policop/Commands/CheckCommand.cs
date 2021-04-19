@@ -18,15 +18,15 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class CheckCommand : ToolCommand
     {
-        private string _orgName;
-        private string _outputFileName;
-        private string _policyRepo;
+        private string? _orgName;
+        private string? _outputFileName;
+        private string? _policyRepo;
         private bool _updateIssues;
         private bool _assignIssues;
         private bool _viewInExcel;
-        private string _writeIssuesTo;
+        private string? _writeIssuesTo;
         private SortedSet<string> _includedRuleIds = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-        private ICollection<string> _activeTerms;
+        private ICollection<string>? _activeTerms;
 
         public override string Name => "check";
 
@@ -128,7 +128,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 WriteIssues(_writeIssuesTo, report);
 
             if (_updateIssues)
+            {
+                Debug.Assert(gitHubClient is not null);
                 await UpdateIssuesAsync(gitHubClient, policyRepo, report, _assignIssues);
+            }
 
             Console.WriteLine($"  Existing violations: {report.ExistingViolations.Count:N0}");
             Console.WriteLine($"Overridden violations: {report.OverriddenViolations.Count:N0}");
@@ -141,7 +144,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
         private static readonly string AreaViolationLabel = "area-violation";
         private static readonly string PolicyOverrideLabel = "policy-override";
 
-        private static void SaveVioloations(string orgName, string outputFileName, bool viewInExcel, ViolationReport report)
+        private static void SaveVioloations(string orgName, string? outputFileName, bool viewInExcel, ViolationReport report)
         {
             var document = new CsvDocument("fingerprint", "org", "status", "severity", "rule", "rule-title", "violation", "repo", "user", "team", "assignees");
 
@@ -234,8 +237,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             issueRequest.Labels.Add(AreaViolationLabel);
             var existingIssues = await client.Issue.GetAllForRepository(policyRepo.Owner, policyRepo.Name, issueRequest);
             return existingIssues.Select(PolicyIssue.Create)
-                                  .Where(pi => pi is not null)
-                                  .ToArray();
+                                 .Where(pi => pi is not null)
+                                 .Select(pi => pi!)
+                                 .ToArray();
         }
 
         private static async Task UpdateIssuesAsync(GitHubClient client, RepoName policyRepo, ViolationReport report, bool assignIssues)
@@ -423,7 +427,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
         }
 
-        private struct RepoName
+        private readonly struct RepoName
         {
             public RepoName(string owner, string name)
             {
@@ -434,7 +438,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             public string Owner { get; }
             public string Name { get; }
 
-            public static bool TryParse(string ownerSlashName, out RepoName result)
+            public static bool TryParse(string? ownerSlashName, out RepoName result)
             {
                 result = default;
 
@@ -474,7 +478,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             public bool IsClosed => !IsOpen;
             public bool IsOverride { get; }
 
-            public static PolicyIssue Create(Issue issue)
+            public static PolicyIssue? Create(Issue issue)
             {
                 var fingerprint = GetFingerprint(issue.Title);
                 if (fingerprint is null)
@@ -521,7 +525,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             public IReadOnlyList<(PolicyViolation, PolicyIssue)> ReopenedViolations { get; }
             public IReadOnlyList<PolicyIssue> ClosedViolations { get; }
 
-            public IEnumerable<(string Status, PolicyViolation violation, PolicyIssue)> GetAll()
+            public IEnumerable<(string Status, PolicyViolation? violation, PolicyIssue?)> GetAll()
             {
                 foreach (var (v, i) in ExistingViolations)
                     yield return ("Existing", v, i);
@@ -555,7 +559,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
                 var issueByFingerprint = issues.ToDictionary(i => i.Fingerprint);
 
-                var mapping = new List<(PolicyViolation Violation, PolicyIssue Issue)>();
+                var mapping = new List<(PolicyViolation? Violation, PolicyIssue? Issue)>();
 
                 foreach (var violation in violations)
                 {
@@ -570,26 +574,31 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 }
 
                 var existingViolations = mapping.Where(m => m.Violation is not null && m.Issue is not null)
-                                                 .Where(m => m.Issue.IsOpen && !m.Issue.IsOverride)
-                                                 .ToArray();
-
-                var overriddenViolations = mapping.Where(m => m.Violation is not null && m.Issue is not null)
-                                                   .Where(m => m.Issue.IsOverride)
-                                                   .ToArray();
-
-                var createdViolations = mapping.Where(m => m.Violation is not null && m.Issue is null)
-                                                .Select(m => m.Violation)
+                                                .Select(m => (Violation: m.Violation!, Issue: m.Issue!))
+                                                .Where(m => m.Issue.IsOpen && !m.Issue.IsOverride)
                                                 .ToArray();
 
-                var reopenedViolations = mapping.Where(m => m.Violation is not null && m.Issue is not null)
-                                                 .Where(m => m.Issue.IsClosed && !m.Issue.IsOverride)
-                                                 .ToArray();
+                var overriddenViolations = mapping.Where(m => m.Violation is not null && m.Issue is not null)
+                                                  .Select(m => (Violation: m.Violation!, Issue: m.Issue!))
+                                                  .Where(m => m.Issue.IsOverride)
+                                                  .ToArray();
 
-                var closedViolations = mapping.Where(m => m.Issue is not null)
-                                               .Where(m => m.Issue.IsOpen)
-                                               .Where(m => m.Violation is null || m.Issue.IsOverride)
-                                               .Select(m => m.Issue)
+                var createdViolations = mapping.Where(m => m.Violation is not null && m.Issue is null)
+                                               .Select(m => (Violation: m.Violation!, Issue: m.Issue!))
+                                               .Where(m => m.Issue.IsOverride)
+                                               .Select(m => m.Violation)
                                                .ToArray();
+
+                var reopenedViolations = mapping.Where(m => m.Violation is not null && m.Issue is not null)
+                                                .Select(m => (Violation: m.Violation!, Issue: m.Issue!))
+                                                .Where(m => m.Issue.IsClosed && !m.Issue.IsOverride)
+                                                .ToArray();
+
+                var closedViolations = mapping.Where(m => m.Issue is not null && m.Issue.IsOpen)
+                                              .Select(m => (m.Violation, Issue: m.Issue!))
+                                              .Where(m => m.Violation is null || m.Issue.IsOverride)
+                                              .Select(m => m.Issue)
+                                              .ToArray();
 
                 return new ViolationReport(existingViolations, overriddenViolations, createdViolations, reopenedViolations, closedViolations);
             }

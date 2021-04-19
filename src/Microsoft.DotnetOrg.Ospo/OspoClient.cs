@@ -15,6 +15,9 @@ namespace Microsoft.DotnetOrg.Ospo
 
         public OspoClient(string token)
         {
+            if (token is null)
+                throw new ArgumentNullException(nameof(token));
+
             _httpClient = new HttpClient
             {
                 BaseAddress = new Uri("https://repos.opensource.microsoft.com/api/")
@@ -29,7 +32,7 @@ namespace Microsoft.DotnetOrg.Ospo
             _httpClient.Dispose();
         }
 
-        public async Task<OspoLink> GetAsync(string gitHubLogin)
+        public async Task<OspoLink?> GetAsync(string gitHubLogin)
         {
             var result = await GetAsJsonAsync<OspoLink>($"people/links/github/{gitHubLogin}");
             return result;
@@ -37,16 +40,18 @@ namespace Microsoft.DotnetOrg.Ospo
 
         public async Task<OspoLinkSet> GetAllAsync()
         {
+            var links = await GetAsJsonAsync<IReadOnlyList<OspoLink>>($"people/links");
+
             var linkSet = new OspoLinkSet
             {
-                Links = await GetAsJsonAsync<IReadOnlyList<OspoLink>>($"people/links")
+                Links = links ?? Array.Empty<OspoLink>()
             };
 
             linkSet.Initialize();
             return linkSet;
         }
 
-        private async Task<T> GetAsJsonAsync<T>(string requestUri)
+        private async Task<T?> GetAsJsonAsync<T>(string requestUri)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
             var response = await _httpClient.SendAsync(request);

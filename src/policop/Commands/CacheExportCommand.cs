@@ -8,7 +8,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class CacheExportCommand : ToolCommand
     {
-        private string _outputDirectory;
+        private string? _outputDirectory;
 
         public override string Name => "cache-export";
 
@@ -37,7 +37,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
                 if (orgCache.Exists)
                 {
-                    var destinationDirectoryPath = Path.GetDirectoryName(destinationPath);
+                    var destinationDirectoryPath = Path.GetDirectoryName(destinationPath)!;
                     Directory.CreateDirectory(destinationDirectoryPath);
                     orgCache.CopyTo(destinationPath, true);
                 }

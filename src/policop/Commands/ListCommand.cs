@@ -13,13 +13,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class ListCommand : ToolCommand
     {
-        private string _orgName;
+        private string? _orgName;
         private bool _listRepos;
         private bool _listTeams;
         private bool _listUsers;
-        private List<string> _activeTerms;
+        private List<string>? _activeTerms;
         private bool _viewInExcel;
-        private string _outputFileName;
+        private string? _outputFileName;
         private readonly ReportContext _reportContext = new ReportContext();
 
         public override string Name => "list";
@@ -44,7 +44,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             if (_orgName == "*")
                 return CacheManager.GetCachedOrgNames();
 
-            return new[] { _orgName };
+            return new[] { _orgName! };
         }
 
         public override async Task ExecuteAsync()
@@ -66,9 +66,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var orgTasks = orgNames.Select(o => CacheManager.LoadOrgAsync(o)).ToArray();
             await Task.WhenAll(orgTasks);
 
-            var orgs = orgTasks.Select(t => t.Result).ToArray();
+            var orgs = orgTasks.Where(t => t.Result is not null)
+                               .Select(t => t.Result!)
+                               .ToArray();
 
-            if (orgs.Length == 1 && orgs[0] is null)
+            if (orgs.Length == 1 && orgs.Length == 0)
             {
                 Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
                 return;

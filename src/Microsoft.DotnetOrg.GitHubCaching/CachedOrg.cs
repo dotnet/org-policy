@@ -11,9 +11,10 @@ using Octokit.GraphQL;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
+#pragma warning disable CS8618 // This is a serialized type.
     public sealed class CachedOrg
     {
-        public static int CurrentVersion = 9;
+        public static int CurrentVersion => 9;
 
         public int Version { get; set; }
         public string Name { get; set; }
@@ -176,16 +177,16 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return $"https://github.com/orgs/{orgName}/people/{login}";
         }
 
-        public static Task<CachedOrg> LoadAsync(Connection connection,
-                                                string orgName,
-                                                TextWriter logWriter = null,
-                                                OspoClient ospoClient = null)
+        public static Task<CachedOrg?> LoadAsync(Connection connection,
+                                                 string orgName,
+                                                 TextWriter? logWriter = null,
+                                                 OspoClient? ospoClient = null)
         {
             var loader = new CacheLoader(connection, logWriter, ospoClient);
-            return loader.LoadAsync(orgName);
+            return loader.LoadAsync(orgName)!;
         }
 
-        public static async Task<CachedOrg> LoadAsync(string path)
+        public static async Task<CachedOrg?> LoadAsync(string path)
         {
             if (!File.Exists(path))
                 return null;
@@ -194,7 +195,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 return await LoadAsync(stream);
         }
 
-        public static async Task<CachedOrg> LoadAsync(Stream stream)
+        public static async Task<CachedOrg?> LoadAsync(Stream stream)
         {
             var options = new JsonSerializerOptions
             {
@@ -202,13 +203,15 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             };
             options.Converters.Add(new JsonStringEnumConverter());
             var orgData = await JsonSerializer.DeserializeAsync<CachedOrg>(stream, options);
+            if (orgData is null)
+                return null;
             orgData.Initialize();
             return orgData;
         }
 
         public async Task SaveAsync(string path)
         {
-            var cacheDirectory = Path.GetDirectoryName(path);
+            var cacheDirectory = Path.GetDirectoryName(path)!;
             Directory.CreateDirectory(cacheDirectory);
 
             using (var stream = File.Create(path))
@@ -225,4 +228,5 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             await JsonSerializer.SerializeAsync(stream, this, options);
         }
     }
+#pragma warning restore CS8618
 }

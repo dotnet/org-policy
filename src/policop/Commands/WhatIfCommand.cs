@@ -18,10 +18,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class WhatIfCommand : ToolCommand
     {
-        private string _orgName;
-        private string _newPermissions;
-        private List<string> _activeTerms;
-        private string _outputFileName;
+        private string? _orgName;
+        private string? _newPermissions;
+        private List<string>? _activeTerms;
+        private string? _outputFileName;
         private bool _viewInExcel;
         private bool _generateEmail;
         private bool _sendEmail;
@@ -118,7 +118,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                                       team: t.Team,
                                                       user: t.UserAccess.User,
                                                       whatIfPermission: t.UserAccess.WhatIfDowngraded(t.Team, newPermission)))
-                          .Where(r => !r.WhatIfPermission.Value.IsUnchanged)
+                          .Where(r => !r.WhatIfPermission!.Value.IsUnchanged)
                           .Where(_reportContext.CreateRowFilter())
                           .ToArray();
 
@@ -143,27 +143,27 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             var userGroups = rows.Where(r => r.WhatIfPermission is not null &&
                                               !r.WhatIfPermission.Value.IsUnchanged &&
-                                              r.User.IsMicrosoftUser() &&
-                                              !string.IsNullOrEmpty(r.User.GetEmail()))
-                                 .Select(r => (r.User, r.Repo, WhatIfPermission: r.WhatIfPermission.Value))
+                                              r.User!.IsMicrosoftUser() &&
+                                              !string.IsNullOrEmpty(r.User!.GetEmail()))
+                                 .Select(r => (r.User, r.Repo, WhatIfPermission: r.WhatIfPermission!.Value))
                                  .Distinct()
                                  .GroupBy(r => r.User);
 
-            var affectedTeams = rows.Select(r => r.Team)
-                                     .Distinct()
-                                     .ToArray();
+            var affectedTeams = rows.Select(r => r.Team!)
+                                    .Distinct()
+                                    .ToArray();
 
             var excludedAdmins = rows.Where(r => r.WhatIfPermission is not null &&
                                                   !r.WhatIfPermission.Value.IsUnchanged &&
                                                   r.WhatIfPermission.Value.UserAccess.Permission == CachedPermission.Admin)
-                                      .Select(r => (r.Repo, r.User));
+                                      .Select(r => (r.Repo!, r.User!));
             var excludedAdminsSet = new HashSet<(CachedRepo, CachedUser)>(excludedAdmins);
 
             foreach (var userGroup in userGroups)
             {
                 var user = userGroup.Key;
-                var name = user.GetName();
-                var email = user.GetEmail();
+                var name = user!.GetName();
+                var email = user!.GetEmail();
 
                 var sb = new StringBuilder();
                 sb.AppendLine($"Hello {name},");
@@ -176,7 +176,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     if (newPermission is null)
                         sb.AppendLine($"* The team {team.Name} will be deleted.");
                     else
-                        sb.AppendLine($"* The team {team.Name} will now only grant `{newPermission.ToString().ToLower()}` permissions.");
+                        sb.AppendLine($"* The team {team.Name} will now only grant `{newPermission.ToString()!.ToLower()}` permissions.");
                 }
 
                 sb.AppendLine();

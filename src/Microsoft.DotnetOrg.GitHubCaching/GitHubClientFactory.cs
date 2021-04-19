@@ -14,7 +14,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 {
     public static class GitHubClientFactory
     {
-        public static async Task<GitHubClient> CreateAsync(string token = null, string scopes = "public_repo, read:org")
+        public static async Task<GitHubClient> CreateAsync(string? token = null, string scopes = "public_repo, read:org")
         {
             if (string.IsNullOrEmpty(token))
                 token = await GetOrCreateTokenAsync(scopes);
@@ -22,7 +22,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return Create(token);
         }
 
-        public static async Task<QConnection> CreateGraphAsync(string token = null, string scopes = "public_repo, read:org")
+        public static async Task<QConnection> CreateGraphAsync(string? token = null, string scopes = "public_repo, read:org")
         {
             if (string.IsNullOrEmpty(token))
                 token = await GetOrCreateTokenAsync(scopes);
@@ -39,7 +39,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             if (!string.IsNullOrEmpty(environmentToken))
                 return environmentToken;
 
-            string token = null;
+            string? token = null;
 
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
@@ -55,7 +55,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             if (token is null)
             {
                 token = await CreateTokenAsync(scopes, isRenewal: false);
-                var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);
+                var tokenFileDirectory = Path.GetDirectoryName(tokenFileName)!;
                 Directory.CreateDirectory(tokenFileDirectory);
                 File.WriteAllText(tokenFileName, token);
             }
@@ -97,8 +97,10 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         private static string GetTokenFileName()
         {
             var exePath = Environment.GetCommandLineArgs()[0];
-            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), fileInfo.CompanyName, fileInfo.ProductName, "github-token.txt");
+            var fileInfo = FileVersionInfo.GetVersionInfo(exePath)!;
+            var companyName = fileInfo.CompanyName ?? string.Empty;
+            var productName = fileInfo.ProductName ?? string.Empty;
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), companyName, productName, "github-token.txt");
         }
 
         private static async Task<string> CreateTokenAsync(string scopes, bool isRenewal)
@@ -146,7 +148,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
         }
 
-        private static string ReadText(string item)
+        private static string? ReadText(string item)
         {
             Console.Write($"{item}: ");
             return Console.ReadLine();
@@ -162,12 +164,12 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return ReadNonEmptyText(item, ReadPassword);
         }
 
-        private static string ReadNonEmptyText(string item, Func<string> reader)
+        private static string ReadNonEmptyText(string item, Func<string?> reader)
         {
             while (true)
             {
                 Console.Write($"{item}: ");
-                var result = reader().Trim();
+                var result = (reader() ?? string.Empty).Trim();
                 if (!string.IsNullOrEmpty(result))
                     return result;
 

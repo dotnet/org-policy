@@ -8,7 +8,7 @@ namespace Microsoft.DotnetOrg.Ospo
 {
     public static class OspoClientFactory
     {
-        public static async Task<OspoClient> CreateAsync(string token = null)
+        public static async Task<OspoClient> CreateAsync(string? token = null)
         {
             if (string.IsNullOrEmpty(token))
                 token = await GetOrCreateTokenAsync();
@@ -22,7 +22,7 @@ namespace Microsoft.DotnetOrg.Ospo
             if (!string.IsNullOrEmpty(environmentToken))
                 return environmentToken;
 
-            string token = null;
+            string? token = null;
 
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
@@ -38,7 +38,7 @@ namespace Microsoft.DotnetOrg.Ospo
             if (token is null)
             {
                 token = await CreateTokenAsync();
-                var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);
+                var tokenFileDirectory = Path.GetDirectoryName(tokenFileName)!;
                 Directory.CreateDirectory(tokenFileDirectory);
                 File.WriteAllText(tokenFileName, token);
             }
@@ -69,8 +69,10 @@ namespace Microsoft.DotnetOrg.Ospo
         private static string GetTokenFileName()
         {
             var exePath = Environment.GetCommandLineArgs()[0];
-            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), fileInfo.CompanyName, fileInfo.ProductName, "ospo-token.txt");
+            var fileInfo = FileVersionInfo.GetVersionInfo(exePath)!;
+            var companyName = fileInfo.CompanyName ?? string.Empty;
+            var productName = fileInfo.ProductName ?? string.Empty;
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), companyName, productName, "ospo-token.txt");
         }
 
         private static async Task<string> CreateTokenAsync()

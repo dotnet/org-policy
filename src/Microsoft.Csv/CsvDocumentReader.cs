@@ -15,7 +15,7 @@ namespace Microsoft.Csv
             _rows = rows;
         }
 
-        public override IEnumerable<string> Read()
+        public override IEnumerable<string>? Read()
         {
             if (_currentRow >= _rows.Count)
                 return null;

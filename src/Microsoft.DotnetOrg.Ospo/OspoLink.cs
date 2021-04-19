@@ -2,7 +2,8 @@
 
 namespace Microsoft.DotnetOrg.Ospo
 {
-    public class OspoLink
+#pragma warning disable CS8618 // This is a serialized type.
+    public sealed class OspoLink
     {
         [JsonPropertyName("github")]
         public GitHubInfo GitHubInfo { get; set; }
@@ -10,4 +11,5 @@ namespace Microsoft.DotnetOrg.Ospo
         [JsonPropertyName("aad")]
         public MicrosoftInfo MicrosoftInfo { get; set; }
     }
+#pragma warning restore CS8618
 }

@@ -15,12 +15,24 @@ namespace Microsoft.DotnetOrg.Policies
                                string title,
                                string body,
                                CachedOrg org,
-                               CachedRepo repo = null,
-                               CachedBranch branch = null,
-                               CachedTeam team = null,
-                               CachedUser user = null,
-                               IReadOnlyCollection<CachedUser> assignees = null)
+                               CachedRepo? repo = null,
+                               CachedBranch? branch = null,
+                               CachedTeam? team = null,
+                               CachedUser? user = null,
+                               IReadOnlyCollection<CachedUser>? assignees = null)
         {
+            if (descriptor is null)
+                throw new ArgumentNullException(nameof(descriptor));
+
+            if (string.IsNullOrEmpty(title))
+                throw new ArgumentException($"'{nameof(title)}' cannot be null or empty.", nameof(title));
+
+            if (string.IsNullOrEmpty(body))
+                throw new ArgumentException($"'{nameof(body)}' cannot be null or empty.", nameof(body));
+
+            if (org is null)
+                throw new ArgumentNullException(nameof(org));
+
             Descriptor = descriptor;
             Fingerprint = ComputeFingerprint(descriptor.DiagnosticId, repo, branch, user, team);
             Title = title;
@@ -39,13 +51,17 @@ namespace Microsoft.DotnetOrg.Policies
         public string Title { get; }
         public CachedOrg Org { get; }
         public string Body { get; }
-        public CachedRepo Repo { get; }
-        public CachedBranch Branch { get; }
-        public CachedTeam Team { get; }
-        public CachedUser User { get; }
+        public CachedRepo? Repo { get; }
+        public CachedBranch? Branch { get; }
+        public CachedTeam? Team { get; }
+        public CachedUser? User { get; }
         public IReadOnlyCollection<CachedUser> Assignees { get; }
 
-        private static IReadOnlyCollection<CachedUser> ComputeAssignees(CachedOrg org, CachedRepo repo, CachedTeam team, CachedUser user, IReadOnlyCollection<CachedUser> assignees)
+        private static IReadOnlyCollection<CachedUser> ComputeAssignees(CachedOrg org,
+                                                                        CachedRepo? repo,
+                                                                        CachedTeam? team,
+                                                                        CachedUser? user,
+                                                                        IReadOnlyCollection<CachedUser>? assignees)
         {
             var result = new List<CachedUser>();
 
@@ -67,7 +83,11 @@ namespace Microsoft.DotnetOrg.Policies
             return result.ToArray();
         }
 
-        private static Guid ComputeFingerprint(string diagnosticId, CachedRepo repo, CachedBranch branch, CachedUser user, CachedTeam team)
+        private static Guid ComputeFingerprint(string diagnosticId,
+                                               CachedRepo? repo,
+                                               CachedBranch? branch,
+                                               CachedUser? user,
+                                               CachedTeam? team)
         {
             using (var fingerprintBytes = new MemoryStream())
             using (var md5 = MD5.Create())
@@ -107,7 +127,7 @@ namespace Microsoft.DotnetOrg.Policies
 
             using (var stringReader = new StringReader(text))
             {
-                string line;
+                string? line;
                 while ((line = stringReader.ReadLine()) is not null)
                 {
                     if (string.IsNullOrWhiteSpace(line))
@@ -121,7 +141,7 @@ namespace Microsoft.DotnetOrg.Policies
             var sb = new StringBuilder();
             using (var stringReader = new StringReader(text))
             {
-                string line;
+                string? line;
                 while ((line = stringReader.ReadLine()) is not null)
                 {
                     var unindentedLine = line.Length < minIndent

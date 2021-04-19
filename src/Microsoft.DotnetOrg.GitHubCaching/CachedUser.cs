@@ -5,6 +5,7 @@ using Microsoft.DotnetOrg.Ospo;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
+#pragma warning disable CS8618 // This is a serialized type.
     public sealed class CachedUser
     {
         public string Login { get; set; }
@@ -30,4 +31,5 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         [JsonIgnore]
         public List<CachedUserAccess> Repos { get; } = new List<CachedUserAccess>();
     }
+#pragma warning restore CS8618
 }

@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
+#pragma warning disable CS8618 // This is a serialized type.
     public sealed class CachedUserAccess
     {
         public string RepoName { get; set; }
@@ -105,4 +106,5 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return new CachedWhatIfPermission(this, maximumPermission);
         }
     }
+#pragma warning restore CS8618
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,8 +8,14 @@ namespace Microsoft.DotnetOrg.DevOps
 {
     public static class DevOpsClientFactory
     {
-        public static async Task<DevOpsClient> CreateAsync(string organization, string project, string token = null)
+        public static async Task<DevOpsClient> CreateAsync(string organization, string project, string? token = null)
         {
+            if (organization is null)
+                throw new ArgumentNullException(nameof(organization));
+
+            if (project is null)
+                throw new ArgumentNullException(nameof(project));
+
             if (string.IsNullOrEmpty(token))
                 token = await GetOrCreateTokenAsync(organization, project);
 
@@ -23,7 +28,7 @@ namespace Microsoft.DotnetOrg.DevOps
             if (!string.IsNullOrEmpty(environmentToken))
                 return environmentToken;
 
-            string token = null;
+            string? token = null;
 
             var tokenFileName = GetTokenFileName();
             if (File.Exists(tokenFileName))
@@ -40,7 +45,7 @@ namespace Microsoft.DotnetOrg.DevOps
             if (token is null)
             {
                 token = await CreateTokenAsync(organization, project);
-                var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);
+                var tokenFileDirectory = Path.GetDirectoryName(tokenFileName)!;
                 Directory.CreateDirectory(tokenFileDirectory);
                 File.WriteAllText(tokenFileName, token);
             }
@@ -71,8 +76,10 @@ namespace Microsoft.DotnetOrg.DevOps
         private static string GetTokenFileName()
         {
             var exePath = Environment.GetCommandLineArgs()[0];
-            var fileInfo = FileVersionInfo.GetVersionInfo(exePath);
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), fileInfo.CompanyName, fileInfo.ProductName, "dev-ops-token.txt");
+            var fileInfo = FileVersionInfo.GetVersionInfo(exePath)!;
+            var companyName = fileInfo.CompanyName ?? string.Empty;
+            var productName = fileInfo.ProductName ?? string.Empty;
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), companyName, productName, "dev-ops-token.txt");
         }
 
         private static Task<string> CreateTokenAsync(string organization, string project)

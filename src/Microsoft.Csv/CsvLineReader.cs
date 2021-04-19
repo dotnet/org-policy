@@ -64,7 +64,7 @@ namespace Microsoft.Csv
             return GetEnumerator();
         }
 
-        private IEnumerable<string> ReadLine()
+        private IEnumerable<string>? ReadLine()
         {
             if (Peek() == Eof)
                 return null;
@@ -80,7 +80,7 @@ namespace Microsoft.Csv
             return _fields;
         }
 
-        private string ReadField()
+        private string? ReadField()
         {
             if (Peek() == CarriageReturn)
             {
