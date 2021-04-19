@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
@@ -15,8 +16,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public bool IsMirror { get; set; }
         public DateTimeOffset LastPush { get; set; }
         public string Description { get; set; }
-        public string DefaultBranch { get; set; }
+        public string DefaultBranchName { get; set; }
         public IReadOnlyList<CachedBranch> Branches { get; set; }
+        public IReadOnlyList<CachedBranchProtectionRule> BranchProtectionRules { get; set; }
 
         [JsonIgnore]
         public CachedOrg Org { get; set; }
@@ -26,6 +28,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         [JsonIgnore]
         public string FullName => $"{Org.Name}/{Name}";
+
+        [JsonIgnore]
+        public CachedBranch DefaultBranch => Branches.Single(b => b.Name == DefaultBranchName);
 
         [JsonIgnore]
         public List<CachedTeamAccess> Teams { get; } = new List<CachedTeamAccess>();

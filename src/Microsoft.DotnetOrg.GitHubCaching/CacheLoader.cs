@@ -147,12 +147,20 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             var result = (await RunQueryWithRetry(query)).ToArray();
 
+            await FillBranches(orgName, result);
+            await FillBranchProtectionRules(orgName, result);
+
+            return result;
+        }
+
+        private async Task FillBranches(string orgName, CachedRepo[] result)
+        {
             var repoQueryArguments = new Dictionary<string, object?>();
             var repoQuery = new Query()
                 .Repository(Var("repo"), orgName)
                 .Select(r => new
                 {
-                    DefaultBranch = r.DefaultBranchRef == null ? "" : r.DefaultBranchRef.Name,
+                    DefaultBranchName = r.DefaultBranchRef == null ? "" : r.DefaultBranchRef.Name,
                     Branches = r.Refs("refs/heads/", null, null, null, null, null, null, null).AllPages().Select(r =>
                     new CachedBranch
                     {
@@ -168,11 +176,49 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 repoQueryArguments["repo"] = repo.Name;
 
                 var branchInfo = await RunQueryWithRetry(repoQuery, repoQueryArguments);
-                repo.DefaultBranch = branchInfo.DefaultBranch;
+                repo.DefaultBranchName = branchInfo.DefaultBranchName;
                 repo.Branches = branchInfo.Branches;
             }
+        }
 
-            return result;
+        private async Task FillBranchProtectionRules(string orgName, CachedRepo[] result)
+        {
+            var repoQueryArguments = new Dictionary<string, object?>();
+            var repoQuery = new Query()
+                .Repository(Var("repo"), orgName)
+                .Select(r => new
+                {
+                    Rules = r.BranchProtectionRules(null, null, null, null).AllPages().Select(r =>
+                    new CachedBranchProtectionRule
+                    {
+                        // TODO: These branch protection settings aren't supported by the API yet:
+                        // - AllowsDeletions
+                        // - AllowsForcePushes
+                        // - RequiresLinearHistory
+                        MatchingRefs = r.MatchingRefs(null, null, null, null, null).AllPages().Select(m => m.Prefix + "/" + m.Name).ToList(),
+                        DismissesStaleReviews = r.DismissesStaleReviews,
+                        IsAdminEnforced = r.IsAdminEnforced,
+                        Pattern = r.Pattern,
+                        RequiredApprovingReviewCount = r.RequiredApprovingReviewCount,
+                        RequiredStatusCheckContexts = r.RequiredStatusCheckContexts.ToArray(),
+                        RequiresApprovingReviews = r.RequiresApprovingReviews,
+                        RequiresCodeOwnerReviews = r.RequiresCodeOwnerReviews,
+                        RequiresCommitSignatures = r.RequiresCommitSignatures,
+                        RequiresStatusChecks = r.RequiresStatusChecks,
+                        RequiresStrictStatusChecks = r.RequiresStrictStatusChecks,
+                        RestrictsPushes = r.RestrictsPushes,
+                        RestrictsReviewDismissals = r.RestrictsReviewDismissals
+                    }).ToList()
+                })
+                .Compile();
+
+            foreach (var repo in result)
+            {
+                repoQueryArguments["repo"] = repo.Name;
+
+                var branchInfo = await RunQueryWithRetry(repoQuery, repoQueryArguments);
+                repo.BranchProtectionRules = branchInfo.Rules;
+            }
         }
 
         private async Task<IReadOnlyCollection<CachedTeam>> GetCachedTeamsAsync(string orgName)
