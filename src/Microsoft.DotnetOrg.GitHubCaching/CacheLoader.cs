@@ -17,14 +17,16 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 {
     internal sealed class CacheLoader
     {
-        public CacheLoader(Connection connection, TextWriter? logWriter, OspoClient? ospoClient)
+        public CacheLoader(Octokit.GitHubClient client, Connection connection, TextWriter? logWriter, OspoClient? ospoClient)
         {
+            Client = client;
             Connection = connection;
             Log = logWriter ?? Console.Out;
             OspoClient = ospoClient;
         }
 
         public int ErrorRetryCount { get; set; } = 3;
+        public Octokit.GitHubClient Client { get; }
         public Connection Connection { get; }
         public TextWriter Log { get; }
         public OspoClient? OspoClient { get; }
@@ -41,6 +43,10 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 Version = CachedOrg.CurrentVersion,
                 Name = orgName
             };
+
+            Log.WriteLine($"Loading secrets...");
+            var orgSecrets = await GetOrgSecretsAsync(orgName);
+            cachedOrg.Secrets.AddRange(orgSecrets);
 
             Log.WriteLine($"Loading members...");
             var members = await GetCachedMembersAsync(orgName);
@@ -124,6 +130,19 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return result;
         }
 
+        private async Task<IReadOnlyCollection<CachedOrgSecret>> GetOrgSecretsAsync(string orgName)
+        {
+            var orgSecrets = await Client.GetOrgSecrets(orgName);
+
+            foreach (var secret in orgSecrets)
+            {
+                await Client.WaitForEnoughQuotaAsync(Log);
+                secret.RepositoryNames = await Client.GetOrgSecretRepositories(orgName, secret.Name);
+            }
+
+            return orgSecrets;
+        }
+
         private async Task<IReadOnlyCollection<CachedRepo>> GetCachedReposAsync(string orgName)
         {
             var query = new Query()
@@ -132,6 +151,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 .AllPages()
                 .Select(r => new CachedRepo()
                 {
+                    Id = r.DatabaseId!.Value,
                     Name = r.Name,
                     LastPush = r.PushedAt ?? r.CreatedAt,
                     IsPrivate = r.IsPrivate,
@@ -150,11 +170,13 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             await FillBranches(orgName, result);
             await FillBranchProtectionRules(orgName, result);
+            await FillEnvironments(orgName, result);
+            await FillSecrets(orgName, result);
 
             return result;
         }
 
-        private async Task FillBranches(string orgName, CachedRepo[] result)
+        private async Task FillBranches(string orgName, CachedRepo[] repos)
         {
             var repoQueryArguments = new Dictionary<string, object?>();
             var repoQuery = new Query()
@@ -172,7 +194,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 })
                 .Compile();
 
-            foreach (var repo in result)
+            foreach (var repo in repos)
             {
                 repoQueryArguments["repo"] = repo.Name;
 
@@ -182,7 +204,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
         }
 
-        private async Task FillBranchProtectionRules(string orgName, CachedRepo[] result)
+        private async Task FillBranchProtectionRules(string orgName, CachedRepo[] repos)
         {
             var repoQueryArguments = new Dictionary<string, object?>();
             var repoQuery = new Query()
@@ -213,7 +235,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 })
                 .Compile();
 
-            foreach (var repo in result)
+            foreach (var repo in repos)
             {
                 repoQueryArguments["repo"] = repo.Name;
 
@@ -231,6 +253,31 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     Log.WriteLine($"warn: unable to retreive branch protection rules for '{repo.Name}'");
                     repo.BranchProtectionRules = Array.Empty<CachedBranchProtectionRule>();
                 }
+            }
+        }
+
+        private async Task FillEnvironments(string orgName, CachedRepo[] repos)
+        {
+            foreach (var repo in repos)
+            {
+                await Client.WaitForEnoughQuotaAsync(Log);
+                repo.Environments = await Client.GetRepoEnvironments(orgName, repo.Name);
+
+                foreach (var environment in repo.Environments)
+                {
+                    await Client.WaitForEnoughQuotaAsync(Log);
+                    environment.Secrets = await Client.GetRepoEnvironmentSecrets(repo.Id, environment.Name);
+                }
+            }
+        }
+
+        private async Task FillSecrets(string orgName, CachedRepo[] repos)
+        {
+            foreach (var repo in repos)
+            {
+                await Client.WaitForEnoughQuotaAsync(Log);
+                var secrets = await Client.GetRepoSecrets(orgName, repo.Name);
+                repo.Secrets = secrets;
             }
         }
 

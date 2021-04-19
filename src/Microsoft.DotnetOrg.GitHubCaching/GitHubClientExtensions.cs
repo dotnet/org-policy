@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Octokit;
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-
-using Octokit;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
@@ -153,5 +154,195 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             var delay = TimeSpan.FromSeconds(retrySeconds);
             await Task.Delay(delay);
         }
+
+        public static async Task<IReadOnlyList<CachedOrgSecret>> GetOrgSecrets(this GitHubClient client, string orgName)
+        {
+            var rawResponse = await client.Connection.GetRaw(new Uri($"/orgs/{orgName}/actions/secrets", UriKind.Relative), new Dictionary<string, string>()
+            {
+                { "per_page", "100" }
+            });
+
+            var json = (string)rawResponse.HttpResponse.Body;
+            var response = JsonSerializer.Deserialize<OrgSecretsResponse>(json);
+
+            var result = new List<CachedOrgSecret>();
+
+            if (response != null)
+            {
+                foreach (var secret in response.secrets)
+                {
+                    var cachedSecret = new CachedOrgSecret()
+                    {
+                        Name = secret.name,
+                        CreatedAt = secret.created_at.ToLocalTime(),
+                        UpdatedAt = secret.updated_at.ToLocalTime(),
+                        Visibility = secret.visibility
+                    };
+                    result.Add(cachedSecret);
+                }
+            }
+
+            return result.ToArray();
+        }
+
+        public static async Task<IReadOnlyList<string>> GetOrgSecretRepositories(this GitHubClient client, string orgName, string secretName)
+        {
+            var rawResponse = await client.Connection.GetRaw(new Uri($"/orgs/{orgName}/actions/secrets/{secretName}/repositories", UriKind.Relative), new Dictionary<string, string>()
+            {
+                { "per_page", "100" }
+            });
+
+            var json = (string)rawResponse.HttpResponse.Body;
+            var response = JsonSerializer.Deserialize<RepoListResponse>(json);
+            if (response is null)
+                return Array.Empty<string>();
+
+            return response.repositories.Select(r => r.name).ToArray();
+        }
+
+        public static async Task<IReadOnlyList<CachedRepoSecret>> GetRepoSecrets(this GitHubClient client, string owner, string repo)
+        {
+            try
+            {
+                var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/actions/secrets", UriKind.Relative), new Dictionary<string, string>()
+                {
+                    { "per_page", "100" }
+                });
+
+                var json = (string)rawResponse.HttpResponse.Body;
+                return DeserializeSecrets(json);
+            }
+            catch (NotFoundException)
+            {
+                return Array.Empty<CachedRepoSecret>();
+            }
+        }
+
+        private static IReadOnlyList<CachedRepoSecret> DeserializeSecrets(string json)
+        {
+            var response = JsonSerializer.Deserialize<RepoSecretsResponse>(json);
+
+            var result = new List<CachedRepoSecret>();
+
+            if (response != null)
+            {
+                foreach (var secret in response.secrets)
+                {
+                    var cachedSecret = new CachedRepoSecret()
+                    {
+                        Name = secret.name,
+                        CreatedAt = secret.created_at.ToLocalTime(),
+                        UpdatedAt = secret.updated_at.ToLocalTime(),
+                    };
+                    result.Add(cachedSecret);
+                }
+            }
+
+            return result.ToArray();
+        }
+
+        public static async Task<IReadOnlyList<CachedRepoEnvironment>> GetRepoEnvironments(this GitHubClient client, string owner, string repo)
+        {
+            try
+            {
+                var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/environments", UriKind.Relative), new Dictionary<string, string>());
+                var json = (string)rawResponse.HttpResponse.Body;
+                var response = JsonSerializer.Deserialize<RepoEnvironmentResponse>(json);
+
+                var result = new List<CachedRepoEnvironment>();
+
+                if (response != null)
+                {
+                    foreach (var environment in response.environments)
+                    {
+                        var cachedEnvironment = new CachedRepoEnvironment()
+                        {
+                            Id = environment.id,
+                            NodeId = environment.node_id,
+                            Name = environment.name,
+                            Url = environment.html_url,
+                            CreatedAt = environment.created_at.ToLocalTime(),
+                            UpdatedAt = environment.updated_at.ToLocalTime()
+                        };
+                        result.Add(cachedEnvironment);
+                    }
+                }
+
+                return result.ToArray();
+            }
+            catch (NotFoundException)
+            {
+                return Array.Empty<CachedRepoEnvironment>();
+            }
+        }
+
+        public static async Task<IReadOnlyList<CachedRepoSecret>> GetRepoEnvironmentSecrets(this GitHubClient client, int repositoryId, string environmentName)
+        {
+            var rawResponse = await client.Connection.GetRaw(new Uri($"/repositories/{repositoryId}/environments/{environmentName}/secrets", UriKind.Relative), new Dictionary<string, string>()
+            {
+                { "per_page", "100" }
+            });
+            var json = (string)rawResponse.HttpResponse.Body;
+            return DeserializeSecrets(json);
+        }
+
+#pragma warning disable CS8618 // Serialized type
+
+        private class OrgSecretsResponse
+        {
+            public int total_count { get; set; }
+            public OrgSecret[] secrets { get; set; }
+        }
+
+        private sealed class OrgSecret
+        {
+            public string name { get; set; }
+            public DateTimeOffset created_at { get; set; }
+            public DateTimeOffset updated_at { get; set; }
+            public string visibility { get; set; }
+        }
+
+        private class RepoSecretsResponse
+        {
+            public int total_count { get; set; }
+            public RepoSecret[] secrets { get; set; }
+        }
+
+        private sealed class RepoSecret
+        {
+            public string name { get; set; }
+            public DateTimeOffset created_at { get; set; }
+            public DateTimeOffset updated_at { get; set; }
+        }
+
+        private class RepoListResponse
+        {
+            public int total_count { get; set; }
+            public RepoListItem[] repositories { get; set; }
+        }
+
+        private class RepoListItem
+        {
+            public string name { get; set; }
+        }
+
+        private sealed class RepoEnvironmentResponse
+        {
+            public int total_count { get; set; }
+            public RepoEnvironment[] environments { get; set; }
+        }
+
+        private sealed class RepoEnvironment
+        {
+            public int id { get; set; }
+            public string node_id { get; set; }
+            public string name { get; set; }
+            public string url { get; set; }
+            public string html_url { get; set; }
+            public DateTime created_at { get; set; }
+            public DateTime updated_at { get; set; }
+        }
+
+#pragma warning restore CS8618
     }
 }

@@ -8,6 +8,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 #pragma warning disable CS8618 // This is a serialized type.
     public sealed class CachedRepo
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public bool IsPrivate { get; set; }
         public bool IsArchived { get; set; }
@@ -19,6 +20,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public string DefaultBranchName { get; set; }
         public IReadOnlyList<CachedBranch> Branches { get; set; }
         public IReadOnlyList<CachedBranchProtectionRule> BranchProtectionRules { get; set; }
+        public IReadOnlyList<CachedRepoEnvironment> Environments { get; set; }
+        public IReadOnlyList<CachedRepoSecret> Secrets { get; set; }
 
         [JsonIgnore]
         public CachedOrg Org { get; set; }
@@ -41,6 +44,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         [JsonIgnore]
         public List<CachedUserAccess> EffectiveUsers { get; } = new List<CachedUserAccess>();
+
+        [JsonIgnore]
+        public List<CachedOrgSecret> OrgSecrets { get; set; } = new List<CachedOrgSecret>();
     }
 #pragma warning restore CS8618
 }

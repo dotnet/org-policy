@@ -30,12 +30,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 ? new[] { _orgName }
                 : CacheManager.GetCachedOrgNames().ToArray();
 
+            var client = await GitHubClientFactory.CreateAsync();
             var connection = await GitHubClientFactory.CreateGraphAsync();
             var ospoClient = !_includeLinks ? null : await OspoClientFactory.CreateAsync();
 
             foreach (var orgName in orgNames)
             {
-                var result = await CachedOrg.LoadAsync(connection, orgName, Console.Out, ospoClient);
+                var result = await CachedOrg.LoadAsync(client, connection, orgName, Console.Out, ospoClient);
                 if (result is not null)
                     await CacheManager.StoreOrgAsync(result);
             }

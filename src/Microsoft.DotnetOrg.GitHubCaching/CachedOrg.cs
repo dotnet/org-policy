@@ -14,10 +14,11 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 #pragma warning disable CS8618 // This is a serialized type.
     public sealed class CachedOrg
     {
-        public static int CurrentVersion => 10;
+        public static int CurrentVersion => 11;
 
         public int Version { get; set; }
         public string Name { get; set; }
+        public List<CachedOrgSecret> Secrets { get; set; } = new List<CachedOrgSecret>();
         public List<CachedTeam> Teams { get; set; } = new List<CachedTeam>();
         public List<CachedRepo> Repos { get; set; } = new List<CachedRepo>();
         public List<CachedUserAccess> Collaborators { get; set; } = new List<CachedUserAccess>();
@@ -33,6 +34,18 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             var repoByName = Repos.ToDictionary(r => r.Name);
             var userByLogin = Users.ToDictionary(u => u.Login);
 
+            foreach (var secret in Secrets)
+            {
+                secret.Org = this;
+                secret.Repositories = secret.RepositoryNames.Select(r => repoByName.TryGetValue(r, out var repo) ? repo : null)
+                                            .Where(r => r is not null)
+                                            .Select(r => r!)
+                                            .ToArray();
+
+                foreach (var repo in secret.Repositories)
+                    repo.OrgSecrets.Add(secret);
+            }
+
             foreach (var repo in Repos)
             {
                 repo.Org = this;
@@ -42,6 +55,22 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
                 foreach (var rule in repo.BranchProtectionRules)
                     rule.Repo = repo;
+
+                foreach (var environment in repo.Environments)
+                {
+                    environment.Repo = repo;
+
+                    foreach (var secret in environment.Secrets)
+                    {
+                        secret.Repo = repo;
+                        secret.Environment = environment;
+                    }
+                }
+
+                foreach (var secret in repo.Secrets)
+                {
+                    secret.Repo = repo;
+                }
             }
 
             foreach (var team in Teams)
@@ -180,12 +209,13 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return $"https://github.com/orgs/{orgName}/people/{login}";
         }
 
-        public static Task<CachedOrg?> LoadAsync(Connection connection,
+        public static Task<CachedOrg?> LoadAsync(Octokit.GitHubClient client,
+                                                 Connection connection,
                                                  string orgName,
                                                  TextWriter? logWriter = null,
                                                  OspoClient? ospoClient = null)
         {
-            var loader = new CacheLoader(connection, logWriter, ospoClient);
+            var loader = new CacheLoader(client, connection, logWriter, ospoClient);
             return loader.LoadAsync(orgName)!;
         }
 
