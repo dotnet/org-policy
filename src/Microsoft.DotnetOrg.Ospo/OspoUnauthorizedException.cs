@@ -26,7 +26,7 @@ namespace Microsoft.DotnetOrg.Ospo
         {
         }
 
-        public OspoUnauthorizedException(string message, HttpStatusCode code)
+        public OspoUnauthorizedException(string? message, HttpStatusCode code)
             : base(message, code)
         {
         }

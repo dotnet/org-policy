@@ -11,12 +11,12 @@ namespace Microsoft.DotnetOrg.Ospo
         {
         }
 
-        public OspoException(string message)
+        public OspoException(string? message)
             : base(message)
         {
         }
 
-        public OspoException(string message, Exception inner)
+        public OspoException(string? message, Exception? inner)
             : base(message, inner)
         {
         }
@@ -26,7 +26,7 @@ namespace Microsoft.DotnetOrg.Ospo
         {
         }
 
-        public OspoException(string message, HttpStatusCode code)
+        public OspoException(string? message, HttpStatusCode code)
             : this(message)
         {
             Code = code;
