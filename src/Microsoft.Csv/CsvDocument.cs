@@ -24,10 +24,10 @@ namespace Microsoft.Csv
         private CsvDocument(IList<string> keys, IList<IDictionary<string, string>> rows)
         {
             if (keys == null)
-                throw new ArgumentNullException("keys");
+                throw new ArgumentNullException(nameof(keys));
 
             if (rows == null)
-                throw new ArgumentNullException("rows");
+                throw new ArgumentNullException(nameof(rows));
 
             _keys = keys;
             _rows = rows;
@@ -44,10 +44,10 @@ namespace Microsoft.Csv
         public static CsvDocument Parse(string data, CsvSettings settings)
         {
             if (data == null)
-                throw new ArgumentNullException("data");
+                throw new ArgumentNullException(nameof(data));
 
             if (!settings.IsValid)
-                throw new ArgumentNullException("settings");
+                throw new ArgumentNullException(nameof(settings));
 
             using (var sr = new StringReader(data))
                 return Load(sr, settings);
@@ -61,10 +61,10 @@ namespace Microsoft.Csv
         public static CsvDocument Load(string fileName, CsvSettings settings)
         {
             if (fileName == null)
-                throw new ArgumentNullException("fileName");
+                throw new ArgumentNullException(nameof(fileName));
 
             if (!settings.IsValid)
-                throw new ArgumentNullException("settings");
+                throw new ArgumentNullException(nameof(settings));
 
             using (var sr = new StreamReader(fileName, settings.Encoding))
                 return Load(sr, settings);
@@ -78,10 +78,10 @@ namespace Microsoft.Csv
         public static CsvDocument Load(TextReader textReader, CsvSettings settings)
         {
             if (textReader == null)
-                throw new ArgumentNullException("textReader");
+                throw new ArgumentNullException(nameof(textReader));
 
             if (!settings.IsValid)
-                throw new ArgumentNullException("settings");
+                throw new ArgumentNullException(nameof(settings));
 
             using (var reader = new CsvTextReader(textReader, settings))
                 return Load(reader);
@@ -90,7 +90,7 @@ namespace Microsoft.Csv
         public static CsvDocument Load(CsvReader reader)
         {
             if (reader == null)
-                throw new ArgumentNullException("reader");
+                throw new ArgumentNullException(nameof(reader));
 
             var rows = new List<IDictionary<string, string>>();
             var headerData = reader.Read();
@@ -137,10 +137,10 @@ namespace Microsoft.Csv
         public void Save(string fileName, CsvSettings settings)
         {
             if (fileName == null)
-                throw new ArgumentNullException("fileName");
+                throw new ArgumentNullException(nameof(fileName));
 
             if (!settings.IsValid)
-                throw new ArgumentNullException("settings");
+                throw new ArgumentNullException(nameof(settings));
 
             using (var fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             using (var streamWriter = new StreamWriter(fileStream, settings.Encoding))
@@ -155,10 +155,10 @@ namespace Microsoft.Csv
         public void Save(TextWriter textWriter, CsvSettings settings)
         {
             if (textWriter == null)
-                throw new ArgumentNullException("textWriter");
+                throw new ArgumentNullException(nameof(textWriter));
 
             if (!settings.IsValid)
-                throw new ArgumentNullException("settings");
+                throw new ArgumentNullException(nameof(settings));
 
             using (var csvTextWriter = new CsvTextWriter(textWriter))
                 Save(csvTextWriter);
@@ -167,7 +167,7 @@ namespace Microsoft.Csv
         public void Save(CsvWriter writer)
         {
             if (writer == null)
-                throw new ArgumentNullException("writer");
+                throw new ArgumentNullException(nameof(writer));
 
             var header = Keys;
             var rows = from r in Rows
