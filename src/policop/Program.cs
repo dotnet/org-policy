@@ -15,7 +15,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             var commands = GetCommands();
             var commandName = args.FirstOrDefault();
 
-            if (commandName == null ||
+            if (commandName is null ||
                 commandName == "-?" ||
                 commandName == "-h" ||
                 commandName == "--help")
@@ -31,7 +31,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             }
 
             var command = commands.SingleOrDefault(c => c.Name == commandName);
-            if (command == null)
+            if (command is null)
             {
                 Console.Error.WriteLine($"error: undefined command '{commandName}'");
                 return;
@@ -78,7 +78,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             return typeof(Program).Assembly
                                   .GetTypes()
                                   .Where(t => typeof(ToolCommand).IsAssignableFrom(t) &&
-                                              !t.IsAbstract && t.GetConstructor(Array.Empty<Type>()) != null)
+                                              !t.IsAbstract && t.GetConstructor(Array.Empty<Type>()) is not null)
                                   .Select(t => (ToolCommand)Activator.CreateInstance(t))
                                   .OrderBy(t => t.Name)
                                   .ToArray();

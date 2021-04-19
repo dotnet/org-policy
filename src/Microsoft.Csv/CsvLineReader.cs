@@ -52,7 +52,7 @@ namespace Microsoft.Csv
         public IEnumerator<IEnumerable<string>> GetEnumerator()
         {
             var line = ReadLine();
-            while (line != null)
+            while (line is not null)
             {
                 yield return line;
                 line = ReadLine();
@@ -71,7 +71,7 @@ namespace Microsoft.Csv
 
             _fields.Clear();
             var field = ReadField();
-            while (field != null)
+            while (field is not null)
             {
                 _fields.Add(field);
                 field = ReadField();

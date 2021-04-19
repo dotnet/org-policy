@@ -37,7 +37,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                     continue;
 
                 var coc = await client.GetCodeOfConduct(repo.Org.Name, repo.Name);
-                if (coc != null)
+                if (coc is not null)
                     continue;
 
                 context.ReportViolation(

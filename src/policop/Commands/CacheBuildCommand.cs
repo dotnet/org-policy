@@ -36,9 +36,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 ? builds.FirstOrDefault()
                 : builds.FirstOrDefault(b => b.Id.ToString() == _buildId);
 
-            if (build == null)
+            if (build is null)
             {
-                if (_buildId == null)
+                if (_buildId is null)
                     Console.Error.WriteLine("error: no builds found");
                 else
                     Console.Error.WriteLine($"error: can't find build {_buildId}");

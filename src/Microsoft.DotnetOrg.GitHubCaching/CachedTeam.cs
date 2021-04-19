@@ -53,7 +53,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public IEnumerable<CachedTeam> AncestorsAndSelf()
         {
             var current = this;
-            while (current != null)
+            while (current is not null)
             {
                 yield return current;
                 current = current.Parent;

@@ -22,7 +22,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             await client.WaitForEnoughQuotaAsync(logWriter);
 
             var rateLimit = client.GetLastApiInfo()?.RateLimit;
-            var rateLimitText = rateLimit == null
+            var rateLimitText = rateLimit is null
                                     ? null
                                     : $" (Remaining API quota: {rateLimit.Remaining})";
             logWriter.WriteLine($"{text}...{rateLimitText}");
@@ -32,7 +32,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         {
             var rateLimit = client.GetLastApiInfo()?.RateLimit;
 
-            if (rateLimit != null && rateLimit.Remaining <= 50)
+            if (rateLimit is not null && rateLimit.Remaining <= 50)
             {
                 var padding = TimeSpan.FromMinutes(2);
                 var waitTime = (rateLimit.Reset - DateTimeOffset.Now).Add(padding);
@@ -71,7 +71,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 var uri = new Uri(client.Connection.BaseAddress, $"/repos/{owner}/{repo}/community/code_of_conduct");
                 var response = await client.Connection.Get<GitHubCodeOfConduct>(uri, null, "application/vnd.github.scarlet-witch-preview+json");
-                if (response.Body?.Body == null)
+                if (response.Body?.Body is null)
                     return null;
 
                 // Make sure we have a sensible value
@@ -99,35 +99,35 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 var profileUri = new Uri(client.Connection.BaseAddress, $"/repos/{owner}/{repo}/community/profile");
                 var profileResponseRaw = await client.Connection.Get<Dictionary<string, object>>(profileUri, null, "application/vnd.github.black-panther-preview+json");
 
-                if (profileResponseRaw.Body == null)
+                if (profileResponseRaw.Body is null)
                     return null;
 
                 if (!profileResponseRaw.Body.TryGetValue("files", out var filesRaw))
                     return null;
 
                 var files = filesRaw as IDictionary<string, object>;
-                if (files == null)
+                if (files is null)
                     return null;
 
                 if (!files.TryGetValue("contributing", out var contributingRaw))
                     return null;
 
                 var contributing = contributingRaw as IDictionary<string, object>;
-                if (contributing == null)
+                if (contributing is null)
                     return null;
 
                 if (!contributing.TryGetValue("html_url", out var htmlUrlRaw))
                     return null;
 
                 var htmlUrl = htmlUrlRaw as string;
-                if (htmlUrl == null)
+                if (htmlUrl is null)
                     return null;
 
                 if (!contributing.TryGetValue("url", out var urlRaw))
                     return null;
 
                 var url = urlRaw as string;
-                if (url == null)
+                if (url is null)
                     return null;
 
                 var uri = new Uri(url);

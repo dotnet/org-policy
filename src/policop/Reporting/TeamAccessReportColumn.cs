@@ -16,7 +16,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 
         public override string GetValue(ReportRow row)
         {
-            return row.TeamAccess == null ? null : GetValue(row.TeamAccess);
+            return row.TeamAccess is null ? null : GetValue(row.TeamAccess);
         }
 
         public string GetValue(CachedTeamAccess teamAccess)

@@ -87,7 +87,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 }
             }
 
-            if (_outputFileName != null)
+            if (_outputFileName is not null)
                 document.Save(_outputFileName);
             else if (_viewInExcel)
                 document.ViewInExcel();

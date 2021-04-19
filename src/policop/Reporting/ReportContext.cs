@@ -109,7 +109,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 
         public IReadOnlyList<ReportColumn> GetColumns(params string[] defaultColumns)
         {
-            Debug.Assert(defaultColumns != null && defaultColumns.Length > 0);
+            Debug.Assert(defaultColumns is not null && defaultColumns.Length > 0);
 
             if (IncludedColumns.Count == 0)
                 IncludedColumns.AddRange(defaultColumns);
@@ -120,7 +120,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             foreach (var name in IncludedColumns)
             {
                 var column = ReportColumn.Get(name);
-                if (column != null)
+                if (column is not null)
                 {
                     result.Add(column);
                 }
@@ -147,7 +147,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
         {
             var termFilters = ParseColumnFilters(ColumnFilters);
 
-            var hasErrors = termFilters.Any(kv => kv.Key == null);
+            var hasErrors = termFilters.Any(kv => kv.Key is null);
             if (hasErrors)
                 Environment.Exit(1);
 
@@ -161,7 +161,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             foreach (var name in names)
             {
                 var column = ReportColumn.Get(name);
-                Debug.Assert(column != null, $"Column {name} is invalid");
+                Debug.Assert(column is not null, $"Column {name} is invalid");
                 columns.Add(column);
             }
 
@@ -202,7 +202,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             }
 
             var column = ReportColumn.Get(name);
-            if (column == null)
+            if (column is null)
                 Console.Error.WriteLine($"error: column '{name}' isn't valid");
 
             return new KeyValuePair<ReportColumn, string>(column, value);

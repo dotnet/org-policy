@@ -51,7 +51,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             var org = await CacheManager.LoadOrgAsync(_orgName);
 
-            if (org == null)
+            if (org is null)
             {
                 Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
                 return;
@@ -83,7 +83,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     {
                         var protectionSettings = await client.Repository.Branch.GetBranchProtection(repo.Org.Name, repo.Name, branch.Name);
 
-                        if (protectionSettings?.RequiredStatusChecks != null)
+                        if (protectionSettings?.RequiredStatusChecks is not null)
                         {
                             var contexts = protectionSettings.RequiredStatusChecks.Contexts.ToList();
                             var matchingContexts = contexts.Where(c => _statusCheck == "*" || string.Equals(c, _statusCheck, StringComparison.OrdinalIgnoreCase))

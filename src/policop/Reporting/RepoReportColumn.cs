@@ -16,7 +16,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 
         public override string GetValue(ReportRow row)
         {
-            return row.Repo == null ? null : GetValue(row.Repo);
+            return row.Repo is null ? null : GetValue(row.Repo);
         }
 
         public string GetValue(CachedRepo repo)

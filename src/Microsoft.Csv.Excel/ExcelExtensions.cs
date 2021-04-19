@@ -15,7 +15,7 @@ namespace Microsoft.Csv
         public static bool IsExcelInstalled()
         {
             return OperatingSystem.IsWindows() &&
-                   Registry.ClassesRoot.OpenSubKey("Excel.Application") != null;
+                   Registry.ClassesRoot.OpenSubKey("Excel.Application") is not null;
         }
 
         private static void AssertExcelIsInstalled()

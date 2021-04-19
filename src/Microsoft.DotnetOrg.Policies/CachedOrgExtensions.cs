@@ -104,10 +104,10 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool IsClaimingToBeWorkingForMicrosoft(this CachedUser user)
         {
-            var companyContainsMicrosoft = user.Company != null &&
+            var companyContainsMicrosoft = user.Company is not null &&
                                            user.Company.IndexOf("Microsoft", StringComparison.OrdinalIgnoreCase) >= 0;
 
-            var emailContainsMicrosoft = user.Email != null &&
+            var emailContainsMicrosoft = user.Email is not null &&
                                          user.Email.IndexOf("Microsoft", StringComparison.OrdinalIgnoreCase) >= 0;
 
             return companyContainsMicrosoft ||
@@ -116,7 +116,7 @@ namespace Microsoft.DotnetOrg.Policies
 
         public static bool IsMicrosoftUser(this CachedUser user)
         {
-            if (user.MicrosoftInfo != null)
+            if (user.MicrosoftInfo is not null)
                 return true;
 
             if (user.IsKnownMicrosoftServiceAccount())
@@ -128,7 +128,7 @@ namespace Microsoft.DotnetOrg.Policies
                 user.Org.GetMicrosoftBotsTeam()
             };
 
-            return teams.Any(t => t != null && t.EffectiveMembers.Contains(user));
+            return teams.Any(t => t is not null && t.EffectiveMembers.Contains(user));
         }
 
         private static bool IsKnownMicrosoftServiceAccount(this CachedUser user)
@@ -183,7 +183,7 @@ namespace Microsoft.DotnetOrg.Policies
                 return true;
 
             var team = user.Org.GetBotsTeam();
-            return team != null && team.EffectiveMembers.Contains(user);
+            return team is not null && team.EffectiveMembers.Contains(user);
         }
 
         public static bool IsPotentiallyABot(this CachedUser user)
@@ -206,7 +206,7 @@ namespace Microsoft.DotnetOrg.Policies
             //        to early design documents or previews
             //
             var externalPartnerTeam = team.Org.GetExternalPartnerTeam();
-            if (externalPartnerTeam != null && team.AncestorsAndSelf().Contains(externalPartnerTeam))
+            if (externalPartnerTeam is not null && team.AncestorsAndSelf().Contains(externalPartnerTeam))
                 return false;
 
             var hasChildren = team.Children.Any();

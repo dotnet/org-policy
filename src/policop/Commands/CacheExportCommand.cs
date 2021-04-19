@@ -21,7 +21,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override Task ExecuteAsync()
         {
-            if (_outputDirectory == null)
+            if (_outputDirectory is null)
             {
                 Console.Error.WriteLine($"error: -o must be specified");
                 return Task.CompletedTask;

@@ -23,10 +23,10 @@ namespace Microsoft.Csv
 
         private CsvDocument(IList<string> keys, IList<IDictionary<string, string>> rows)
         {
-            if (keys == null)
+            if (keys is null)
                 throw new ArgumentNullException(nameof(keys));
 
-            if (rows == null)
+            if (rows is null)
                 throw new ArgumentNullException(nameof(rows));
 
             _keys = keys;
@@ -43,7 +43,7 @@ namespace Microsoft.Csv
 
         public static CsvDocument Parse(string data, CsvSettings settings)
         {
-            if (data == null)
+            if (data is null)
                 throw new ArgumentNullException(nameof(data));
 
             if (!settings.IsValid)
@@ -60,7 +60,7 @@ namespace Microsoft.Csv
 
         public static CsvDocument Load(string fileName, CsvSettings settings)
         {
-            if (fileName == null)
+            if (fileName is null)
                 throw new ArgumentNullException(nameof(fileName));
 
             if (!settings.IsValid)
@@ -77,7 +77,7 @@ namespace Microsoft.Csv
 
         public static CsvDocument Load(TextReader textReader, CsvSettings settings)
         {
-            if (textReader == null)
+            if (textReader is null)
                 throw new ArgumentNullException(nameof(textReader));
 
             if (!settings.IsValid)
@@ -89,19 +89,19 @@ namespace Microsoft.Csv
 
         public static CsvDocument Load(CsvReader reader)
         {
-            if (reader == null)
+            if (reader is null)
                 throw new ArgumentNullException(nameof(reader));
 
             var rows = new List<IDictionary<string, string>>();
             var headerData = reader.Read();
-            var headerArray = headerData == null
+            var headerArray = headerData is null
                                   ? new string[0]
                                   : headerData.ToArray();
 
-            if (headerData != null)
+            if (headerData is not null)
             {
                 var rowData = reader.Read();
-                while (rowData != null)
+                while (rowData is not null)
                 {
                     var rowArray = rowData.ToArray();
                     var count = Math.Min(headerArray.Length, rowArray.Length);
@@ -136,7 +136,7 @@ namespace Microsoft.Csv
 
         public void Save(string fileName, CsvSettings settings)
         {
-            if (fileName == null)
+            if (fileName is null)
                 throw new ArgumentNullException(nameof(fileName));
 
             if (!settings.IsValid)
@@ -154,7 +154,7 @@ namespace Microsoft.Csv
 
         public void Save(TextWriter textWriter, CsvSettings settings)
         {
-            if (textWriter == null)
+            if (textWriter is null)
                 throw new ArgumentNullException(nameof(textWriter));
 
             if (!settings.IsValid)
@@ -166,7 +166,7 @@ namespace Microsoft.Csv
 
         public void Save(CsvWriter writer)
         {
-            if (writer == null)
+            if (writer is null)
                 throw new ArgumentNullException(nameof(writer));
 
             var header = Keys;

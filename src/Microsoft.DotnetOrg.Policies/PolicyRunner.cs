@@ -12,7 +12,7 @@ namespace Microsoft.DotnetOrg.Policies
             return typeof(PolicyRunner).Assembly
                                         .GetTypes()
                                         .Where(t => !t.IsAbstract &&
-                                                    t.GetConstructor(Array.Empty<Type>()) != null &&
+                                                    t.GetConstructor(Array.Empty<Type>()) is not null &&
                                                     typeof(PolicyRule).IsAssignableFrom(t))
                                         .Select(t => Activator.CreateInstance(t))
                                         .Cast<PolicyRule>()

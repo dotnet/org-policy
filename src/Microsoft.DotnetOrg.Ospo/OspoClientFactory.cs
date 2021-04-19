@@ -35,7 +35,7 @@ namespace Microsoft.DotnetOrg.Ospo
                 }
             }
 
-            if (token == null)
+            if (token is null)
             {
                 token = await CreateTokenAsync();
                 var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);

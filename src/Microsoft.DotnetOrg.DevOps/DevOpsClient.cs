@@ -49,7 +49,7 @@ namespace Microsoft.DotnetOrg.DevOps
             if (!string.IsNullOrEmpty(reasonFilter))
                 uri += $"&reasonFilter={reasonFilter}";
 
-            if (top != null)
+            if (top is not null)
                 uri += $"&$top={top}";
 
             var results = await GetAsJsonAsync<Result<IReadOnlyList<DevOpsBuild>>>(uri);
@@ -90,12 +90,12 @@ namespace Microsoft.DotnetOrg.DevOps
         private static string GetContainerId(DevOpsArtifact artifact)
         {
             var dropName = artifact?.Name;
-            if (dropName == null)
+            if (dropName is null)
                 return null;
 
             var data = artifact?.Resource?.Data;
 
-            if (data == null)
+            if (data is null)
                 return null;
 
             if (!data.StartsWith("#/"))

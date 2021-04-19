@@ -49,16 +49,16 @@ namespace Microsoft.DotnetOrg.Policies
         {
             var result = new List<CachedUser>();
 
-            if (assignees != null)
+            if (assignees is not null)
                 result.AddRange(assignees.Where(a => a.IsMember));
 
-            if (result.Count == 0 && repo != null)
+            if (result.Count == 0 && repo is not null)
                 result.AddRange(repo.GetAdministrators().Where(a => a.IsMember));
 
-            if (result.Count == 0 && team != null)
+            if (result.Count == 0 && team is not null)
                 result.AddRange(team.GetMaintainers());
 
-            if (result.Count == 0 && user != null && user.IsMember)
+            if (result.Count == 0 && user is not null && user.IsMember)
                 result.Add(user);
 
             if (result.Count == 0)
@@ -85,7 +85,7 @@ namespace Microsoft.DotnetOrg.Policies
                     writer.WriteLine(team?.Name);
 
                     // Additional fields:
-                    if (branch != null)
+                    if (branch is not null)
                         writer.WriteLine($"branch = {branch.Name}");
                 }
 
@@ -108,7 +108,7 @@ namespace Microsoft.DotnetOrg.Policies
             using (var stringReader = new StringReader(text))
             {
                 string line;
-                while ((line = stringReader.ReadLine()) != null)
+                while ((line = stringReader.ReadLine()) is not null)
                 {
                     if (string.IsNullOrWhiteSpace(line))
                         continue;
@@ -122,7 +122,7 @@ namespace Microsoft.DotnetOrg.Policies
             using (var stringReader = new StringReader(text))
             {
                 string line;
-                while ((line = stringReader.ReadLine()) != null)
+                while ((line = stringReader.ReadLine()) is not null)
                 {
                     var unindentedLine = line.Length < minIndent
                         ? line

@@ -66,16 +66,16 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var team = FindTeam(_teamName);
             var parentTeam = (Team) null;
 
-            if (team == null)
+            if (team is null)
             {
                 Console.Error.WriteLine($"error: team '{_teamName}' doesn't exist");
                 return;
             }
 
-            if (_parentTeam != null)           
+            if (_parentTeam is not null)           
             {
                 parentTeam = FindTeam(_parentTeam);
-                if (parentTeam == null)
+                if (parentTeam is null)
                 {
                     Console.Error.WriteLine($"error: parent team '{_parentTeam}' doesn't exist");
                     return;

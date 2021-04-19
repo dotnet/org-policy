@@ -65,7 +65,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             DateTime? since = null;
 
-            if (_since != null)
+            if (_since is not null)
             {
                 if (!DateTime.TryParse(_since, out var s))
                 {
@@ -76,7 +76,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 since = s;
             }
 
-            if (since != null)
+            if (since is not null)
             {
                 if (_refs.Count != 1)
                 {
@@ -97,7 +97,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             IReadOnlyList<GitHubCommit> commits;
 
-            if (since != null)
+            if (since is not null)
             {
                 var commitRequest = new CommitRequest
                 {
@@ -120,7 +120,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var allMicrosofties = await ospoClient.GetAllAsync();
 
             var report = (from c in commits
-                          where c.Author?.Login != null && !IsBot(c.Author.Login)
+                          where c.Author?.Login is not null && !IsBot(c.Author.Login)
                           group c by c.Author.Login into g
                           select (Login: g.Key, Commits: g.Count(), Link: allMicrosofties.LinkByLogin.GetValueOrDefault(g.Key)))
                           .OrderByDescending(r => r.Commits)
@@ -178,7 +178,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 string.Equals(login, "dotnet-maestro[bot]", StringComparison.OrdinalIgnoreCase))
                 return true;
 
-            return link != null && link.MicrosoftInfo != null;
+            return link is not null && link.MicrosoftInfo is not null;
         }
     }
 }

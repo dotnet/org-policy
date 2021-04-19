@@ -26,7 +26,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override async Task ExecuteAsync()
         {
-            if (_orgName == null)
+            if (_orgName is null)
             {
                 Console.Error.WriteLine($"error: --org must be specified");
                 return;
@@ -40,7 +40,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             var org = await CacheManager.LoadOrgAsync(_orgName);
 
-            if (org == null)
+            if (org is null)
             {
                 Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
                 return;
@@ -88,7 +88,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 }
             }
 
-            if (_outputFileName != null)
+            if (_outputFileName is not null)
                 csvDocument.Save(_outputFileName);
 
             if (_viewInExcel)

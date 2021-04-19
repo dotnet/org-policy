@@ -67,7 +67,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 // First check that the CoC links the expected CoC
 
                 var coc = await client.GetCodeOfConduct(repo.Org.Name, repo.Name);
-                if (coc != null)
+                if (coc is not null)
                 {
                     var containsExpectedLink = coc.Body.IndexOf(expectedLink, StringComparison.OrdinalIgnoreCase) >= 0;
                     if (!containsExpectedLink)
@@ -84,13 +84,13 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 var readme = await client.GetReadme(repo.Org.Name, repo.Name);
                 var contributing = await client.GetContributing(repo.Org.Name, repo.Name);
 
-                if (coc != null)
+                if (coc is not null)
                     CheckForProblematicReferences(coc.Name, coc.HtmlUrl, coc.Body);
 
-                if (readme != null)
+                if (readme is not null)
                     CheckForProblematicReferences(readme.Name, readme.HtmlUrl, readme.Content);
 
-                if (contributing != null)
+                if (contributing is not null)
                     CheckForProblematicReferences(contributing.Name, contributing.HtmlUrl, contributing.Content);
 
                 if (!problematicFiles.Any())

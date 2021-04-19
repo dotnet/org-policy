@@ -37,7 +37,7 @@ namespace Microsoft.DotnetOrg.DevOps
                 }
             }
             
-            if (token == null)
+            if (token is null)
             {
                 token = await CreateTokenAsync(organization, project);
                 var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);

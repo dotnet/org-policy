@@ -106,7 +106,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         private async Task<OspoLinkSet> LoadLinkSetAsync()
         {
-            if (OspoClient == null)
+            if (OspoClient is null)
                 return new OspoLinkSet();
 
             Log.WriteLine("Loading Microsoft link information...");
@@ -227,7 +227,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 var current = await RunQueryWithRetry(query, vars);
                 vars["after"] = current.HasNextPage ? current.EndCursor : null;
 
-                while (vars["after"] != null)
+                while (vars["after"] is not null)
                 {
                     var page = await RunQueryWithRetry(query, vars);
                     current.Items.AddRange(page.Items);
@@ -288,7 +288,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 var current = await RunQueryWithRetry(query, vars);
                 vars["after"] = current.HasNextPage ? current.EndCursor : null;
 
-                while (vars["after"] != null)
+                while (vars["after"] is not null)
                 {
                     var page = await RunQueryWithRetry(query, vars);
                     current.Items.AddRange(page.Items);
@@ -342,7 +342,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             var current = await RunQueryWithRetry(query, vars);
             vars["after"] = current.HasNextPage ? current.EndCursor : null;
 
-            while (vars["after"] != null)
+            while (vars["after"] is not null)
             {
                 var page = await RunQueryWithRetry(query, vars);
                 current.Items.AddRange(page.Items);
@@ -353,7 +353,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             foreach (var item in current.Items)
             {
-                var isMember = item.Role != null;
+                var isMember = item.Role is not null;
                 var isAdmin = item.Role switch
                 {
                     OrganizationMemberRole.Member => false,
@@ -453,7 +453,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 var current = await RunQueryWithRetry(query, vars);
                 vars["after"] = current.HasNextPage ? current.EndCursor : null;
 
-                while (vars["after"] != null)
+                while (vars["after"] is not null)
                 {
                     var page = await RunQueryWithRetry(query, vars);
                     current.Items.AddRange(page.Items);

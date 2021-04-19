@@ -41,7 +41,7 @@ namespace Microsoft.DotnetOrg.PolicyCop
             var location = GetOrgCache(orgName);
             var cachedOrg = await CachedOrg.LoadAsync(location.FullName);
 
-            var cacheIsValid = cachedOrg != null &&
+            var cacheIsValid = cachedOrg is not null &&
                                cachedOrg.Name == orgName &&
                                cachedOrg.Version == CachedOrg.CurrentVersion;
 

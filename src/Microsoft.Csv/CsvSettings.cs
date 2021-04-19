@@ -22,6 +22,6 @@ namespace Microsoft.Csv
         public char Delimiter { get; private set; }
         public char TextQualifier { get; private set; }
 
-        public bool IsValid => Encoding != null;
+        public bool IsValid => Encoding is not null;
     }
 }

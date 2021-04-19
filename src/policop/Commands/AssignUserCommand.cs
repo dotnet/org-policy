@@ -99,7 +99,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 var team = teams.SingleOrDefault(t => string.Equals(t.Name, _teamName, StringComparison.OrdinalIgnoreCase) ||
                                                        string.Equals(t.Slug, _teamName, StringComparison.OrdinalIgnoreCase));
 
-                if (team == null)
+                if (team is null)
                 {
                     Console.Error.WriteLine($"error: team '{_teamName}' doesn't exist");
                     return;
@@ -128,7 +128,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     repo = null;
                 }
 
-                if (repo == null)
+                if (repo is null)
                 {
                     Console.Error.WriteLine($"error: repo '{_orgName}/{_repoName}' doesn't exist");
                     return;

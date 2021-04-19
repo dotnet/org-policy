@@ -59,7 +59,7 @@ namespace Microsoft.Csv
 
         protected string EscapeValue(string value)
         {
-            if (value == null)
+            if (value is null)
                 return string.Empty;
 
             var textQualifier = Settings.TextQualifier;

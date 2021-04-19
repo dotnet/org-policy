@@ -52,7 +52,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 }
             }
 
-            if (token == null)
+            if (token is null)
             {
                 token = await CreateTokenAsync(scopes, isRenewal: false);
                 var tokenFileDirectory = Path.GetDirectoryName(tokenFileName);

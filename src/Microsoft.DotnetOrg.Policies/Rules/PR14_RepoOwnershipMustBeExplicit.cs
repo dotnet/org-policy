@@ -22,7 +22,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             var microsoftTeam = context.Org.GetMicrosoftTeam();
             var nonMicrosoftTeam = context.Org.GetNonMicrosoftTeam();
 
-            if (microsoftTeam == null || nonMicrosoftTeam == null)
+            if (microsoftTeam is null || nonMicrosoftTeam is null)
                 return;
 
             foreach (var repo in context.Org.Repos)

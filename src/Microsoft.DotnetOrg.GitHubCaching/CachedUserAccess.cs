@@ -44,7 +44,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 if (ta.Team == team)
                 {
-                    if (newPermission == null)
+                    if (newPermission is null)
                         return null;
 
                     // Only downgrade, never upgrade
@@ -92,7 +92,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                         continue;
 
                     var newPermission = permissionChanger(teamAccess);
-                    var newPermissionLevel = newPermission == null ? -1 : (int)newPermission.Value;
+                    var newPermissionLevel = newPermission is null ? -1 : (int)newPermission.Value;
                     maximumLevel = Math.Max(maximumLevel, newPermissionLevel);
                     break;
                 }

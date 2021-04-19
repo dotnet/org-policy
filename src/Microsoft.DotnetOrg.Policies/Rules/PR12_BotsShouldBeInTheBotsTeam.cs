@@ -11,7 +11,7 @@
         public override void GetViolations(PolicyAnalysisContext context)
         {
             var botsTeam = context.Org.GetBotsTeam();
-            if (botsTeam == null)
+            if (botsTeam is null)
                 return;
 
             foreach (var user in context.Org.Users)

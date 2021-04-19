@@ -248,7 +248,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             new UserReportColumn(
                 "u:ms-linked",
                 "Indicates whether the user is a linked Microsoft user",
-                u => u.MicrosoftInfo != null ? "Yes" : "No"
+                u => u.MicrosoftInfo is not null ? "Yes" : "No"
             ),
             new UserReportColumn(
                 "u:ms-login",
@@ -258,7 +258,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
             new UserReportColumn(
                 "u:company",
                 "The company name",
-                u => u.MicrosoftInfo != null ? "Microsoft" : u.Company
+                u => u.MicrosoftInfo is not null ? "Microsoft" : u.Company
             ),
             new UserReportColumn(
                 "u:bot",
@@ -310,9 +310,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "rtu:principal-kind",
                 "Indicates whether it's a user or team",
                 r => {
-                    if (r.Team != null && r.User == null)
+                    if (r.Team is not null && r.User is null)
                         return "Team";
-                    else if (r.Team == null && r.User != null)
+                    else if (r.Team is null && r.User is not null)
                         return "User";
                     return null;
                 }
@@ -321,9 +321,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "rtu:principal",
                 "The user or team",
                 r => {
-                    if (r.Team != null && r.User == null)
+                    if (r.Team is not null && r.User is null)
                         return r.Team.Name;
-                    else if (r.Team == null && r.User != null)
+                    else if (r.Team is null && r.User is not null)
                         return r.User.Login;
                     return null;
                 }
@@ -332,9 +332,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "rtu:permission",
                 "The permission of the user or team",
                 r => {
-                    if (r.TeamAccess != null && r.UserAccess == null)
+                    if (r.TeamAccess is not null && r.UserAccess is null)
                         return r.TeamAccess.Permission.ToString().ToLower();
-                    else if (r.TeamAccess == null && r.UserAccess != null)
+                    else if (r.TeamAccess is null && r.UserAccess is not null)
                         return r.UserAccess.Permission.ToString().ToLower();
                     return null;
                 }

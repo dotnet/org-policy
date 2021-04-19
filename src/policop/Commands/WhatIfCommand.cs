@@ -63,7 +63,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             var org = await CacheManager.LoadOrgAsync(_orgName);
 
-            if (org == null)
+            if (org is null)
             {
                 Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
                 return;
@@ -141,7 +141,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             var outlookApp = new Application();
             var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().UsePipeTables().Build();
 
-            var userGroups = rows.Where(r => r.WhatIfPermission != null &&
+            var userGroups = rows.Where(r => r.WhatIfPermission is not null &&
                                               !r.WhatIfPermission.Value.IsUnchanged &&
                                               r.User.IsMicrosoftUser() &&
                                               !string.IsNullOrEmpty(r.User.GetEmail()))
@@ -153,7 +153,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                      .Distinct()
                                      .ToArray();
 
-            var excludedAdmins = rows.Where(r => r.WhatIfPermission != null &&
+            var excludedAdmins = rows.Where(r => r.WhatIfPermission is not null &&
                                                   !r.WhatIfPermission.Value.IsUnchanged &&
                                                   r.WhatIfPermission.Value.UserAccess.Permission == CachedPermission.Admin)
                                       .Select(r => (r.Repo, r.User));
@@ -173,7 +173,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
                 foreach (var team in affectedTeams)
                 {
-                    if (newPermission == null)
+                    if (newPermission is null)
                         sb.AppendLine($"* The team {team.Name} will be deleted.");
                     else
                         sb.AppendLine($"* The team {team.Name} will now only grant `{newPermission.ToString().ToLower()}` permissions.");

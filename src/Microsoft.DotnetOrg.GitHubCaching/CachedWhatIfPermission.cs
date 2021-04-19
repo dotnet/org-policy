@@ -11,7 +11,7 @@
         public CachedUserAccess UserAccess { get; }
         public CachedPermission? NewPermissions { get; }
 
-        public bool IsUnchanged => NewPermissions != null && UserAccess.Permission == NewPermissions.Value;
+        public bool IsUnchanged => NewPermissions is not null && UserAccess.Permission == NewPermissions.Value;
 
         public override string ToString()
         {

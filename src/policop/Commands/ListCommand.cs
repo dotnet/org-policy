@@ -68,7 +68,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             var orgs = orgTasks.Select(t => t.Result).ToArray();
 
-            if (orgs.Length == 1 && orgs[0] == null)
+            if (orgs.Length == 1 && orgs[0] is null)
             {
                 Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
                 return;
@@ -226,7 +226,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             if (document.Keys.Count == 0 || document.Rows.Count == 0)
                 return;
 
-            if (_outputFileName != null)
+            if (_outputFileName is not null)
                 document.Save(_outputFileName);
             else if (_viewInExcel)
                 document.ViewInExcel();

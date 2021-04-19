@@ -76,7 +76,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     }
                 }
 
-                team.Repos.RemoveAll(r => r.Repo == null);
+                team.Repos.RemoveAll(r => r.Repo is null);
             }
 
             foreach (var collaborator in Collaborators)
@@ -94,7 +94,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 }
             }
 
-            Collaborators.RemoveAll(c => c.Repo == null || c.User == null);
+            Collaborators.RemoveAll(c => c.Repo is null || c.User is null);
 
             foreach (var user in Users)
             {

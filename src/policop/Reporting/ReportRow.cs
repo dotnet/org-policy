@@ -18,11 +18,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
         {
             get
             {
-                if (Repo != null) return Repo.Org;
-                if (Team != null) return Team.Org;
-                if (User != null) return User.Org;
-                if (UserAccess != null) return UserAccess.Org;
-                if (TeamAccess != null) return TeamAccess.Org;
+                if (Repo is not null) return Repo.Org;
+                if (Team is not null) return Team.Org;
+                if (User is not null) return User.Org;
+                if (UserAccess is not null) return UserAccess.Org;
+                if (TeamAccess is not null) return TeamAccess.Org;
                 return null;
             }
         }

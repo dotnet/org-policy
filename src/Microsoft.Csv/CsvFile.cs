@@ -52,7 +52,7 @@ namespace Microsoft.Csv
             using (var csvReader = Read(fileName, settings))
             {
                 var line = csvReader.Read();
-                while (line != null)
+                while (line is not null)
                 {
                     yield return line;
                     line = csvReader.Read();

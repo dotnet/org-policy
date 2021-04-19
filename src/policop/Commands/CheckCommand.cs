@@ -61,7 +61,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             var org = await CacheManager.LoadOrgAsync(_orgName);
 
-            if (org == null)
+            if (org is null)
             {
                 Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
                 return;
@@ -118,13 +118,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             stopwatch.Stop();
 
-            var report = gitHubClient == null
+            var report = gitHubClient is null
                             ? ViolationReport.Create(violations)
                             : await CreateViolationReportAsync(gitHubClient, policyRepo, violations);
 
             SaveVioloations(_orgName, _outputFileName, _viewInExcel, report);
 
-            if (_writeIssuesTo != null)
+            if (_writeIssuesTo is not null)
                 WriteIssues(_writeIssuesTo, report);
 
             if (_updateIssues)
@@ -149,7 +149,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             {
                 foreach (var (status, violation, _) in report.GetAll())
                 {
-                    if (violation == null)
+                    if (violation is null)
                         continue;
 
                     writer.Write(violation.Fingerprint.ToString());
@@ -160,17 +160,17 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     writer.Write(violation.Descriptor.Title);
                     writer.Write(violation.Title);
 
-                    if (violation.Repo == null)
+                    if (violation.Repo is null)
                         writer.Write(string.Empty);
                     else
                         writer.WriteHyperlink(violation.Repo.Url, violation.Repo.Name, viewInExcel);
 
-                    if (violation.User == null)
+                    if (violation.User is null)
                         writer.Write(string.Empty);
                     else
                         writer.WriteHyperlink(violation.User.Url, violation.User.Login, viewInExcel);
 
-                    if (violation.Team == null)
+                    if (violation.Team is null)
                         writer.Write(string.Empty);
                     else
                         writer.WriteHyperlink(violation.Team.Url, violation.Team.Name, viewInExcel);
@@ -234,7 +234,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             issueRequest.Labels.Add(AreaViolationLabel);
             var existingIssues = await client.Issue.GetAllForRepository(policyRepo.Owner, policyRepo.Name, issueRequest);
             return existingIssues.Select(PolicyIssue.Create)
-                                  .Where(pi => pi != null)
+                                  .Where(pi => pi is not null)
                                   .ToArray();
         }
 
@@ -477,7 +477,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             public static PolicyIssue Create(Issue issue)
             {
                 var fingerprint = GetFingerprint(issue.Title);
-                if (fingerprint == null)
+                if (fingerprint is null)
                     return null;
 
                 return new PolicyIssue(fingerprint.Value, issue);
@@ -569,25 +569,25 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                         mapping.Add((null, issue));
                 }
 
-                var existingViolations = mapping.Where(m => m.Violation != null && m.Issue != null)
+                var existingViolations = mapping.Where(m => m.Violation is not null && m.Issue is not null)
                                                  .Where(m => m.Issue.IsOpen && !m.Issue.IsOverride)
                                                  .ToArray();
 
-                var overriddenViolations = mapping.Where(m => m.Violation != null && m.Issue != null)
+                var overriddenViolations = mapping.Where(m => m.Violation is not null && m.Issue is not null)
                                                    .Where(m => m.Issue.IsOverride)
                                                    .ToArray();
 
-                var createdViolations = mapping.Where(m => m.Violation != null && m.Issue == null)
+                var createdViolations = mapping.Where(m => m.Violation is not null && m.Issue is null)
                                                 .Select(m => m.Violation)
                                                 .ToArray();
 
-                var reopenedViolations = mapping.Where(m => m.Violation != null && m.Issue != null)
+                var reopenedViolations = mapping.Where(m => m.Violation is not null && m.Issue is not null)
                                                  .Where(m => m.Issue.IsClosed && !m.Issue.IsOverride)
                                                  .ToArray();
 
-                var closedViolations = mapping.Where(m => m.Issue != null)
+                var closedViolations = mapping.Where(m => m.Issue is not null)
                                                .Where(m => m.Issue.IsOpen)
-                                               .Where(m => m.Violation == null || m.Issue.IsOverride)
+                                               .Where(m => m.Violation is null || m.Issue.IsOverride)
                                                .Select(m => m.Issue)
                                                .ToArray();
 
