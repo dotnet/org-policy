@@ -5,9 +5,11 @@ namespace Microsoft.Csv
 {
     public abstract class CsvWriter : IDisposable
     {
+        private CsvSettings _settings;
+
         protected CsvWriter(CsvSettings settings)
         {
-            Settings = settings;
+            _settings = settings;
         }
 
         public void Dispose()
@@ -38,6 +40,10 @@ namespace Microsoft.Csv
             WriteLine();
         }
 
-        public virtual CsvSettings Settings { get; set; }
+        public virtual CsvSettings Settings
+        {
+            get => _settings;
+            set => _settings = value;
+        }
     }
 }
