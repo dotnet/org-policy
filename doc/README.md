@@ -20,6 +20,8 @@ Rule            | Severity | Title
 [PR16](PR16.md) | Error    | Repos must link correct Code of Conduct
 [PR17](PR17.md) | Warning  | Teams should have a sufficient number of maintainers
 [PR18](PR18.md) | Warning  | Repos shouldn't use deprecated branch names
+[PR19](PR19.md) | Warning  | Default branches should have branch protection
+[PR20](PR20.md) | Warning  | Release branches should have branch protection
 
 ## Process
 
