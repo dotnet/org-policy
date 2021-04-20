@@ -124,7 +124,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                            .Where(_reportContext.CreateRowFilter())
                            .ToArray();
 
-            var columns = GetColumns("r:name", "r:private", "r:archived", "r:template", "r:description");
+            var columns = GetColumns("r:name", "r:ms-owned", "r:private", "r:archived", "r:template", "r:description");
             OutputTable(rows, columns);
         }
 
