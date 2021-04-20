@@ -146,7 +146,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private static void SaveVioloations(string orgName, string? outputFileName, bool viewInExcel, ViolationReport report)
         {
-            var document = new CsvDocument("fingerprint", "org", "status", "severity", "rule", "rule-title", "violation", "repo", "user", "team", "assignees");
+            var document = new CsvDocument("fingerprint", "org", "status", "severity", "rule", "rule-title", "violation", "repo", "branch", "user", "team", "assignees");
 
             using (var writer = document.Append())
             {
@@ -167,6 +167,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                         writer.Write(string.Empty);
                     else
                         writer.WriteHyperlink(violation.Repo.Url, violation.Repo.Name, viewInExcel);
+
+                    if (violation.Branch is null)
+                        writer.Write(string.Empty);
+                    else
+                        writer.WriteHyperlink(violation.Branch.Url, violation.Branch.Name, viewInExcel);
 
                     if (violation.User is null)
                         writer.Write(string.Empty);
