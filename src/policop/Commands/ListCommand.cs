@@ -13,7 +13,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class ListCommand : ToolCommand
     {
-        private string? _orgName;
+        private string _orgName = "*";
         private bool _listRepos;
         private bool _listTeams;
         private bool _listUsers;
@@ -49,12 +49,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         public override async Task ExecuteAsync()
         {
-            if (string.IsNullOrEmpty(_orgName))
-            {
-                Console.Error.WriteLine($"error: --org must be specified");
-                return;
-            }
-
             if (_viewInExcel && !ExcelExtensions.IsExcelInstalled())
             {
                 Console.Error.WriteLine("error: --excel is only valid if Excel is installed.");
