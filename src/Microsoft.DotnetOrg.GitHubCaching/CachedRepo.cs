@@ -30,7 +30,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public string FullName => $"{Org.Name}/{Name}";
 
         [JsonIgnore]
-        public CachedBranch DefaultBranch => Branches.Single(b => b.Name == DefaultBranchName);
+        // Note: Repos that have never been pushed don't have a branch yet.
+        public CachedBranch? DefaultBranch => Branches.SingleOrDefault(b => b.Name == DefaultBranchName);
 
         [JsonIgnore]
         public List<CachedTeamAccess> Teams { get; } = new List<CachedTeamAccess>();
