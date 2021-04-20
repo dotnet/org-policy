@@ -150,6 +150,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                    .Where(r => r.Violation is not null)
                                    .Select(r => r.Violation!);
             var hasAnyRepos = violations.Any(v => v.Repo is not null);
+            var hasAnySecrets = violations.Any(v => v.Secret is not null);
             var hasAnyBranches = violations.Any(v => v.Branch is not null);
             var hasAnyUsers = violations.Any(v => v.User is not null);
             var hasAnyTeams = violations.Any(v => v.Team is not null);
@@ -164,6 +165,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 "rule-title",
                 "violation",
                 "repo",
+                "secret",
                 "branch",
                 "user",
                 "team","assignees"
@@ -171,6 +173,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             if (!hasAnyRepos)
                 headers.Remove("repo");
+
+            if (!hasAnySecrets)
+                headers.Remove("secret");
 
             if (!hasAnyBranches)
                 headers.Remove("branch");
@@ -206,6 +211,13 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                             writer.WriteHyperlink(violation.Repo.Url, violation.Repo.Name, viewInExcel);
                     }
 
+                    if (hasAnySecrets)
+                    {
+                        if (violation.Secret is null)
+                            writer.Write(string.Empty);
+                        else
+                            writer.WriteHyperlink(violation.Secret.Url, violation.Secret.Name, viewInExcel);
+                    }
 
                     if (hasAnyBranches)
                     {
