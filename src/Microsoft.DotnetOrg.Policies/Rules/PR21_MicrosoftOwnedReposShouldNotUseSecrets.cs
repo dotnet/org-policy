@@ -9,7 +9,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
         public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
             "PR21",
             "Microsoft-owned repo should not use secrets",
-            PolicySeverity.Warning
+            PolicySeverity.Hidden
         );
 
         public override void GetViolations(PolicyAnalysisContext context)
