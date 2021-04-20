@@ -216,8 +216,20 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 repoQueryArguments["repo"] = repo.Name;
 
-                var branchInfo = await RunQueryWithRetry(repoQuery, repoQueryArguments);
-                repo.BranchProtectionRules = branchInfo.Rules;
+                try
+                {
+                    var branchInfo = await RunQueryWithRetry(repoQuery, repoQueryArguments);
+                    repo.BranchProtectionRules = branchInfo.Rules;
+                }
+                catch
+                {
+                    // It looks like on some repos (such as mono/monodevelop) the GraphQL library
+                    // simply crashes with an IndexOutOfRangeException. In order to make progress,
+                    // let's just ignore repos for which we can't retreive the branch protections,
+                    // report a warning, and keep going.
+                    Log.WriteLine($"warn: unable to retreive branch protection rules for '{repo.Name}'");
+                    repo.BranchProtectionRules = Array.Empty<CachedBranchProtectionRule>();
+                }
             }
         }
 
