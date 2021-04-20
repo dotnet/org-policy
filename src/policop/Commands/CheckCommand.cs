@@ -146,7 +146,42 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private static void SaveVioloations(string orgName, string? outputFileName, bool viewInExcel, ViolationReport report)
         {
-            var document = new CsvDocument("fingerprint", "org", "status", "severity", "rule", "rule-title", "violation", "repo", "branch", "user", "team", "assignees");
+            var violations = report.GetAll()
+                                   .Where(r => r.Violation is not null)
+                                   .Select(r => r.Violation!);
+            var hasAnyRepos = violations.Any(v => v.Repo is not null);
+            var hasAnyBranches = violations.Any(v => v.Branch is not null);
+            var hasAnyUsers = violations.Any(v => v.User is not null);
+            var hasAnyTeams = violations.Any(v => v.Team is not null);
+
+            var headers = new List<string>
+            {
+                "fingerprint",
+                "org",
+                "status",
+                "severity",
+                "rule",
+                "rule-title",
+                "violation",
+                "repo",
+                "branch",
+                "user",
+                "team","assignees"
+            };
+
+            if (!hasAnyRepos)
+                headers.Remove("repo");
+
+            if (!hasAnyBranches)
+                headers.Remove("branch");
+
+            if (!hasAnyUsers)
+                headers.Remove("user");
+
+            if (!hasAnyTeams)
+                headers.Remove("team");
+
+            var document = new CsvDocument(headers);
 
             using (var writer = document.Append())
             {
@@ -163,25 +198,38 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     writer.Write(violation.Descriptor.Title);
                     writer.Write(violation.Title);
 
-                    if (violation.Repo is null)
-                        writer.Write(string.Empty);
-                    else
-                        writer.WriteHyperlink(violation.Repo.Url, violation.Repo.Name, viewInExcel);
+                    if (hasAnyRepos)
+                    {
+                        if (violation.Repo is null)
+                            writer.Write(string.Empty);
+                        else
+                            writer.WriteHyperlink(violation.Repo.Url, violation.Repo.Name, viewInExcel);
+                    }
 
-                    if (violation.Branch is null)
-                        writer.Write(string.Empty);
-                    else
-                        writer.WriteHyperlink(violation.Branch.Url, violation.Branch.Name, viewInExcel);
 
-                    if (violation.User is null)
-                        writer.Write(string.Empty);
-                    else
-                        writer.WriteHyperlink(violation.User.Url, violation.User.Login, viewInExcel);
+                    if (hasAnyBranches)
+                    {
+                        if (violation.Branch is null)
+                            writer.Write(string.Empty);
+                        else
+                            writer.WriteHyperlink(violation.Branch.Url, violation.Branch.Name, viewInExcel);
+                    }
 
-                    if (violation.Team is null)
-                        writer.Write(string.Empty);
-                    else
-                        writer.WriteHyperlink(violation.Team.Url, violation.Team.Name, viewInExcel);
+                    if (hasAnyUsers)
+                    {
+                        if (violation.User is null)
+                            writer.Write(string.Empty);
+                        else
+                            writer.WriteHyperlink(violation.User.Url, violation.User.Login, viewInExcel);
+                    }
+
+                    if (hasAnyTeams)
+                    {
+                        if (violation.Team is null)
+                            writer.Write(string.Empty);
+                        else
+                            writer.WriteHyperlink(violation.Team.Url, violation.Team.Name, viewInExcel);
+                    }
 
                     var assignees = string.Join(", ", violation.Assignees.Select(r => r.Login));
                     writer.Write(assignees);
@@ -530,7 +578,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             public IReadOnlyList<(PolicyViolation, PolicyIssue)> ReopenedViolations { get; }
             public IReadOnlyList<PolicyIssue> ClosedViolations { get; }
 
-            public IEnumerable<(string Status, PolicyViolation? violation, PolicyIssue?)> GetAll()
+            public IEnumerable<(string Status, PolicyViolation? Violation, PolicyIssue? Issue)> GetAll()
             {
                 foreach (var (v, i) in ExistingViolations)
                     yield return ("Existing", v, i);
