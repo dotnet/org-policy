@@ -584,9 +584,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                                   .ToArray();
 
                 var createdViolations = mapping.Where(m => m.Violation is not null && m.Issue is null)
-                                               .Select(m => (Violation: m.Violation!, Issue: m.Issue!))
-                                               .Where(m => m.Issue.IsOverride)
-                                               .Select(m => m.Violation)
+                                               .Select(m => m.Violation!)
                                                .ToArray();
 
                 var reopenedViolations = mapping.Where(m => m.Violation is not null && m.Issue is not null)
