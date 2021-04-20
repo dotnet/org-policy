@@ -14,6 +14,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         [JsonIgnore]
         public IReadOnlyList<CachedRepo> Repositories { get; set; }
+
+        [JsonIgnore]
+        public override string Url => $"https://github.com/organizations/{Org.Name}/settings/secrets/actions";
     }
 #pragma warning restore CS8618
 }

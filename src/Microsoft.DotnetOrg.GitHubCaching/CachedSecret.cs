@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
@@ -8,6 +9,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public string Name { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        [JsonIgnore]
+        public abstract string Url { get; }
     }
 #pragma warning restore CS8618
 }
