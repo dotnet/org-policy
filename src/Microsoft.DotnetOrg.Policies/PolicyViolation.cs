@@ -16,6 +16,7 @@ namespace Microsoft.DotnetOrg.Policies
                                string body,
                                CachedOrg org,
                                CachedRepo? repo = null,
+                               CachedSecret? secret = null,
                                CachedBranch? branch = null,
                                CachedTeam? team = null,
                                CachedUser? user = null,
@@ -34,11 +35,12 @@ namespace Microsoft.DotnetOrg.Policies
                 throw new ArgumentNullException(nameof(org));
 
             Descriptor = descriptor;
-            Fingerprint = ComputeFingerprint(descriptor.DiagnosticId, repo, branch, user, team);
+            Fingerprint = ComputeFingerprint(descriptor.DiagnosticId, repo, secret, branch, user, team);
             Title = title;
             Body = UnindentAndTrim(body);
             Org = org;
             Repo = repo;
+            Secret = secret;
             Branch = branch;
             Team = team;
             User = user;
@@ -52,6 +54,7 @@ namespace Microsoft.DotnetOrg.Policies
         public CachedOrg Org { get; }
         public string Body { get; }
         public CachedRepo? Repo { get; }
+        public CachedSecret? Secret { get; }
         public CachedBranch? Branch { get; }
         public CachedTeam? Team { get; }
         public CachedUser? User { get; }
@@ -85,6 +88,7 @@ namespace Microsoft.DotnetOrg.Policies
 
         private static Guid ComputeFingerprint(string diagnosticId,
                                                CachedRepo? repo,
+                                               CachedSecret? secret,
                                                CachedBranch? branch,
                                                CachedUser? user,
                                                CachedTeam? team)
@@ -105,6 +109,10 @@ namespace Microsoft.DotnetOrg.Policies
                     writer.WriteLine(team?.Name);
 
                     // Additional fields:
+
+                    if (secret is not null)
+                        writer.WriteLine($"secret = {secret.Name}");
+
                     if (branch is not null)
                         writer.WriteLine($"branch = {branch.Name}");
                 }

@@ -22,6 +22,7 @@ Rule            | Severity | Title
 [PR18](PR18.md) | Warning  | Repos shouldn't use deprecated branch names
 [PR19](PR19.md) | Warning  | Default branches should have branch protection
 [PR20](PR20.md) | Warning  | Release branches should have branch protection
+[PR21](PR21.md) | Warning  | Microsoft-owned repo should not use secrets
 
 ## Process
 
