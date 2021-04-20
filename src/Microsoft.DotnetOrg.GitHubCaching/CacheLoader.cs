@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.DotnetOrg.Ospo;
@@ -542,10 +543,23 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         private Task<T> RunQueryWithRetry<T>(ICompiledQuery<T> query, Dictionary<string, object?> variables)
         {
-            return RunQueryWithRetry(() => Connection.Run(query, variables));
+            var contextSelector = new Func<string>(() =>
+            {
+                var sb = new StringBuilder();
+                foreach (var (k, v) in variables)
+                {
+                    if (sb.Length > 0)
+                        sb.Append(", ");
+
+                    sb.Append($"{k} = {v}");
+                }
+                return sb.ToString();
+            });
+
+            return RunQueryWithRetry(() => Connection.Run(query, variables), contextSelector);
         }
 
-        private async Task<T> RunQueryWithRetry<T>(Func<Task<T>> func)
+        private async Task<T> RunQueryWithRetry<T>(Func<Task<T>> func, Func<string>? contextSelector = null)
         {
             var attempt = 1;
 
@@ -556,8 +570,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
             catch (NullReferenceException)
             {
-                Log.WriteLine($"error: API quota exceeded");
-                await Task.Delay(TimeSpan.FromMinutes(65));
+                var delay = TimeSpan.FromMinutes(65);
+                Log.WriteLine($"error: API quota exceeded. Waiting for {delay}...");
+                await Task.Delay(delay);
                 goto TryAgain;
             }
             catch (Octokit.AbuseException ex)
@@ -567,9 +582,14 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
             catch (Exception ex) when (attempt < ErrorRetryCount)
             {
-                Log.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}: {ex.Message}");
+                var context = contextSelector?.Invoke();
+                if (context is not null)
+                    context = $" ({context})";
+
+                var delay = TimeSpan.FromMinutes(5);
+                Log.WriteLine($"error on attempt {attempt} of {ErrorRetryCount}{context}: {ex.Message}. Waiting for {delay}...");
                 attempt++;
-                await Task.Delay(TimeSpan.FromMinutes(5));
+                await Task.Delay(delay);
                 goto TryAgain;
             }
         }
