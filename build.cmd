@@ -1,4 +1,5 @@
 @echo off
 setlocal
 set SLN_FILE=%~dp0src\Microsoft.DotnetOrg.Policies.sln
-dotnet build %SLN_FILE% --nologo -- %*
+set OUT_DIR=%~dp0bin\
+dotnet build %SLN_FILE% --nologo -o %OUT_DIR% -- %*
