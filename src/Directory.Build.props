@@ -4,6 +4,7 @@
     <Copyright>Copyright (c) Microsoft</Copyright>
     <Company>Microsoft</Company>
     <Product>dotnet-org-policy</Product>  
+    <SuppressNETCoreSdkPreviewMessage>True</SuppressNETCoreSdkPreviewMessage> 
   </PropertyGroup>
   
 </Project>
