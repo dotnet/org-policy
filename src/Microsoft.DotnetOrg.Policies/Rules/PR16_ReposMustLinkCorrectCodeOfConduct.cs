@@ -64,34 +64,38 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                 problematicFiles.Clear();
 
+                var profile = await client.GetCommunityProfile(repo.Org.Name, repo.Name);
+                var coc = profile?.Files?.CodeOfConductFile;
+                var cocBody = await client.GetCommunityFile(coc);
+                var readme = profile?.Files?.Readme;
+                var readmeBody = await client.GetCommunityFile(readme);
+                var contributing = profile?.Files?.Contributing;
+                var contributingBody = await client.GetCommunityFile(contributing);
+
                 // First check that the CoC links the expected CoC
 
-                var coc = await client.GetCodeOfConduct(repo.Org.Name, repo.Name);
-                if (coc is not null)
+                if (coc is not null && cocBody is not null)
                 {
-                    var containsExpectedLink = coc.Body.IndexOf(expectedLink, StringComparison.OrdinalIgnoreCase) >= 0;
+                    var containsExpectedLink = cocBody.Contains(expectedLink, StringComparison.OrdinalIgnoreCase);
                     if (!containsExpectedLink)
-                        problematicFiles.Add((coc.Name, coc.Url));
+                        problematicFiles.Add((coc.FileName, coc.Url));
                 }
 
                 void CheckForProblematicReferences(string name, string url, string contents)
                 {
-                    var containsProblematicReference = problematicReferences.Any(t => contents.IndexOf(t, StringComparison.OrdinalIgnoreCase) >= 0);
+                    var containsProblematicReference = problematicReferences.Any(t => contents.Contains(t, StringComparison.OrdinalIgnoreCase));
                     if (containsProblematicReference)
                         problematicFiles.Add((name, url));
                 }
 
-                var readme = await client.GetReadme(repo.Org.Name, repo.Name);
-                var contributing = await client.GetContributing(repo.Org.Name, repo.Name);
+                if (coc is not null && cocBody is not null)
+                    CheckForProblematicReferences(coc.FileName, coc.HtmlUrl, cocBody);
 
-                if (coc is not null)
-                    CheckForProblematicReferences(coc.Name, coc.HtmlUrl, coc.Body);
+                if (readme is not null && readmeBody is not null)
+                    CheckForProblematicReferences(readme.FileName, readme.HtmlUrl, readmeBody);
 
-                if (readme is not null)
-                    CheckForProblematicReferences(readme.Name, readme.HtmlUrl, readme.Content);
-
-                if (contributing is not null)
-                    CheckForProblematicReferences(contributing.Name, contributing.HtmlUrl, contributing.Content);
+                if (contributing is not null && contributingBody is not null)
+                    CheckForProblematicReferences(contributing.FileName, contributing.HtmlUrl, contributingBody);
 
                 if (!problematicFiles.Any())
                     continue;

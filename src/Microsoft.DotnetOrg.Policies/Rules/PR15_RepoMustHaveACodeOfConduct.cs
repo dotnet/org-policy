@@ -36,7 +36,8 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (repo.IsFork || repo.IsMirror)
                     continue;
 
-                var coc = await client.GetCodeOfConduct(repo.Org.Name, repo.Name);
+                var communityProfile = await client.GetCommunityProfile(repo.Org.Name, repo.Name);
+                var coc = communityProfile?.Files?.CodeOfConductFile;
                 if (coc is not null)
                     continue;
 

@@ -47,38 +47,13 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return Task.CompletedTask;
         }
 
-        public static async Task<Readme?> GetReadme(this GitHubClient client, string owner, string repo)
+        public static async Task<GitHubCommunityProfile?> GetCommunityProfile(this GitHubClient client, string owner, string repo)
         {
         retry:
             try
             {
-                return await client.Repository.Content.GetReadme(owner, repo);
-            }
-            catch (AbuseException ex)
-            {
-                await ex.HandleAsync();
-                goto retry;
-            }
-            catch (NotFoundException)
-            {
-                return null;
-            }
-        }
-
-        public static async Task<GitHubCodeOfConduct?> GetCodeOfConduct(this GitHubClient client, string owner, string repo)
-        {
-        retry:
-            try
-            {
-                var uri = new Uri(client.Connection.BaseAddress, $"/repos/{owner}/{repo}/community/code_of_conduct");
-                var response = await client.Connection.Get<GitHubCodeOfConduct>(uri, null, "application/vnd.github.scarlet-witch-preview+json");
-                if (response.Body?.Body is null)
-                    return null;
-
-                // Make sure we have a sensible value
-                var htmlUri = new Uri(response.Body.HtmlUrl);
-                response.Body.Name = htmlUri.Segments.Last();
-
+                var uri = new Uri(client.Connection.BaseAddress, $"/repos/{owner}/{repo}/community/profile");
+                var response = await client.Connection.Get<GitHubCommunityProfile>(uri, null, "application/vnd.github.scarlet-witch-preview+json");
                 return response.Body;
             }
             catch (AbuseException ex)
@@ -92,47 +67,16 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
         }
 
-        public static async Task<RepositoryContent?> GetContributing(this GitHubClient client, string owner, string repo)
+        public static async Task<string?> GetCommunityFile(this GitHubClient client, GitHubCommunityProfile.CommunityFile? file)
         {
+            if (string.IsNullOrEmpty(file?.RawUrl))
+                return null;
+
         retry:
             try
             {
-                var profileUri = new Uri(client.Connection.BaseAddress, $"/repos/{owner}/{repo}/community/profile");
-                var profileResponseRaw = await client.Connection.Get<Dictionary<string, object>>(profileUri, null, "application/vnd.github.black-panther-preview+json");
-
-                if (profileResponseRaw.Body is null)
-                    return null;
-
-                if (!profileResponseRaw.Body.TryGetValue("files", out var filesRaw))
-                    return null;
-
-                var files = filesRaw as IDictionary<string, object>;
-                if (files is null)
-                    return null;
-
-                if (!files.TryGetValue("contributing", out var contributingRaw))
-                    return null;
-
-                var contributing = contributingRaw as IDictionary<string, object>;
-                if (contributing is null)
-                    return null;
-
-                if (!contributing.TryGetValue("html_url", out var htmlUrlRaw))
-                    return null;
-
-                var htmlUrl = htmlUrlRaw as string;
-                if (htmlUrl is null)
-                    return null;
-
-                if (!contributing.TryGetValue("url", out var urlRaw))
-                    return null;
-
-                var url = urlRaw as string;
-                if (url is null)
-                    return null;
-
-                var uri = new Uri(url);
-                var response = await client.Connection.GetResponse<RepositoryContent>(uri);
+                var uri = new Uri(file.RawUrl);
+                var response = await client.Connection.Get<string>(uri, null, null);
                 return response.Body;
             }
             catch (AbuseException ex)
