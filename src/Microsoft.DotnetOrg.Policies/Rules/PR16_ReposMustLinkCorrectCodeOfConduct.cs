@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Microsoft.DotnetOrg.GitHubCaching;
 
@@ -15,7 +14,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override async Task GetViolationsAsync(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             // TODO: Enable for other orgs
             //       mono
@@ -36,7 +35,6 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 "opencode@microsoft.com"
             };
 
-            var client = await GitHubClientFactory.CreateAsync();
             var problematicFiles = new HashSet<(string Name, string Url)>();
 
             foreach (var repo in context.Org.Repos)
@@ -64,38 +62,28 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                 problematicFiles.Clear();
 
-                var profile = await client.GetCommunityProfile(repo.Org.Name, repo.Name);
-                var coc = profile?.Files?.CodeOfConductFile;
-                var cocBody = await client.GetCommunityFile(coc);
-                var readme = profile?.Files?.Readme;
-                var readmeBody = await client.GetCommunityFile(readme);
-                var contributing = profile?.Files?.Contributing;
-                var contributingBody = await client.GetCommunityFile(contributing);
-
                 // First check that the CoC links the expected CoC
 
-                if (coc is not null && cocBody is not null)
+                if (repo.CodeOfConduct is not null)
                 {
-                    var containsExpectedLink = cocBody.Contains(expectedLink, StringComparison.OrdinalIgnoreCase);
+                    var containsExpectedLink = repo.CodeOfConduct.Contents.Contains(expectedLink, StringComparison.OrdinalIgnoreCase);
                     if (!containsExpectedLink)
-                        problematicFiles.Add((coc.FileName, coc.Url));
+                        problematicFiles.Add((repo.CodeOfConduct.Name, repo.CodeOfConduct.Url));
                 }
 
-                void CheckForProblematicReferences(string name, string url, string contents)
+                void CheckForProblematicReferences(CachedFile? file)
                 {
-                    var containsProblematicReference = problematicReferences.Any(t => contents.Contains(t, StringComparison.OrdinalIgnoreCase));
+                    if (file is null)
+                        return;
+
+                    var containsProblematicReference = problematicReferences.Any(t => file.Contents.Contains(t, StringComparison.OrdinalIgnoreCase));
                     if (containsProblematicReference)
-                        problematicFiles.Add((name, url));
+                        problematicFiles.Add((file.Name, file.Url));
                 }
 
-                if (coc is not null && cocBody is not null)
-                    CheckForProblematicReferences(coc.FileName, coc.HtmlUrl, cocBody);
-
-                if (readme is not null && readmeBody is not null)
-                    CheckForProblematicReferences(readme.FileName, readme.HtmlUrl, readmeBody);
-
-                if (contributing is not null && contributingBody is not null)
-                    CheckForProblematicReferences(contributing.FileName, contributing.HtmlUrl, contributingBody);
+                CheckForProblematicReferences(repo.CodeOfConduct);
+                CheckForProblematicReferences(repo.ReadMe);
+                CheckForProblematicReferences(repo.Contributing);
 
                 if (!problematicFiles.Any())
                     continue;

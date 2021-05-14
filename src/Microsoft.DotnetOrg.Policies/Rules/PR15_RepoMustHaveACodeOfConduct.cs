@@ -13,7 +13,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
             PolicySeverity.Error
         );
 
-        public override async Task GetViolationsAsync(PolicyAnalysisContext context)
+        public override void GetViolations(PolicyAnalysisContext context)
         {
             if (!string.Equals(context.Org.Name, "aspnet", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(context.Org.Name, "dotnet", StringComparison.OrdinalIgnoreCase) &&
@@ -22,8 +22,6 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
             // This rule is not scoped to anyone because both Microsoft and .NET Foundation
             // projects are expected to follow this policy.
-
-            var client = await GitHubClientFactory.CreateAsync();
 
             foreach (var repo in context.Org.Repos)
             {
@@ -36,9 +34,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
                 if (repo.IsFork || repo.IsMirror)
                     continue;
 
-                var communityProfile = await client.GetCommunityProfile(repo.Org.Name, repo.Name);
-                var coc = communityProfile?.Files?.CodeOfConductFile;
-                if (coc is not null)
+                if (repo.CodeOfConduct is not null)
                     continue;
 
                 context.ReportViolation(
