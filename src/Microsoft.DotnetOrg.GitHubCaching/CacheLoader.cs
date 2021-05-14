@@ -172,6 +172,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             await FillBranchProtectionRules(orgName, result);
             await FillEnvironments(orgName, result);
             await FillSecrets(orgName, result);
+            await FillFiles(orgName, result);
 
             return result;
         }
@@ -278,6 +279,32 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 await Client.WaitForEnoughQuotaAsync(Log);
                 var secrets = await Client.GetRepoSecrets(orgName, repo.Name);
                 repo.Secrets = secrets;
+            }
+        }
+
+        private async Task FillFiles(string orgName, CachedRepo[] repos)
+        {
+            foreach (var repo in repos)
+            {
+                var profile = await Client.GetCommunityProfile(orgName, repo.Name);
+                repo.ReadMe = await CreateFileAsync(Client, profile?.Files?.Readme);
+                repo.Contributing = await CreateFileAsync(Client, profile?.Files?.Contributing);
+                repo.CodeOfConduct = await CreateFileAsync(Client, profile?.Files?.CodeOfConductFile);
+                repo.License = await CreateFileAsync(Client, profile?.Files?.License);
+            }
+
+            static async Task<CachedFile?> CreateFileAsync(Octokit.GitHubClient client, GitHubCommunityProfile.CommunityFile? file)
+            {
+                if (file is null)
+                    return null;
+
+                var contents = await client.GetCommunityFile(file);
+                return new CachedFile
+                {
+                    Name = file.FileName,
+                    Url = file.HtmlUrl,
+                    Contents = contents ?? string.Empty
+                };
             }
         }
 

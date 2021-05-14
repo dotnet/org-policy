@@ -22,6 +22,10 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public IReadOnlyList<CachedBranchProtectionRule> BranchProtectionRules { get; set; }
         public IReadOnlyList<CachedRepoEnvironment> Environments { get; set; }
         public IReadOnlyList<CachedRepoSecret> Secrets { get; set; }
+        public CachedFile? ReadMe { get; set; }
+        public CachedFile? Contributing { get; set; }
+        public CachedFile? CodeOfConduct { get; set; }
+        public CachedFile? License { get; set; }
 
         [JsonIgnore]
         public CachedOrg Org { get; set; }
