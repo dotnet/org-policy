@@ -269,16 +269,30 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         private static async Task<RepoActionPermissionsResponse?> GetInternalRepoActionPermissionsAsync(this GitHubClient client, string owner, string repo)
         {
-            var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/actions/permissions", UriKind.Relative), new Dictionary<string, string>());
-            var json = (string)rawResponse.HttpResponse.Body;
-            return JsonSerializer.Deserialize<RepoActionPermissionsResponse>(json);
+            try
+            {
+                var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/actions/permissions", UriKind.Relative), new Dictionary<string, string>());
+                var json = (string)rawResponse.HttpResponse.Body;
+                return JsonSerializer.Deserialize<RepoActionPermissionsResponse>(json);
+            }
+            catch (NotFoundException)
+            {
+                return null;
+            }
         }
 
         private static async Task<RepoActionPermissionsSelectedActionsResponse?> GetInternalRepoAllowedActionsAsync(this GitHubClient client, string owner, string repo)
         {
-            var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/actions/permissions/selected-actions", UriKind.Relative), new Dictionary<string, string>());
-            var json = (string)rawResponse.HttpResponse.Body;
-            return JsonSerializer.Deserialize<RepoActionPermissionsSelectedActionsResponse>(json);
+            try
+            {
+                var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/actions/permissions/selected-actions", UriKind.Relative), new Dictionary<string, string>());
+                var json = (string)rawResponse.HttpResponse.Body;
+                return JsonSerializer.Deserialize<RepoActionPermissionsSelectedActionsResponse>(json);
+            }
+            catch (NotFoundException)
+            {
+                return null;
+            }
         }
 
 #pragma warning disable CS8618 // Serialized type
