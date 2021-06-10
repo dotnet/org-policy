@@ -312,7 +312,10 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         private async Task FillActionPermissions(string orgName, CachedRepo[] repos)
         {
             foreach (var repo in repos)
+            {
+                await Client.WaitForEnoughQuotaAsync(Log);
                 repo.ActionPermissions = await Client.GetRepoActionPermissionsAsync(orgName, repo.Name);
+            }
         }
 
         private async Task<IReadOnlyCollection<CachedTeam>> GetCachedTeamsAsync(string orgName)
