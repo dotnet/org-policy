@@ -173,6 +173,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             await FillEnvironments(orgName, result);
             await FillSecrets(orgName, result);
             await FillFiles(orgName, result);
+            await FillActionPermissions(orgName, result);
 
             return result;
         }
@@ -306,6 +307,12 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     Contents = contents ?? string.Empty
                 };
             }
+        }
+
+        private async Task FillActionPermissions(string orgName, CachedRepo[] repos)
+        {
+            foreach (var repo in repos)
+                repo.ActionPermissions = await Client.GetRepoActionPermissionsAsync(orgName, repo.Name);
         }
 
         private async Task<IReadOnlyCollection<CachedTeam>> GetCachedTeamsAsync(string orgName)

@@ -26,6 +26,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public CachedFile? Contributing { get; set; }
         public CachedFile? CodeOfConduct { get; set; }
         public CachedFile? License { get; set; }
+        public CachedRepoActionPermissions ActionPermissions { get; set; }
 
         [JsonIgnore]
         public CachedOrg Org { get; set; }

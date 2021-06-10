@@ -148,6 +148,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "The status of the main migration ('Pending', 'Completed', or 'Archived')",
                 r => r.MigrationToMainStatus()
             ),
+            new RepoReportColumn(
+                "r:action-permissions",
+                "The configuration which GitHub actions can be used",
+                r => r.ActionPermissions.AllowedActions.ToString()
+            ),
         };
 
         public static IReadOnlyList<ReportColumn> TeamColumns { get; } = new[]
