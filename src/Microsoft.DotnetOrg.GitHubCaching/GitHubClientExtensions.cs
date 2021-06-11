@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -295,6 +296,63 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
         }
 
+        public static async Task<CachedFile[]> GetRepoWorkflowsAsync(this GitHubClient client, string owner, string repo)
+        {
+            var response = await client.GetInternalRepoWorkflowsAsync(owner, repo);
+            if (response is null || response.workflows is null)
+                return Array.Empty<CachedFile>();
+
+            var files = new List<CachedFile>(response.workflows.Length);
+
+            foreach (var workflow in response.workflows)
+            {
+                if (workflow is null ||
+                    workflow.name is null ||
+                    workflow.path is null ||
+                    workflow.html_url is null)
+                    continue;
+
+                byte[]? data = null;
+
+                try
+                {
+                    data = await client.Repository.Content.GetRawContent(owner, repo, workflow.path);
+                }
+                catch (Exception)
+                {
+                    // Ignore
+                }
+
+                if (data is null)
+                    continue;
+
+                var contents = Encoding.UTF8.GetString(data);
+                var file = new CachedFile
+                {
+                    Name = workflow.name,
+                    Url = workflow.html_url,
+                    Contents = contents
+                };
+                files.Add(file);
+            }
+
+            return files.ToArray();
+        }
+
+        private static async Task<ActionWorkflowsResponse?> GetInternalRepoWorkflowsAsync(this GitHubClient client, string owner, string repo)
+        {
+            try
+            {
+                var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/actions/workflows", UriKind.Relative), new Dictionary<string, string>());
+                var json = (string)rawResponse.HttpResponse.Body;
+                return JsonSerializer.Deserialize<ActionWorkflowsResponse>(json);
+            }
+            catch (NotFoundException)
+            {
+                return null;
+            }
+        }
+
 #pragma warning disable CS8618 // Serialized type
 
         private class OrgSecretsResponse
@@ -366,6 +424,26 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             public bool github_owned_allowed { get; set; }
             public bool verified_allowed { get; set; }
             public string[]? patterns_allowed { get; set; }
+        }
+
+        private sealed class ActionWorkflowsResponse
+        {
+            public int total_count { get; set; }
+            public Workflow[]? workflows { get; set; }
+        }
+
+        private sealed class Workflow
+        {
+            public int id { get; set; }
+            public string? node_id { get; set; }
+            public string? name { get; set; }
+            public string? path { get; set; }
+            public string? state { get; set; }
+            public DateTime created_at { get; set; }
+            public DateTime updated_at { get; set; }
+            public string? url { get; set; }
+            public string? html_url { get; set; }
+            public string? badge_url { get; set; }
         }
     }
 }

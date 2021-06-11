@@ -153,6 +153,11 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting
                 "The configuration which GitHub actions can be used",
                 r => r.ActionPermissions.AllowedActions.ToString()
             ),
+            new RepoReportColumn(
+                "r:has-workflows",
+                "Indicates whether this repo has any GitHub action workflows",
+                r => r.Workflows.Any() ? "Yes" : "No"
+            ),
         };
 
         public static IReadOnlyList<ReportColumn> TeamColumns { get; } = new[]

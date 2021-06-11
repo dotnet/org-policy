@@ -174,6 +174,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             await FillSecrets(orgName, result);
             await FillFiles(orgName, result);
             await FillActionPermissions(orgName, result);
+            await FillWorkflows(orgName, result);
 
             return result;
         }
@@ -315,6 +316,15 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 await Client.WaitForEnoughQuotaAsync(Log);
                 repo.ActionPermissions = await Client.GetRepoActionPermissionsAsync(orgName, repo.Name);
+            }
+        }
+
+        private async Task FillWorkflows(string orgName, CachedRepo[] repos)
+        {
+            foreach (var repo in repos)
+            {
+                await Client.WaitForEnoughQuotaAsync(Log);
+                repo.Workflows = await Client.GetRepoWorkflowsAsync(orgName, repo.Name);
             }
         }
 
