@@ -168,7 +168,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 "secret",
                 "branch",
                 "user",
-                "team","assignees"
+                "team",
+                "assignees",
+                "emails"
             };
 
             if (!hasAnyRepos)
@@ -245,6 +247,10 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
                     var assignees = string.Join(", ", violation.Assignees.Select(r => r.Login));
                     writer.Write(assignees);
+
+                    var emails = string.Join(", ", violation.Assignees.Select(a => a.GetEmailName())
+                                                                      .Where(e => !string.IsNullOrEmpty(e)));
+                    writer.Write(emails);
 
                     writer.WriteLine();
                 }
