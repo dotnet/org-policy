@@ -29,7 +29,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                 context.ReportViolation(
                     Descriptor,
-                    $"Repo '{repo.Name}' should should restrict GitHub Actions",
+                    $"Repo '{repo.Name}' should restrict GitHub Actions",
                     $@"
                         The repo {repo.Markdown()} shouldn't allow all GitHub Actions but restrict which actions can be used by either selecting **Local Only** or by [specifying a list of patterns](https://docs.github.com/en/github/administering-a-repository/managing-repository-settings/disabling-or-limiting-github-actions-for-a-repository#allowing-specific-actions-to-run) that describe which actions are allowed.
                     ",

@@ -27,7 +27,7 @@ namespace Microsoft.DotnetOrg.Policies.Rules
 
                 context.ReportViolation(
                     Descriptor,
-                    $"Repo '{repo.Name}' should should disable GitHub Actions",
+                    $"Repo '{repo.Name}' should disable GitHub Actions",
                     $@"
                         The repo {repo.Markdown()} doesn't have any workflows and thus should disable GitHub actions.
                     ",
