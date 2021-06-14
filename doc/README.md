@@ -23,8 +23,8 @@ Rule            | Severity | Title
 [PR19](PR19.md) | Warning  | Default branches should have branch protection
 [PR20](PR20.md) | Warning  | Release branches should have branch protection
 [PR21](PR21.md) | Warning  | Microsoft-owned repo should not use secrets
-[PR21](PR22.md) | Error    | Microsoft-owned repo should disable GitHub Actions when it's not used
-[PR21](PR23.md) | Error    | Microsoft-owned repos should restrict GitHub Actions
+[PR22](PR22.md) | Error    | Microsoft-owned repo should disable GitHub Actions when it's not used
+[PR23](PR23.md) | Error    | Microsoft-owned repos should restrict GitHub Actions
 
 ## Process
 
