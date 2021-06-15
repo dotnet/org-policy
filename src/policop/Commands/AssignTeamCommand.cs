@@ -51,22 +51,19 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 return;
             }
 
-            Permission permission;
-
             switch (_permission)
             {
                 case null:
-                case "read":
-                    permission = Permission.Pull;
-                    break;
-                case "write":
-                    permission = Permission.Push;
-                    break;
+                    _permission = "pull";
+                    goto case "pull";
+                case "pull":
+                case "push":
                 case "admin":
-                    permission = Permission.Admin;
+                case "maintain":
+                case "triage":
                     break;
                 default:
-                    Console.Error.WriteLine($"error: permission can be 'read', 'write', or 'admin' but not '{_permission}'");
+                    Console.Error.WriteLine($"error: permission can be 'pull', 'push', 'admin', 'maintain', or 'triage' but not '{_permission}'");
                     return;
             }
 
@@ -105,7 +102,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             }
             else
             {
-                await client.Organization.Team.AddRepository(team.Id, _orgName, _repoName, new RepositoryPermissionRequest(permission));
+                await client.Connection.Put<object>(new Uri($"/orgs/{_orgName}/teams/{team.Slug}/repos/{_orgName}/{_repoName}", UriKind.Relative),
+                                                    new { permission = _permission });
                 Console.Out.WriteLine($"Added team '{_teamName}' to repo '{_repoName}'");
             }
         }
