@@ -231,11 +231,11 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return DeserializeSecrets(json);
         }
 
-        public static async Task<CachedRepoActionPermissions> GetRepoActionPermissionsAsync(this GitHubClient client, string owner, string repo)
+        public static async Task<CachedActionPermissions> GetActionPermissionsAsync(this GitHubClient client, string owner, string? repo = null)
         {
-            var result = new CachedRepoActionPermissions();
+            var result = new CachedActionPermissions();
 
-            var permissions = await client.GetInternalRepoActionPermissionsAsync(owner, repo);
+            var permissions = await client.GetInternalActionPermissionsAsync(owner, repo);
             if (permissions is not null)
             {
                 result.Enabled = permissions.enabled;
@@ -244,7 +244,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
             if (result.AllowedActions == CachedRepoAllowedActions.Selected)
             {
-                var selectedActions = await client.GetInternalRepoAllowedActionsAsync(owner, repo);
+                var selectedActions = await client.GetInternalAllowedActionsAsync(owner, repo);
                 if (selectedActions is not null)
                 {
                     result.GitHubOwnedAllowed = selectedActions.github_owned_allowed;
@@ -268,13 +268,17 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return result;
         }
 
-        private static async Task<RepoActionPermissionsResponse?> GetInternalRepoActionPermissionsAsync(this GitHubClient client, string owner, string repo)
+        private static async Task<ActionPermissionsResponse?> GetInternalActionPermissionsAsync(this GitHubClient client, string owner, string? repo)
         {
             try
             {
-                var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/actions/permissions", UriKind.Relative), new Dictionary<string, string>());
+                var uri = repo is null
+                    ? $"/orgs/{owner}/actions/permissions"
+                    : $"/repos/{owner}/{repo}/actions/permissions";
+
+                var rawResponse = await client.Connection.GetRaw(new Uri(uri, UriKind.Relative), new Dictionary<string, string>());
                 var json = (string)rawResponse.HttpResponse.Body;
-                return JsonSerializer.Deserialize<RepoActionPermissionsResponse>(json);
+                return JsonSerializer.Deserialize<ActionPermissionsResponse>(json);
             }
             catch (NotFoundException)
             {
@@ -282,13 +286,17 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             }
         }
 
-        private static async Task<RepoActionPermissionsSelectedActionsResponse?> GetInternalRepoAllowedActionsAsync(this GitHubClient client, string owner, string repo)
+        private static async Task<ActionPermissionsSelectedActionsResponse?> GetInternalAllowedActionsAsync(this GitHubClient client, string owner, string? repo)
         {
             try
             {
-                var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/actions/permissions/selected-actions", UriKind.Relative), new Dictionary<string, string>());
+                var uri = repo is null
+                    ? $"/orgs/{owner}/actions/permissions/selected-actions"
+                    : $"/repos/{owner}/{repo}/actions/permissions/selected-actions";
+
+                var rawResponse = await client.Connection.GetRaw(new Uri(uri, UriKind.Relative), new Dictionary<string, string>());
                 var json = (string)rawResponse.HttpResponse.Body;
-                return JsonSerializer.Deserialize<RepoActionPermissionsSelectedActionsResponse>(json);
+                return JsonSerializer.Deserialize<ActionPermissionsSelectedActionsResponse>(json);
             }
             catch (NotFoundException)
             {
@@ -412,14 +420,14 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
 #pragma warning restore CS8618
 
-        private sealed class RepoActionPermissionsResponse
+        private sealed class ActionPermissionsResponse
         {
             public bool enabled { get; set; }
             public string? allowed_actions { get; set; }
             public string? selected_actions_url { get; set; }
         }
 
-        private sealed class RepoActionPermissionsSelectedActionsResponse
+        private sealed class ActionPermissionsSelectedActionsResponse
         {
             public bool github_owned_allowed { get; set; }
             public bool verified_allowed { get; set; }

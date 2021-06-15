@@ -26,7 +26,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public CachedFile? Contributing { get; set; }
         public CachedFile? CodeOfConduct { get; set; }
         public CachedFile? License { get; set; }
-        public CachedRepoActionPermissions ActionPermissions { get; set; }
+        public CachedActionPermissions ActionPermissions { get; set; }
         public IReadOnlyList<CachedFile> Workflows { get; set; }
 
         [JsonIgnore]

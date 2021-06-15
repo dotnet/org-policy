@@ -41,7 +41,8 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             var cachedOrg = new CachedOrg
             {
                 Version = CachedOrg.CurrentVersion,
-                Name = orgName
+                Name = orgName,
+                ActionPermissions = await Client.GetActionPermissionsAsync(orgName)
             };
 
             Log.WriteLine($"Loading secrets...");
@@ -315,7 +316,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             foreach (var repo in repos)
             {
                 await Client.WaitForEnoughQuotaAsync(Log);
-                repo.ActionPermissions = await Client.GetRepoActionPermissionsAsync(orgName, repo.Name);
+                repo.ActionPermissions = await Client.GetActionPermissionsAsync(orgName, repo.Name);
             }
         }
 

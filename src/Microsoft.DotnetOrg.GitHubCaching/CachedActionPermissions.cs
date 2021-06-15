@@ -3,7 +3,7 @@ using System;
 
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
-    public sealed class CachedRepoActionPermissions
+    public sealed class CachedActionPermissions
     {
         public bool Enabled { get; set; }
         public CachedRepoAllowedActions AllowedActions { get; set; }

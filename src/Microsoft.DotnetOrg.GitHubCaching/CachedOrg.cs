@@ -14,10 +14,11 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 #pragma warning disable CS8618 // This is a serialized type.
     public sealed class CachedOrg
     {
-        public static int CurrentVersion => 13;
+        public static int CurrentVersion => 14;
 
         public int Version { get; set; }
         public string Name { get; set; }
+        public CachedActionPermissions ActionPermissions { get; set; }
         public List<CachedOrgSecret> Secrets { get; set; } = new List<CachedOrgSecret>();
         public List<CachedTeam> Teams { get; set; } = new List<CachedTeam>();
         public List<CachedRepo> Repos { get; set; } = new List<CachedRepo>();
