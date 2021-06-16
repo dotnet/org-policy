@@ -42,7 +42,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 var org = await orgTask;
                 if (org is null)
                 {
-                    Console.Error.WriteLine($"warning: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
+                    Console.Error.WriteLine($"error: org '{_orgName}' not cached yet. Run cache-build or cache-org first.");
                     return;
                 }
             }
@@ -58,14 +58,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     {
                         foreach (var workflow in repo.Workflows)
                         {
-                            //writer.Write(org.Name);
-                            //writer.Write(repo.Name);
-                            //writer.Write(workflow.Name);
-                            //writer.Write("");
-                            //writer.Write("");
-                            //writer.Write("");
-                            //writer.WriteLine();
-
                             foreach (var (actionOrg, actionRepo, actionVersion) in ParseActions(workflow.Contents))
                             {
                                 writer.Write(org.Name);
