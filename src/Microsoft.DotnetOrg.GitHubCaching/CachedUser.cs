@@ -20,7 +20,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         public CachedOrg Org { get; set; }
 
         [JsonIgnore]
-        public string Url => CachedOrg.GetUserUrl(Login, Org.Name);
+        public string Url => CachedOrg.GetUserUrl(Login);
 
         [JsonIgnore]
         public bool IsExternal => !IsMember;

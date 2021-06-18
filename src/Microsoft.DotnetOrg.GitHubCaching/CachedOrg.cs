@@ -205,9 +205,9 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             return $"https://github.com/orgs/{orgName}/teams/{teamSlug}";
         }
 
-        public static string GetUserUrl(string login, string orgName)
+        public static string GetUserUrl(string login)
         {
-            return $"https://github.com/orgs/{orgName}/people/{login}";
+            return $"https://github.com/{login}";
         }
 
         public static Task<CachedOrg?> LoadAsync(Octokit.GitHubClient client,
