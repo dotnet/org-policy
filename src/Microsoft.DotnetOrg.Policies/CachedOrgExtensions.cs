@@ -164,6 +164,7 @@ namespace Microsoft.DotnetOrg.Policies
                 "opbld49",
                 "openpublishbuild",
                 "VSC-Service-Account",
+                "vsfeedback",
             };
 
             return knownServiceAccounts.Any(a => string.Equals(user.Login, a, StringComparison.OrdinalIgnoreCase));
