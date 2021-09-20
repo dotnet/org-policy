@@ -143,11 +143,27 @@ namespace Microsoft.DotnetOrg.Policies
 
             var knownServiceAccounts = new[]
             {
+                "acrolinxatmsft1",
+                "acrolinx-at-msft2",
+                "acrolinx-at-msft3",
+                "acrolinx-at-msft4",
                 "cxwtool",
-                "VSC-Service-Account",
-                "msftdata",
-                "dnfgituser",
                 "dnfadmin",
+                "dnfgituser",
+                "msftdata",
+                "olprod1",
+                "olprod11",
+                "olprod12",
+                "olprod13",
+                "olprod15",
+                "olprod16",
+                "olprod2",
+                "olprod3",
+                "olprod4",
+                "olprod5",
+                "opbld49",
+                "openpublishbuild",
+                "VSC-Service-Account",
             };
 
             return knownServiceAccounts.Any(a => string.Equals(user.Login, a, StringComparison.OrdinalIgnoreCase));
