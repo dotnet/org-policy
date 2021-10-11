@@ -26,6 +26,7 @@ Rule            | Severity | Title
 [PR22](PR22.md) | Error    | Microsoft-owned repo should disable GitHub Actions when it's not used
 [PR23](PR23.md) | Error    | Microsoft-owned repos should restrict GitHub Actions
 [PR24](PR24.md) | Warning  | Microsoft-owned repos should not give read access to external contributors
+[PR25](PR25.md) | Error    | Microsoft-owned private repos should not grant access via any non-Microsoft owned teams
 
 ## Process
 

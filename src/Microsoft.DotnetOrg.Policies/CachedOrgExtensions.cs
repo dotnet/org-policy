@@ -99,7 +99,19 @@ namespace Microsoft.DotnetOrg.Policies
                 return true;
 
             var microsoftTeam = team.Org.GetMicrosoftTeam();
-            return team.AncestorsAndSelf().Any(t => t == microsoftTeam);
+            if (microsoftTeam != null && team.AncestorsAndSelf().Any(t => t == microsoftTeam))
+                return true;
+            
+            var microsoftBotsTeam = team.Org.GetMicrosoftBotsTeam();
+            if (microsoftBotsTeam != null && team.AncestorsAndSelf().Any(t => t == microsoftBotsTeam))
+                return true;
+
+            return false;
+        }
+
+        public static bool IsInfrastructure(this CachedTeam team)
+        {
+            return string.Equals(team.Name, "dnfclas-write", StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool IsClaimingToBeWorkingForMicrosoft(this CachedUser user)
