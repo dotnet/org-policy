@@ -306,7 +306,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 State = ItemStateFilter.All
             };
             issueRequest.Labels.Add(AreaViolationLabel);
-            var existingIssues = await client.Issue.GetAllForRepository(policyRepo.Owner, policyRepo.Name, issueRequest);
+            var existingIssues = await client.InvokeAsync(c => c.Issue.GetAllForRepository(policyRepo.Owner, policyRepo.Name, issueRequest));
             return existingIssues.Select(PolicyIssue.Create)
                                  .Where(pi => pi is not null)
                                  .Select(pi => pi!)

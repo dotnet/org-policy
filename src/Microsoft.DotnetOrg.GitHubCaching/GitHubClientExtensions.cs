@@ -12,6 +12,36 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 {
     public static class GitHubClientExtensions
     {
+        public static async Task InvokeAsync<T>(this GitHubClient client, Func<GitHubClient, Task> operation)
+        {
+            await client.InvokeAsync<object?>(async c => {
+                await operation(c);
+                return null;
+            });
+        }
+
+        public static async Task<T> InvokeAsync<T>(this GitHubClient client, Func<GitHubClient, Task<T>> operation)
+        {
+            var remainingRetries = 3;
+
+            while (true)
+            {
+                try
+                {
+                    return await operation(client);
+                }
+                catch (RateLimitExceededException ex) when (remainingRetries > 0)
+                {
+                    var delay = ex.GetRetryAfterTimeSpan()
+                                  .Add(TimeSpan.FromSeconds(15)); // Add some buffer
+                    var until = DateTime.Now.Add(delay);
+
+                    Console.WriteLine($"Rate limit exceeded. Waiting for {delay.TotalMinutes:N1} mins until {until}.");
+                    await Task.Delay(delay);
+                }
+            }
+        }
+
         public static async Task PrintProgressAsync(this GitHubClient client, TextWriter logWriter, string task, string itemName, int itemIndex, int itemCount)
         {
             var percentage = (itemIndex + 1) / (float)itemCount;
