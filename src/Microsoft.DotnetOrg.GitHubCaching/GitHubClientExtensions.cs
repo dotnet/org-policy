@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -39,58 +38,24 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                     Console.WriteLine($"Rate limit exceeded. Waiting for {delay.TotalMinutes:N1} mins until {until}.");
                     await Task.Delay(delay);
                 }
-            }
-        }
-
-        public static async Task PrintProgressAsync(this GitHubClient client, TextWriter logWriter, string task, string itemName, int itemIndex, int itemCount)
-        {
-            var percentage = (itemIndex + 1) / (float)itemCount;
-            var text = $"{task}: {itemName} {percentage:P1}";
-            await client.PrintProgressAsync(logWriter, text);
-        }
-
-        public static async Task PrintProgressAsync(this GitHubClient client, TextWriter logWriter, string text)
-        {
-            await client.WaitForEnoughQuotaAsync(logWriter);
-
-            var rateLimit = client.GetLastApiInfo()?.RateLimit;
-            var rateLimitText = rateLimit is null
-                                    ? null
-                                    : $" (Remaining API quota: {rateLimit.Remaining})";
-            logWriter.WriteLine($"{text}...{rateLimitText}");
-        }
-
-        public static Task WaitForEnoughQuotaAsync(this GitHubClient client, TextWriter logWriter)
-        {
-            var rateLimit = client.GetLastApiInfo()?.RateLimit;
-
-            if (rateLimit is not null && rateLimit.Remaining <= 50)
-            {
-                var padding = TimeSpan.FromMinutes(2);
-                var waitTime = (rateLimit.Reset - DateTimeOffset.Now).Add(padding);
-                if (waitTime > TimeSpan.Zero)
+                catch (AbuseException ex) when (remainingRetries > 0)
                 {
-                    logWriter.WriteLine($"API rate limit exceeded. Waiting {waitTime.TotalMinutes:N0} minutes until it resets ({rateLimit.Reset.ToLocalTime():M/d/yyyy h:mm tt}).");
-                    return Task.Delay(waitTime);
+                    var delay = TimeSpan.FromSeconds(ex.RetryAfterSeconds ?? 120);
+                    var until = DateTime.Now.Add(delay);
+
+                    Console.WriteLine($"Abuse detection triggered. Waiting for {delay.TotalMinutes:N1} mins until {until}.");
+                    await Task.Delay(delay);
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         public static async Task<GitHubCommunityProfile?> GetCommunityProfile(this GitHubClient client, string owner, string repo)
         {
-        retry:
             try
             {
                 var uri = new Uri(client.Connection.BaseAddress, $"/repos/{owner}/{repo}/community/profile");
-                var response = await client.Connection.Get<GitHubCommunityProfile>(uri, null, "application/vnd.github.scarlet-witch-preview+json");
+                var response = await client.InvokeAsync(c => c.Connection.Get<GitHubCommunityProfile>(uri, null, "application/vnd.github.scarlet-witch-preview+json"));
                 return response.Body;
-            }
-            catch (AbuseException ex)
-            {
-                await ex.HandleAsync();
-                goto retry;
             }
             catch (NotFoundException)
             {
@@ -103,31 +68,16 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             if (string.IsNullOrEmpty(file?.RawUrl))
                 return null;
 
-        retry:
             try
             {
                 var uri = new Uri(file.RawUrl);
-                var response = await client.Connection.Get<string>(uri, null, null);
+                var response = await client.InvokeAsync(c => c.Connection.Get<string>(uri, null, null));
                 return response.Body;
-            }
-            catch (AbuseException ex)
-            {
-                await ex.HandleAsync();
-                goto retry;
             }
             catch (NotFoundException)
             {
                 return null;
             }
-        }
-
-        public static async Task HandleAsync(this AbuseException exception)
-        {
-            var retrySeconds = exception.RetryAfterSeconds ?? 120;
-            Console.WriteLine($"Abuse detection triggered. Waiting for {retrySeconds} seconds before retrying.");
-
-            var delay = TimeSpan.FromSeconds(retrySeconds);
-            await Task.Delay(delay);
         }
 
         public static async Task<IReadOnlyList<CachedOrgSecret>> GetOrgSecrets(this GitHubClient client, string orgName)
@@ -393,7 +343,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
 #pragma warning disable CS8618 // Serialized type
 
-        private class OrgSecretsResponse
+        private sealed class OrgSecretsResponse
         {
             public int total_count { get; set; }
             public OrgSecret[] secrets { get; set; }
@@ -407,7 +357,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             public string visibility { get; set; }
         }
 
-        private class RepoSecretsResponse
+        private sealed class RepoSecretsResponse
         {
             public int total_count { get; set; }
             public RepoSecret[] secrets { get; set; }
@@ -420,13 +370,13 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             public DateTimeOffset updated_at { get; set; }
         }
 
-        private class RepoListResponse
+        private sealed class RepoListResponse
         {
             public int total_count { get; set; }
             public RepoListItem[] repositories { get; set; }
         }
 
-        private class RepoListItem
+        private sealed class RepoListItem
         {
             public string name { get; set; }
         }

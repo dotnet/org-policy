@@ -300,7 +300,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private static async Task<IReadOnlyList<PolicyIssue>> GetIssuesAsync(GitHubClient client, RepoName policyRepo)
         {
-            await client.PrintProgressAsync(Console.Out, "Loading issue list");
+            Console.WriteLine("Loading issue list");
             var issueRequest = new RepositoryIssueRequest
             {
                 State = ItemStateFilter.All
@@ -324,8 +324,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
         private static async Task CreateLabelsAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<PolicyViolation> violations)
         {
-            await client.PrintProgressAsync(Console.Out, "Loading label list");
-            var existingLabels = await client.Issue.Labels.GetAllForRepository(policyRepo.Owner, policyRepo.Name);
+            Console.WriteLine("Loading label list");
+            var existingLabels = await client.InvokeAsync(c => c.Issue.Labels.GetAllForRepository(policyRepo.Owner, policyRepo.Name));
 
             var existingLabelNames = existingLabels.ToDictionary(l => l.Name);
             var desiredLabelNames = violations.Select(v => v.Descriptor.DiagnosticId).Distinct().Concat(new[] { AreaViolationLabel, PolicyOverrideLabel }).ToArray();
@@ -333,11 +333,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
 
             var descriptors = violations.Select(v => v.Descriptor).Distinct().ToDictionary(d => d.DiagnosticId);
 
-            var i = 0;
-
             foreach (var missingLabelName in missingLabelNames)
             {
-                await client.PrintProgressAsync(Console.Out, "Create label", missingLabelName, i++, missingLabelNames.Count);
+                Console.WriteLine($"Creating label '{missingLabelName}'...");
 
                 string color;
                 string description;
@@ -365,7 +363,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 {
                     Description = description
                 };
-                await client.Issue.Labels.Create(policyRepo.Owner, policyRepo.Name, newLabel);
+                await client.InvokeAsync(c => c.Issue.Labels.Create(policyRepo.Owner, policyRepo.Name, newLabel));
             }
         }
 
@@ -377,11 +375,9 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                 await GrantReadAccessAsync(client, policyRepo, allAssigness);
             }
 
-            var i = 0;
-
             foreach (var violation in violations)
             {
-                await client.PrintProgressAsync(Console.Out, "Filing issue", violation.Title, i++, violations.Count);
+                Console.WriteLine($"Filing issue '{violation.Title}'...");
 
                 var title = $"{violation.Title} ({violation.Fingerprint})";
                 var body = violation.Body;
@@ -402,70 +398,57 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                         newIssue.Assignees.Add(assignee.Login);
                 }
 
-            retry:
-                try
-                {
-                    await client.Issue.Create(policyRepo.Owner, policyRepo.Name, newIssue);
-                }
-                catch (AbuseException ex)
-                {
-                    await ex.HandleAsync();
-                    goto retry;
-                }
+                await client.InvokeAsync(c => c.Issue.Create(policyRepo.Owner, policyRepo.Name, newIssue));
             }
         }
 
         private static async Task GrantReadAccessAsync(GitHubClient client, RepoName policyRepo, IReadOnlyCollection<CachedUser> users)
         {
-            await client.PrintProgressAsync(Console.Out, $"Get collaborators for {policyRepo}...");
-            var collaborators = await client.Repository.Collaborator.GetAll(policyRepo.Owner, policyRepo.Name);
+            Console.WriteLine($"Get collaborators for {policyRepo}...");
+
+            var collaborators = await client.InvokeAsync(c => c.Repository.Collaborator.GetAll(policyRepo.Owner, policyRepo.Name));
             var collaboratorSet = collaborators.Select(c => c.Login).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var missingUsers = users.Where(u => !collaboratorSet.Contains(u.Login)).ToArray();
 
-            var i = 0;
-
             foreach (var user in missingUsers)
             {
-                await client.PrintProgressAsync(Console.Out, "Granting pull", user.Login, i++, missingUsers.Length);
+                Console.WriteLine($"Granting pull to '{user.Login}'...");
                 var request = new CollaboratorRequest(Permission.Pull);
-                await client.Repository.Collaborator.Add(policyRepo.Owner, policyRepo.Name, user.Login, request);
+                await client.InvokeAsync(c => c.Repository.Collaborator.Add(policyRepo.Owner, policyRepo.Name, user.Login, request));
             }
         }
 
         private static async Task ReopenIssuesAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<(PolicyViolation, PolicyIssue)> violations)
         {
-            var i = 0;
-
             foreach (var reopenedViolation in violations)
             {
                 var issue = reopenedViolation.Item2.Issue;
 
-                await client.PrintProgressAsync(Console.Out, "Reopening issue", issue.Title, i++, violations.Count);
+                Console.WriteLine($"Reopening issue '{issue.Title}'...");
 
-                await client.Issue.Comment.Create(policyRepo.Owner, policyRepo.Name, issue.Number, "The violation still exists.");
+                await client.InvokeAsync(c => c.Issue.Comment.Create(policyRepo.Owner, policyRepo.Name, issue.Number, "The violation still exists."));
 
                 var issueUpdate = new IssueUpdate
                 {
                     State = ItemState.Open
                 };
-                await client.Issue.Update(policyRepo.Owner, policyRepo.Name, issue.Number, issueUpdate);
+
+                await client.InvokeAsync(c => c.Issue.Update(policyRepo.Owner, policyRepo.Name, issue.Number, issueUpdate));
             }
         }
 
         private static async Task UpdateIssuesAsync(GitHubClient client, RepoName policyRepo, ViolationReport report)
         {
             var updatedIssues = report.ExistingViolations.Concat(report.ReopenedViolations)
-                                                          .Where(t => t.Item1.Body != t.Item2.Issue.Body)
-                                                          .ToArray();
-
-            var i = 0;
+                                                         .Where(t => t.Item1.Body != t.Item2.Issue.Body)
+                                                         .ToArray();
 
             foreach (var violation in updatedIssues)
             {
                 var newBody = violation.Item1.Body;
                 var issue = violation.Item2.Issue;
 
-                await client.PrintProgressAsync(Console.Out, "Updating issue body", issue.Title, i++, updatedIssues.Length);
+                Console.WriteLine($"Updating issue body '{issue.Title}'...");
 
                 // Don't update titles or people will get annoyed because it breaks Outlook threading.
 
@@ -474,27 +457,26 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                     Body = newBody
                 };
 
-                await client.Issue.Update(policyRepo.Owner, policyRepo.Name, issue.Number, issueUpdate);
+                await client.InvokeAsync(c => c.Issue.Update(policyRepo.Owner, policyRepo.Name, issue.Number, issueUpdate));
             }
         }
 
         private static async Task CloseIssuesAsync(GitHubClient client, RepoName policyRepo, IReadOnlyList<PolicyIssue> issues)
         {
-            var i = 0;
-
             foreach (var issue in issues)
             {
                 var gitHubIssue = issue.Issue;
 
-                await client.PrintProgressAsync(Console.Out, "Closing issue", gitHubIssue.Title, i++, issues.Count);
+                Console.WriteLine($"Closing issue '{gitHubIssue.Title}'...");
 
-                await client.Issue.Comment.Create(policyRepo.Owner, policyRepo.Name, gitHubIssue.Number, "The violation was addressed.");
+                await client.InvokeAsync(c => c.Issue.Comment.Create(policyRepo.Owner, policyRepo.Name, gitHubIssue.Number, "The violation was addressed."));
 
                 var issueUpdate = new IssueUpdate
                 {
                     State = ItemState.Closed
                 };
-                await client.Issue.Update(policyRepo.Owner, policyRepo.Name, gitHubIssue.Number, issueUpdate);
+
+                await client.InvokeAsync(c => c.Issue.Update(policyRepo.Owner, policyRepo.Name, gitHubIssue.Number, issueUpdate));
             }
         }
 

@@ -42,7 +42,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
             {
                 Version = CachedOrg.CurrentVersion,
                 Name = orgName,
-                ActionPermissions = await Client.GetActionPermissionsAsync(orgName)
+                ActionPermissions = await Client.InvokeAsync(c => c.GetActionPermissionsAsync(orgName))
             };
 
             Log.WriteLine($"Loading secrets...");
@@ -133,12 +133,11 @@ namespace Microsoft.DotnetOrg.GitHubCaching
 
         private async Task<IReadOnlyCollection<CachedOrgSecret>> GetOrgSecretsAsync(string orgName)
         {
-            var orgSecrets = await Client.GetOrgSecrets(orgName);
+            var orgSecrets = await Client.InvokeAsync(c => c.GetOrgSecrets(orgName));
 
             foreach (var secret in orgSecrets)
             {
-                await Client.WaitForEnoughQuotaAsync(Log);
-                secret.RepositoryNames = await Client.GetOrgSecretRepositories(orgName, secret.Name);
+                secret.RepositoryNames = await Client.InvokeAsync(c => c.GetOrgSecretRepositories(orgName, secret.Name));
             }
 
             return orgSecrets;
@@ -264,13 +263,11 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         {
             foreach (var repo in repos)
             {
-                await Client.WaitForEnoughQuotaAsync(Log);
-                repo.Environments = await Client.GetRepoEnvironments(orgName, repo.Name);
+                repo.Environments = await Client.InvokeAsync(c => c.GetRepoEnvironments(orgName, repo.Name));
 
                 foreach (var environment in repo.Environments)
                 {
-                    await Client.WaitForEnoughQuotaAsync(Log);
-                    environment.Secrets = await Client.GetRepoEnvironmentSecrets(repo.Id, environment.Name);
+                    environment.Secrets = await Client.InvokeAsync(c => c.GetRepoEnvironmentSecrets(repo.Id, environment.Name));
                 }
             }
         }
@@ -279,8 +276,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         {
             foreach (var repo in repos)
             {
-                await Client.WaitForEnoughQuotaAsync(Log);
-                var secrets = await Client.GetRepoSecrets(orgName, repo.Name);
+                var secrets = await Client.InvokeAsync(c => c.GetRepoSecrets(orgName, repo.Name));
                 repo.Secrets = secrets;
             }
         }
@@ -289,7 +285,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         {
             foreach (var repo in repos)
             {
-                var profile = await Client.GetCommunityProfile(orgName, repo.Name);
+                var profile = await Client.InvokeAsync(c => c.GetCommunityProfile(orgName, repo.Name));
                 repo.ReadMe = await CreateFileAsync(Client, profile?.Files?.Readme);
                 repo.Contributing = await CreateFileAsync(Client, profile?.Files?.Contributing);
                 repo.CodeOfConduct = await CreateFileAsync(Client, profile?.Files?.CodeOfConductFile);
@@ -301,7 +297,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 if (file is null)
                     return null;
 
-                var contents = await client.GetCommunityFile(file);
+                var contents = await client.InvokeAsync(c => c.GetCommunityFile(file));
                 return new CachedFile
                 {
                     Name = file.FileName,
@@ -315,8 +311,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         {
             foreach (var repo in repos)
             {
-                await Client.WaitForEnoughQuotaAsync(Log);
-                repo.ActionPermissions = await Client.GetActionPermissionsAsync(orgName, repo.Name);
+                repo.ActionPermissions = await Client.InvokeAsync(c => c.GetActionPermissionsAsync(orgName, repo.Name));
             }
         }
 
@@ -324,8 +319,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching
         {
             foreach (var repo in repos)
             {
-                await Client.WaitForEnoughQuotaAsync(Log);
-                repo.Workflows = await Client.GetRepoWorkflowsAsync(orgName, repo.Name);
+                repo.Workflows = await Client.InvokeAsync(c => c.GetRepoWorkflowsAsync(orgName, repo.Name));
             }
         }
 
@@ -668,11 +662,6 @@ namespace Microsoft.DotnetOrg.GitHubCaching
                 var delay = TimeSpan.FromMinutes(65);
                 Log.WriteLine($"error: API quota exceeded. Waiting for {delay}...");
                 await Task.Delay(delay);
-                goto TryAgain;
-            }
-            catch (Octokit.AbuseException ex)
-            {
-                await ex.HandleAsync();
                 goto TryAgain;
             }
             catch (Exception ex) when (attempt < ErrorRetryCount)
