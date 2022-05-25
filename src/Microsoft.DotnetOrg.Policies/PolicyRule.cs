@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Microsoft.DotnetOrg.Policies
+﻿namespace Microsoft.DotnetOrg.Policies
 {
     public abstract class PolicyRule
     {

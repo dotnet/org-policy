@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-using Mono.Options;
+﻿using Mono.Options;
 
 namespace Microsoft.DotnetOrg.PolicyCop
 {

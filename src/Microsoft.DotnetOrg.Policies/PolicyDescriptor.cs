@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.DotnetOrg.Policies
+﻿namespace Microsoft.DotnetOrg.Policies
 {
     public sealed class PolicyDescriptor
     {

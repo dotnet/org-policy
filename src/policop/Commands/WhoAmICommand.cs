@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-using Microsoft.DotnetOrg.GitHubCaching;
+﻿using Microsoft.DotnetOrg.GitHubCaching;
 
 using Mono.Options;
 

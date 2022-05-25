@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.DotnetOrg.GitHubCaching
+﻿namespace Microsoft.DotnetOrg.GitHubCaching
 {
     public readonly struct CachedAccessReason
     {

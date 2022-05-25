@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.DotnetOrg.Policies.Rules
+﻿namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR18_ReposShouldNotUseDeprecatedBranchNames : PolicyRule
     {

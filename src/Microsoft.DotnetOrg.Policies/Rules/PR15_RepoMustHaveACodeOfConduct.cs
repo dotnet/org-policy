@@ -1,9 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-using Microsoft.DotnetOrg.GitHubCaching;
-
-namespace Microsoft.DotnetOrg.Policies.Rules
+﻿namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR15_RepoMustHaveACodeOfConduct : PolicyRule
     {

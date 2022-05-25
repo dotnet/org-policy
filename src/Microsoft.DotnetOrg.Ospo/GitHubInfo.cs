@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Microsoft.DotnetOrg.Ospo
+﻿namespace Microsoft.DotnetOrg.Ospo
 {
 #pragma warning disable CS8618 // This is a serialized type.
     public sealed class GitHubInfo

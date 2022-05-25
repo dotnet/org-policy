@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.DotnetOrg.PolicyCop.Reporting
+﻿namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {
     internal sealed class RowReportColumn : ReportColumn
     {

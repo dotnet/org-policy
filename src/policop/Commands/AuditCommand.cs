@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-using Microsoft.Csv;
+﻿using Microsoft.Csv;
 
 using Mono.Options;
 

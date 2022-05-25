@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-using Microsoft.Csv;
+﻿using Microsoft.Csv;
 using Microsoft.DotnetOrg.PolicyCop.Reporting;
 
 using Mono.Options;

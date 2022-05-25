@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Mono.Options;
+﻿using Mono.Options;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {

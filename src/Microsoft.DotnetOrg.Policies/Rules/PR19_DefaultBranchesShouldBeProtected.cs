@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Microsoft.DotnetOrg.Policies.Rules
+﻿namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR19_DefaultBranchesShouldBeProtected : PolicyRule
     {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-
-namespace Microsoft.Csv
+﻿namespace Microsoft.Csv
 {
     public class CsvTextReader : CsvReader
     {

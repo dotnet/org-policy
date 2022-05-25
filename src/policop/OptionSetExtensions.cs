@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-
-using Mono.Options;
+﻿using Mono.Options;
 
 namespace Microsoft.DotnetOrg.PolicyCop
 {

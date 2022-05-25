@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Microsoft.Csv
+﻿namespace Microsoft.Csv
 {
     public abstract class CsvWriter : IDisposable
     {

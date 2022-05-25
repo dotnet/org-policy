@@ -1,6 +1,4 @@
-﻿using System;
-
-using Microsoft.Csv;
+﻿using Microsoft.Csv;
 
 namespace Microsoft.DotnetOrg.PolicyCop
 {

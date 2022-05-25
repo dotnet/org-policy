@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Humanizer;
+﻿using Humanizer;
 using Microsoft.DotnetOrg.DevOps;
 
 using Mono.Options;

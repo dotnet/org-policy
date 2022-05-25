@@ -1,6 +1,4 @@
-﻿using System;
-
-using Microsoft.DotnetOrg.GitHubCaching;
+﻿using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {

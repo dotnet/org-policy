@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.DotnetOrg.DevOps
+﻿namespace Microsoft.DotnetOrg.DevOps
 {
 #pragma warning disable CS8618 // This is a serialized type.
     public sealed class DevOpsBuild

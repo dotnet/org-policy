@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using Microsoft.DotnetOrg.GitHubCaching;
+﻿using Microsoft.DotnetOrg.GitHubCaching;
 
 namespace Microsoft.DotnetOrg.Policies.Rules
 {

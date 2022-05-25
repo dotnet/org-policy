@@ -1,7 +1,5 @@
 ﻿using Microsoft.DotnetOrg.GitHubCaching;
 
-using System.Linq;
-
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR23_MicrosoftOwnedReposShouldRestrictGitHubActions : PolicyRule

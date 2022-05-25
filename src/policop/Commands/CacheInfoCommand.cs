@@ -1,8 +1,4 @@
-﻿using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Humanizer.Bytes;
+﻿using Humanizer.Bytes;
 using Microsoft.Csv;
 
 using Mono.Options;

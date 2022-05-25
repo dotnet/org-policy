@@ -2,10 +2,6 @@
 
 using Mono.Options;
 
-using System;
-using System.Text.Json;
-using System.Threading.Tasks;
-
 namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {
     internal sealed class SetActionPermissionsCommand : ToolCommand

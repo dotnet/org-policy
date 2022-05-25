@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Microsoft.DotnetOrg.Policies
 {
     internal static class CodeOfConduct

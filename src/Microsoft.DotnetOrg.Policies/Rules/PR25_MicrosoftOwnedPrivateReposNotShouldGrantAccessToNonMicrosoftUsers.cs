@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace Microsoft.DotnetOrg.Policies.Rules
 {
     internal sealed class PR25_MicrosoftOwnedPrivateReposNotShouldGrantAccessViaNonMicrosoftTeams : PolicyRule

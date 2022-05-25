@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Microsoft.Csv;
+﻿using Microsoft.Csv;
 using Microsoft.DotnetOrg.Ospo;
 
 using Mono.Options;

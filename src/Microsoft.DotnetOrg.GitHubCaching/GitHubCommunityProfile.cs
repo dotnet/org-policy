@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace Microsoft.DotnetOrg.GitHubCaching
+﻿namespace Microsoft.DotnetOrg.GitHubCaching
 {
 #pragma warning disable CS8618 // This is a serialized type.
     public sealed class GitHubCommunityProfile

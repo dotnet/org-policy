@@ -1,6 +1,4 @@
 ﻿
-using System;
-
 namespace Microsoft.DotnetOrg.GitHubCaching
 {
     public sealed class CachedActionPermissions

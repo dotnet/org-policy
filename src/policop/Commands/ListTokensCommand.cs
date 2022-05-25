@@ -1,9 +1,5 @@
 ﻿using Mono.Options;
-
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Commands
 {

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
-namespace Microsoft.Csv
+﻿namespace Microsoft.Csv
 {
     public static class CsvFile
     {

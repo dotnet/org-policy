@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Microsoft.Csv
+﻿namespace Microsoft.Csv
 {
     internal sealed class CsvDocumentReader : CsvReader
     {

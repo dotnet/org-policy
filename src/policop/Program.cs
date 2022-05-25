@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Microsoft.DotnetOrg.GitHubCaching;
-
-using Mono.Options;
+﻿using Mono.Options;
 
 namespace Microsoft.DotnetOrg.PolicyCop
 {

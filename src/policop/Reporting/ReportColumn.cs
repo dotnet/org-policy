@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using Microsoft.DotnetOrg.Policies;
+﻿using Microsoft.DotnetOrg.Policies;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Reporting
 {

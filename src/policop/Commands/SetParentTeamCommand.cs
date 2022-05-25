@@ -1,9 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-
+﻿using System.Diagnostics;
 using Microsoft.DotnetOrg.GitHubCaching;
 
 using Mono.Options;
