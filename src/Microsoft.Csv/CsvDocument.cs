@@ -39,7 +39,7 @@ namespace Microsoft.Csv
             ArgumentNullException.ThrowIfNull(data);
 
             if (!settings.IsValid)
-                throw new ArgumentNullException(nameof(settings));
+                throw new ArgumentException(nameof(settings));
 
             using (var sr = new StringReader(data))
                 return Load(sr, settings);
@@ -55,7 +55,7 @@ namespace Microsoft.Csv
             ArgumentNullException.ThrowIfNull(fileName);
 
             if (!settings.IsValid)
-                throw new ArgumentNullException(nameof(settings));
+                throw new ArgumentException(nameof(settings));
 
             using (var sr = new StreamReader(fileName, settings.Encoding))
                 return Load(sr, settings);
@@ -71,7 +71,7 @@ namespace Microsoft.Csv
             ArgumentNullException.ThrowIfNull(textReader);
 
             if (!settings.IsValid)
-                throw new ArgumentNullException(nameof(settings));
+                throw new ArgumentException(nameof(settings));
 
             using (var reader = new CsvTextReader(textReader, settings))
                 return Load(reader);
@@ -128,7 +128,7 @@ namespace Microsoft.Csv
             ArgumentNullException.ThrowIfNull(fileName);
 
             if (!settings.IsValid)
-                throw new ArgumentNullException(nameof(settings));
+                throw new ArgumentException(nameof(settings));
 
             using (var fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             using (var streamWriter = new StreamWriter(fileStream, settings.Encoding))
@@ -145,7 +145,7 @@ namespace Microsoft.Csv
             ArgumentNullException.ThrowIfNull(textWriter);
 
             if (!settings.IsValid)
-                throw new ArgumentNullException(nameof(settings));
+                throw new ArgumentException(nameof(settings));
 
             using (var csvTextWriter = new CsvTextWriter(textWriter))
                 Save(csvTextWriter);
