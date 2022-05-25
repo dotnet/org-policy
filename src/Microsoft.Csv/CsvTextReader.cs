@@ -8,8 +8,7 @@
         public CsvTextReader(TextReader textReader, CsvSettings settings)
             : base(settings)
         {
-            if (textReader is null)
-                throw new ArgumentNullException(nameof(textReader));
+            ArgumentNullException.ThrowIfNull(textReader);
 
             _reader = new CsvLineReader(textReader, Settings);
             _enumerator = _reader.GetEnumerator();

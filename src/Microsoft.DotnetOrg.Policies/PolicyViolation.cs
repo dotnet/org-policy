@@ -18,8 +18,7 @@ namespace Microsoft.DotnetOrg.Policies
                                CachedUser? user = null,
                                IReadOnlyCollection<CachedUser>? assignees = null)
         {
-            if (descriptor is null)
-                throw new ArgumentNullException(nameof(descriptor));
+            ArgumentNullException.ThrowIfNull(descriptor);
 
             if (string.IsNullOrEmpty(title))
                 throw new ArgumentException($"'{nameof(title)}' cannot be null or empty.", nameof(title));
@@ -27,8 +26,7 @@ namespace Microsoft.DotnetOrg.Policies
             if (string.IsNullOrEmpty(body))
                 throw new ArgumentException($"'{nameof(body)}' cannot be null or empty.", nameof(body));
 
-            if (org is null)
-                throw new ArgumentNullException(nameof(org));
+            ArgumentNullException.ThrowIfNull(org);
 
             Descriptor = descriptor;
             Fingerprint = ComputeFingerprint(descriptor.DiagnosticId, repo, secret, branch, user, team);

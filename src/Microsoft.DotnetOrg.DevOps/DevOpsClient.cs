@@ -12,14 +12,9 @@ namespace Microsoft.DotnetOrg.DevOps
 
         public DevOpsClient(string organization, string project, string token)
         {
-            if (organization is null)
-                throw new ArgumentNullException(nameof(organization));
-
-            if (project is null)
-                throw new ArgumentNullException(nameof(project));
-
-            if (token is null)
-                throw new ArgumentNullException(nameof(token));
+            ArgumentNullException.ThrowIfNull(organization);
+            ArgumentNullException.ThrowIfNull(project);
+            ArgumentNullException.ThrowIfNull(token);
 
             _httpClient = new HttpClient
             {
@@ -66,8 +61,7 @@ namespace Microsoft.DotnetOrg.DevOps
 
         public async Task<DevOpsArtifact?> GetArtifactAsync(int buildId, string artifactName)
         {
-            if (artifactName is null)
-                throw new ArgumentNullException(nameof(artifactName));
+            ArgumentNullException.ThrowIfNull(artifactName);
 
             var uri = $"build/builds/{buildId}/artifacts?artifactName={artifactName}&api-version=5.0";
             var result = await GetAsJsonAsync<DevOpsArtifact>(uri);
@@ -76,11 +70,8 @@ namespace Microsoft.DotnetOrg.DevOps
 
         public async Task<Stream?> GetArtifactFileAsync(int buildId, string artifactName, string fileName)
         {
-            if (artifactName is null)
-                throw new ArgumentNullException(nameof(artifactName));
-
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(artifactName);
+            ArgumentNullException.ThrowIfNull(fileName);
             
             var artifact = await GetArtifactAsync(buildId, artifactName);
             if (artifact is null)

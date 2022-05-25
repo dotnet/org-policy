@@ -19,11 +19,8 @@ namespace Microsoft.Csv
 
         private CsvDocument(IList<string> keys, IList<IDictionary<string, string>> rows)
         {
-            if (keys is null)
-                throw new ArgumentNullException(nameof(keys));
-
-            if (rows is null)
-                throw new ArgumentNullException(nameof(rows));
+            ArgumentNullException.ThrowIfNull(keys);
+            ArgumentNullException.ThrowIfNull(rows);
 
             _keys = keys;
             _rows = rows;
@@ -39,8 +36,7 @@ namespace Microsoft.Csv
 
         public static CsvDocument Parse(string data, CsvSettings settings)
         {
-            if (data is null)
-                throw new ArgumentNullException(nameof(data));
+            ArgumentNullException.ThrowIfNull(data);
 
             if (!settings.IsValid)
                 throw new ArgumentNullException(nameof(settings));
@@ -56,8 +52,7 @@ namespace Microsoft.Csv
 
         public static CsvDocument Load(string fileName, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             if (!settings.IsValid)
                 throw new ArgumentNullException(nameof(settings));
@@ -73,8 +68,7 @@ namespace Microsoft.Csv
 
         public static CsvDocument Load(TextReader textReader, CsvSettings settings)
         {
-            if (textReader is null)
-                throw new ArgumentNullException(nameof(textReader));
+            ArgumentNullException.ThrowIfNull(textReader);
 
             if (!settings.IsValid)
                 throw new ArgumentNullException(nameof(settings));
@@ -85,8 +79,7 @@ namespace Microsoft.Csv
 
         public static CsvDocument Load(CsvReader reader)
         {
-            if (reader is null)
-                throw new ArgumentNullException(nameof(reader));
+            ArgumentNullException.ThrowIfNull(reader);
 
             var rows = new List<IDictionary<string, string>>();
             var headerData = reader.Read();
@@ -132,8 +125,7 @@ namespace Microsoft.Csv
 
         public void Save(string fileName, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             if (!settings.IsValid)
                 throw new ArgumentNullException(nameof(settings));
@@ -150,8 +142,7 @@ namespace Microsoft.Csv
 
         public void Save(TextWriter textWriter, CsvSettings settings)
         {
-            if (textWriter is null)
-                throw new ArgumentNullException(nameof(textWriter));
+            ArgumentNullException.ThrowIfNull(textWriter);
 
             if (!settings.IsValid)
                 throw new ArgumentNullException(nameof(settings));
@@ -162,8 +153,7 @@ namespace Microsoft.Csv
 
         public void Save(CsvWriter writer)
         {
-            if (writer is null)
-                throw new ArgumentNullException(nameof(writer));
+            ArgumentNullException.ThrowIfNull(writer);
 
             var header = Keys;
             var rows = from r in Rows

@@ -4,16 +4,14 @@
     {
         public static CsvTextReader Read(string fileName)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             return Read(fileName, CsvSettings.Default);
         }
 
         public static CsvTextReader Read(string fileName, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             var streamReader = new StreamReader(fileStream, settings.Encoding);
@@ -22,16 +20,14 @@
 
         public static CsvTextWriter Create(string fileName)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             return Create(fileName, CsvSettings.Default);
         }
 
         public static CsvTextWriter Create(string fileName, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             var fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
             var streamWriter = new StreamWriter(fileStream, settings.Encoding);
@@ -40,16 +36,14 @@
 
         public static CsvTextWriter Append(string fileName)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             return Append(fileName, CsvSettings.Default);
         }
 
         public static CsvTextWriter Append(string fileName, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             var fileStream = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.None);
             var streamWriter = new StreamWriter(fileStream, settings.Encoding);
@@ -58,16 +52,14 @@
 
         public static IEnumerable<IEnumerable<string>> ReadLines(string fileName)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             return ReadLines(fileName, CsvSettings.Default);
         }
 
         public static IEnumerable<IEnumerable<string>> ReadLines(string fileName, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
+            ArgumentNullException.ThrowIfNull(fileName);
 
             using (var csvReader = Read(fileName, settings))
             {
@@ -82,36 +74,25 @@
 
         public static void WriteLines(string fileName, IEnumerable<IEnumerable<string>> lines)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            if (lines is null)
-                throw new ArgumentNullException(nameof(lines));
+            ArgumentNullException.ThrowIfNull(fileName);
+            ArgumentNullException.ThrowIfNull(lines);
 
             WriteLines(fileName, lines, CsvSettings.Default);
         }
 
         public static void WriteLines(string fileName, IEnumerable<string> header, IEnumerable<IEnumerable<string>> lines)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            if (header is null)
-                throw new ArgumentNullException(nameof(header));
-
-            if (lines is null)
-                throw new ArgumentNullException(nameof(lines));
+            ArgumentNullException.ThrowIfNull(fileName);
+            ArgumentNullException.ThrowIfNull(header);
+            ArgumentNullException.ThrowIfNull(lines);
 
             WriteLines(fileName, header, lines, CsvSettings.Default);
         }
 
         public static void WriteLines(string fileName, IEnumerable<string> header, IEnumerable<IEnumerable<string>> lines, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            if (header is null)
-                throw new ArgumentNullException(nameof(header));
+            ArgumentNullException.ThrowIfNull(fileName);
+            ArgumentNullException.ThrowIfNull(header);
 
             var headerLine = new[] { header };
             var allLines = headerLine.Concat(lines);
@@ -120,11 +101,8 @@
 
         public static void WriteLines(string fileName, IEnumerable<IEnumerable<string>> lines, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            if (lines is null)
-                throw new ArgumentNullException(nameof(lines));
+            ArgumentNullException.ThrowIfNull(fileName);
+            ArgumentNullException.ThrowIfNull(lines);
 
             using (var csvWriter = Create(fileName, settings))
             {
@@ -135,36 +113,25 @@
 
         public static void AppendLines(string fileName, IEnumerable<IEnumerable<string>> lines)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            if (lines is null)
-                throw new ArgumentNullException(nameof(lines));
+            ArgumentNullException.ThrowIfNull(fileName);
+            ArgumentNullException.ThrowIfNull(lines);
 
             AppendLines(fileName, lines, CsvSettings.Default);
         }
 
         public static void AppendLines(string fileName, IEnumerable<string> header, IEnumerable<IEnumerable<string>> lines)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            if (header is null)
-                throw new ArgumentNullException(nameof(header));
-
-            if (lines is null)
-                throw new ArgumentNullException(nameof(lines));
+            ArgumentNullException.ThrowIfNull(fileName);
+            ArgumentNullException.ThrowIfNull(header);
+            ArgumentNullException.ThrowIfNull(lines);
 
             AppendLines(fileName, header, lines, CsvSettings.Default);
         }
 
         public static void AppendLines(string fileName, IEnumerable<string> header, IEnumerable<IEnumerable<string>> lines, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            if (header is null)
-                throw new ArgumentNullException(nameof(header));
+            ArgumentNullException.ThrowIfNull(fileName);
+            ArgumentNullException.ThrowIfNull(header);
 
             var headerLine = new[] { header };
             var allLines = headerLine.Concat(lines);
@@ -173,11 +140,8 @@
 
         public static void AppendLines(string fileName, IEnumerable<IEnumerable<string>> lines, CsvSettings settings)
         {
-            if (fileName is null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            if (lines is null)
-                throw new ArgumentNullException(nameof(lines));
+            ArgumentNullException.ThrowIfNull(fileName);
+            ArgumentNullException.ThrowIfNull(lines);
 
             using (var csvWriter = Append(fileName, settings))
             {

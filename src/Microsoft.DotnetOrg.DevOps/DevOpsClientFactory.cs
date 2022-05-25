@@ -7,11 +7,8 @@ namespace Microsoft.DotnetOrg.DevOps
     {
         public static async Task<DevOpsClient> CreateAsync(string organization, string project, string? token = null)
         {
-            if (organization is null)
-                throw new ArgumentNullException(nameof(organization));
-
-            if (project is null)
-                throw new ArgumentNullException(nameof(project));
+            ArgumentNullException.ThrowIfNull(organization);
+            ArgumentNullException.ThrowIfNull(project);
 
             if (string.IsNullOrEmpty(token))
                 token = await GetOrCreateTokenAsync(organization, project);

@@ -6,8 +6,7 @@
         public static CachedAccessReason FromCollaborator => new CachedAccessReason(isOwner: false, isCollaborator: true, null);
         public static CachedAccessReason FromTeam(CachedTeam team)
         {
-            if (team is null)
-                throw new ArgumentNullException(nameof(team));
+            ArgumentNullException.ThrowIfNull(team);
 
             return new CachedAccessReason(isOwner: false, isCollaborator: false, team);
         }

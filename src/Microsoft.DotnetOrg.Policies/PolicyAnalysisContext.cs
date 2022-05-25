@@ -9,8 +9,7 @@ namespace Microsoft.DotnetOrg.Policies
 
         public PolicyAnalysisContext(CachedOrg org)
         {
-            if (org is null)
-                throw new ArgumentNullException(nameof(org));
+            ArgumentNullException.ThrowIfNull(org);
 
             Org = org;
         }

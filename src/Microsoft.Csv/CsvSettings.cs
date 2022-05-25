@@ -13,8 +13,7 @@ namespace Microsoft.Csv
         public CsvSettings(Encoding encoding, char delimiter, char textQualifier)
             : this()
         {
-            if (encoding is null)
-                throw new ArgumentNullException(nameof(encoding));
+            ArgumentNullException.ThrowIfNull(encoding);
 
             Encoding = encoding;
             Delimiter = delimiter;

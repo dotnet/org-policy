@@ -11,8 +11,7 @@ namespace Microsoft.DotnetOrg.Ospo
 
         public OspoClient(string token)
         {
-            if (token is null)
-                throw new ArgumentNullException(nameof(token));
+            ArgumentNullException.ThrowIfNull(token);
 
             _httpClient = new HttpClient
             {

@@ -16,8 +16,7 @@ namespace Microsoft.Csv
         public CsvTextWriter(TextWriter textWriter, CsvSettings settings)
             : base(settings)
         {
-            if (textWriter is null)
-                throw new ArgumentNullException(nameof(textWriter));
+            ArgumentNullException.ThrowIfNull(textWriter);
 
             _textWriter = textWriter;
             _textDelimiters = new char[] { settings.Delimiter, settings.TextQualifier, '\r', '\n' };
