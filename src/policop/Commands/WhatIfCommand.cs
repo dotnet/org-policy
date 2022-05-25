@@ -145,7 +145,7 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
                                               !r.WhatIfPermission.Value.IsUnchanged &&
                                               r.User!.IsMicrosoftUser() &&
                                               !string.IsNullOrEmpty(r.User!.GetEmail()))
-                                 .Select(r => (r.User, r.Repo, WhatIfPermission: r.WhatIfPermission!.Value))
+                                 .Select(r => (User: r.User!, Repo: r.Repo!, WhatIfPermission: r.WhatIfPermission!.Value))
                                  .Distinct()
                                  .GroupBy(r => r.User);
 
@@ -162,8 +162,8 @@ namespace Microsoft.DotnetOrg.PolicyCop.Commands
             foreach (var userGroup in userGroups)
             {
                 var user = userGroup.Key;
-                var name = user!.GetName();
-                var email = user!.GetEmail();
+                var name = user.GetName();
+                var email = user.GetEmail();
 
                 var sb = new StringBuilder();
                 sb.AppendLine($"Hello {name},");
