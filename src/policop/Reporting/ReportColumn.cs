@@ -4,8 +4,6 @@ namespace Microsoft.DotnetOrg.PolicyCop.Reporting;
 
 internal abstract class ReportColumn
 {
-    private static Random _random = new Random();
-
     public ReportColumn(string name, string description)
     {
         Name = name;
@@ -120,7 +118,7 @@ internal abstract class ReportColumn
                 }
 
                 // Now assign an random one
-                return admins[_random.Next(0, admins.Length)];
+                return admins[Random.Shared.Next(0, admins.Length)];
             }
         ),
         new RepoReportColumn(
