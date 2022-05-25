@@ -1,36 +1,35 @@
-﻿namespace Microsoft.DotnetOrg.GitHubCaching
+﻿namespace Microsoft.DotnetOrg.GitHubCaching;
+
+public readonly struct CachedAccessReason
 {
-    public readonly struct CachedAccessReason
+    public static CachedAccessReason FromOwner => new CachedAccessReason(isOwner: true, isCollaborator: false, null);
+    public static CachedAccessReason FromCollaborator => new CachedAccessReason(isOwner: false, isCollaborator: true, null);
+    public static CachedAccessReason FromTeam(CachedTeam team)
     {
-        public static CachedAccessReason FromOwner => new CachedAccessReason(isOwner: true, isCollaborator: false, null);
-        public static CachedAccessReason FromCollaborator => new CachedAccessReason(isOwner: false, isCollaborator: true, null);
-        public static CachedAccessReason FromTeam(CachedTeam team)
-        {
-            ArgumentNullException.ThrowIfNull(team);
+        ArgumentNullException.ThrowIfNull(team);
 
-            return new CachedAccessReason(isOwner: false, isCollaborator: false, team);
-        }
+        return new CachedAccessReason(isOwner: false, isCollaborator: false, team);
+    }
 
-        private CachedAccessReason(bool isOwner, bool isCollaborator, CachedTeam? team)
-        {
-            IsOwner = isOwner;
-            IsCollaborator = isCollaborator;
-            Team = team;
-        }
+    private CachedAccessReason(bool isOwner, bool isCollaborator, CachedTeam? team)
+    {
+        IsOwner = isOwner;
+        IsCollaborator = isCollaborator;
+        Team = team;
+    }
 
-        public bool IsOwner { get; }
-        public bool IsCollaborator { get; }
-        public CachedTeam? Team { get; }
+    public bool IsOwner { get; }
+    public bool IsCollaborator { get; }
+    public CachedTeam? Team { get; }
 
-        public override string ToString()
-        {
-            if (IsOwner)
-                return "(Owner)";
+    public override string ToString()
+    {
+        if (IsOwner)
+            return "(Owner)";
 
-            if (IsCollaborator)
-                return "(Collaborator)";
+        if (IsCollaborator)
+            return "(Collaborator)";
 
-            return Team!.GetFullName();
-        }
+        return Team!.GetFullName();
     }
 }

@@ -1,11 +1,10 @@
-﻿namespace Microsoft.DotnetOrg.GitHubCaching
+﻿namespace Microsoft.DotnetOrg.GitHubCaching;
+
+public enum CachedPermission
 {
-    public enum CachedPermission
-    {
-        Read,
-        Triage,
-        Write,
-        Maintain,
-        Admin
-    }
+    Read,
+    Triage,
+    Write,
+    Maintain,
+    Admin
 }

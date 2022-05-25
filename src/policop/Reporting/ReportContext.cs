@@ -2,291 +2,290 @@
 using Microsoft.Csv;
 using Microsoft.DotnetOrg.GitHubCaching;
 
-namespace Microsoft.DotnetOrg.PolicyCop.Reporting
+namespace Microsoft.DotnetOrg.PolicyCop.Reporting;
+
+internal sealed class ReportContext
 {
-    internal sealed class ReportContext
+    private static readonly IReadOnlyList<string> _repoTermColumns = new[] { "r:full-name", "r:name", };
+    private static readonly IReadOnlyList<string> _teamTermColumns = new[] { "t:slug", "t:name", "t:full-slug", "t:full-name", };
+    private static readonly IReadOnlyList<string> _userTermColumns = new[] { "u:login", "u:name", "u:email" };
+
+    public List<string> RepoTerms { get; } = new List<string>();
+    public List<string> TeamTerms { get; } = new List<string>();
+    public List<string> UserTerms { get; } = new List<string>();
+    public List<string> IncludedColumns { get; } = new List<string>();
+    public List<string> ColumnFilters { get; } = new List<string>();
+
+    public Func<CachedRepo, bool> CreateRepoFilter()
     {
-        private static readonly IReadOnlyList<string> _repoTermColumns = new[] { "r:full-name", "r:name", };
-        private static readonly IReadOnlyList<string> _teamTermColumns = new[] { "t:slug", "t:name", "t:full-slug", "t:full-name", };
-        private static readonly IReadOnlyList<string> _userTermColumns = new[] { "u:login", "u:name", "u:email" };
+        return CreateFilter<RepoReportColumn, CachedRepo>(RepoTerms, _repoTermColumns, (rc, r) => rc.GetValue(r));
+    }
 
-        public List<string> RepoTerms { get; } = new List<string>();
-        public List<string> TeamTerms { get; } = new List<string>();
-        public List<string> UserTerms { get; } = new List<string>();
-        public List<string> IncludedColumns { get; } = new List<string>();
-        public List<string> ColumnFilters { get; } = new List<string>();
+    public Func<CachedTeam, bool> CreateTeamFilter()
+    {
+        return CreateFilter<TeamReportColumn, CachedTeam>(TeamTerms, _teamTermColumns, (tc, t) => tc.GetValue(t));
+    }
 
-        public Func<CachedRepo, bool> CreateRepoFilter()
+    public Func<CachedUser, bool> CreateUserFilter()
+    {
+        return CreateFilter<UserReportColumn, CachedUser>(UserTerms, _userTermColumns, (uc, u) => uc.GetValue(u));
+    }
+
+    private Func<TCache, bool> CreateFilter<TColumn, TCache>(IReadOnlyCollection<string> terms,
+        IReadOnlyCollection<string> termColumns,
+        Func<TColumn, TCache, string?> valueSelector)
+        where TColumn : ReportColumn
+    {
+        var termFilters = SelectedTypedColumns<TColumn>(ParseTermFilters(terms, termColumns));
+        var columnFilters = SelectedTypedColumns<TColumn>(ParseColumnFilters(ColumnFilters));
+
+        return r =>
         {
-            return CreateFilter<RepoReportColumn, CachedRepo>(RepoTerms, _repoTermColumns, (rc, r) => rc.GetValue(r));
-        }
-
-        public Func<CachedTeam, bool> CreateTeamFilter()
-        {
-            return CreateFilter<TeamReportColumn, CachedTeam>(TeamTerms, _teamTermColumns, (tc, t) => tc.GetValue(t));
-        }
-
-        public Func<CachedUser, bool> CreateUserFilter()
-        {
-            return CreateFilter<UserReportColumn, CachedUser>(UserTerms, _userTermColumns, (uc, u) => uc.GetValue(u));
-        }
-
-        private Func<TCache, bool> CreateFilter<TColumn, TCache>(IReadOnlyCollection<string> terms,
-                                                                 IReadOnlyCollection<string> termColumns,
-                                                                 Func<TColumn, TCache, string?> valueSelector)
-            where TColumn : ReportColumn
-        {
-            var termFilters = SelectedTypedColumns<TColumn>(ParseTermFilters(terms, termColumns));
-            var columnFilters = SelectedTypedColumns<TColumn>(ParseColumnFilters(ColumnFilters));
-
-            return r =>
+            if (termFilters.Count > 0)
             {
-                if (termFilters.Count > 0)
-                {
-                    var anyTrue = false;
+                var anyTrue = false;
 
-                    foreach (var f in termFilters)
-                    {
-                        var column = f.Key;
-                        var term = f.Value;
-                        var text = valueSelector(column, r) ?? string.Empty;
-                        if (Evaluate(term, text))
-                        {
-                            anyTrue = true;
-                            break;
-                        }
-                    }
-
-                    if (!anyTrue)
-                        return false;
-                }
-
-                foreach (var f in columnFilters)
+                foreach (var f in termFilters)
                 {
                     var column = f.Key;
                     var term = f.Value;
                     var text = valueSelector(column, r) ?? string.Empty;
-                    if (!Evaluate(term, text))
-                        return false;
+                    if (Evaluate(term, text))
+                    {
+                        anyTrue = true;
+                        break;
+                    }
                 }
 
-                return true;
-            };
-        }
-
-        private static IReadOnlyList<KeyValuePair<TColumn, string>> SelectedTypedColumns<TColumn>(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> genericFilters)
-        {
-            var filters = new List<KeyValuePair<TColumn, string>>();
-
-            foreach (var kv in genericFilters)
-            {
-                var column = kv.Key;
-                var expression = kv.Value;
-
-                if (column is TColumn typedColumn)
-                    filters.Add(new KeyValuePair<TColumn, string>(typedColumn, expression));
+                if (!anyTrue)
+                    return false;
             }
 
-            return filters.ToArray();
-        }
-
-        public Func<ReportRow, bool> CreateRowFilter()
-        {
-            var repoTermFilters = CreateTermFilters(RepoTerms, _repoTermColumns);
-            var teamTermFilters = CreateTermFilters(TeamTerms, _teamTermColumns);
-            var userTermFilters = CreateTermFilters(UserTerms, _userTermColumns);
-            var columnFilters = CreateColumnFilters();
-
-            return r => repoTermFilters(r) &&
-                        teamTermFilters(r) &&
-                        userTermFilters(r) &&
-                        columnFilters(r);
-        }
-
-        public IReadOnlyList<ReportColumn> GetColumns(params string[] defaultColumns)
-        {
-            Debug.Assert(defaultColumns is not null && defaultColumns.Length > 0);
-
-            if (IncludedColumns.Count == 0)
-                IncludedColumns.AddRange(defaultColumns);
-
-            var result = new List<ReportColumn>();
-            var hadErrors = false;
-
-            foreach (var name in IncludedColumns)
+            foreach (var f in columnFilters)
             {
-                var column = ReportColumn.Get(name);
-                if (column is not null)
-                {
-                    result.Add(column);
-                }
-                else
-                {
-                    Console.Error.WriteLine($"error: column '{name}' isn't valid");
-                    hadErrors = true;
-                }
+                var column = f.Key;
+                var term = f.Value;
+                var text = valueSelector(column, r) ?? string.Empty;
+                if (!Evaluate(term, text))
+                    return false;
             }
 
-            if (hadErrors)
-                Environment.Exit(1);
+            return true;
+        };
+    }
 
-            return result;
+    private static IReadOnlyList<KeyValuePair<TColumn, string>> SelectedTypedColumns<TColumn>(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> genericFilters)
+    {
+        var filters = new List<KeyValuePair<TColumn, string>>();
+
+        foreach (var kv in genericFilters)
+        {
+            var column = kv.Key;
+            var expression = kv.Value;
+
+            if (column is TColumn typedColumn)
+                filters.Add(new KeyValuePair<TColumn, string>(typedColumn, expression));
         }
 
-        private static Func<ReportRow, bool> CreateTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> names)
+        return filters.ToArray();
+    }
+
+    public Func<ReportRow, bool> CreateRowFilter()
+    {
+        var repoTermFilters = CreateTermFilters(RepoTerms, _repoTermColumns);
+        var teamTermFilters = CreateTermFilters(TeamTerms, _teamTermColumns);
+        var userTermFilters = CreateTermFilters(UserTerms, _userTermColumns);
+        var columnFilters = CreateColumnFilters();
+
+        return r => repoTermFilters(r) &&
+                    teamTermFilters(r) &&
+                    userTermFilters(r) &&
+                    columnFilters(r);
+    }
+
+    public IReadOnlyList<ReportColumn> GetColumns(params string[] defaultColumns)
+    {
+        Debug.Assert(defaultColumns is not null && defaultColumns.Length > 0);
+
+        if (IncludedColumns.Count == 0)
+            IncludedColumns.AddRange(defaultColumns);
+
+        var result = new List<ReportColumn>();
+        var hadErrors = false;
+
+        foreach (var name in IncludedColumns)
         {
-            var termFilters = ParseTermFilters(expressions, names);
-            return CreateDisjunctionFilter(termFilters);
-        }
-
-        private Func<ReportRow, bool> CreateColumnFilters()
-        {
-            var termFilters = ParseColumnFilters(ColumnFilters);
-
-            var hasErrors = termFilters.Any(kv => kv.Key is null);
-            if (hasErrors)
-                Environment.Exit(1);
-
-            return CreateConjunctionFilter(termFilters);
-        }
-
-        private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> names)
-        {
-            var columns = new List<ReportColumn>();
-
-            foreach (var name in names)
+            var column = ReportColumn.Get(name);
+            if (column is not null)
             {
-                var column = ReportColumn.Get(name);
-                Debug.Assert(column is not null, $"Column {name} is invalid");
-                columns.Add(column);
-            }
-
-            var result = new List<KeyValuePair<ReportColumn, string>>();
-
-            foreach (var column in columns)
-            {
-                foreach (var expression in expressions)
-                {
-                    result.Add(new KeyValuePair<ReportColumn, string>(column, expression));
-                }
-            }
-
-            return result;
-        }
-
-        private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseColumnFilters(IReadOnlyCollection<string> expressions)
-        {
-            return expressions.Select(ParseColumnFilter).ToArray();
-        }
-
-        private static KeyValuePair<ReportColumn, string> ParseColumnFilter(string expression)
-        {
-            var indexOfEquals = expression.IndexOf("=");
-
-            string name;
-            string value;
-
-            if (indexOfEquals < 0)
-            {
-                name = expression.Trim();
-                value = "Yes";
+                result.Add(column);
             }
             else
             {
-                name = expression.Substring(0, indexOfEquals).Trim();
-                value = expression.Substring(indexOfEquals + 1).Trim();
-            }
-
-            var column = ReportColumn.Get(name);
-            if (column is null)
                 Console.Error.WriteLine($"error: column '{name}' isn't valid");
-
-            return new KeyValuePair<ReportColumn, string>(column!, value);
+                hadErrors = true;
+            }
         }
 
-        private static Func<ReportRow, bool> CreateConjunctionFilter(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> columnFilters)
-        {
-            if (columnFilters.Count == 0)
-                return _ => true;
+        if (hadErrors)
+            Environment.Exit(1);
 
-            return row =>
+        return result;
+    }
+
+    private static Func<ReportRow, bool> CreateTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> names)
+    {
+        var termFilters = ParseTermFilters(expressions, names);
+        return CreateDisjunctionFilter(termFilters);
+    }
+
+    private Func<ReportRow, bool> CreateColumnFilters()
+    {
+        var termFilters = ParseColumnFilters(ColumnFilters);
+
+        var hasErrors = termFilters.Any(kv => kv.Key is null);
+        if (hasErrors)
+            Environment.Exit(1);
+
+        return CreateConjunctionFilter(termFilters);
+    }
+
+    private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseTermFilters(IReadOnlyCollection<string> expressions, IReadOnlyCollection<string> names)
+    {
+        var columns = new List<ReportColumn>();
+
+        foreach (var name in names)
+        {
+            var column = ReportColumn.Get(name);
+            Debug.Assert(column is not null, $"Column {name} is invalid");
+            columns.Add(column);
+        }
+
+        var result = new List<KeyValuePair<ReportColumn, string>>();
+
+        foreach (var column in columns)
+        {
+            foreach (var expression in expressions)
             {
-                foreach (var columnFilter in columnFilters)
-                {
-                    if (!Evaluate(row, columnFilter))
-                        return false;
-                }
-
-                return true;
-            };
+                result.Add(new KeyValuePair<ReportColumn, string>(column, expression));
+            }
         }
 
-        private static Func<ReportRow, bool> CreateDisjunctionFilter(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> columnFilters)
-        {
-            if (columnFilters.Count == 0)
-                return _ => true;
+        return result;
+    }
 
-            return row =>
+    private static IReadOnlyCollection<KeyValuePair<ReportColumn, string>> ParseColumnFilters(IReadOnlyCollection<string> expressions)
+    {
+        return expressions.Select(ParseColumnFilter).ToArray();
+    }
+
+    private static KeyValuePair<ReportColumn, string> ParseColumnFilter(string expression)
+    {
+        var indexOfEquals = expression.IndexOf("=");
+
+        string name;
+        string value;
+
+        if (indexOfEquals < 0)
+        {
+            name = expression.Trim();
+            value = "Yes";
+        }
+        else
+        {
+            name = expression.Substring(0, indexOfEquals).Trim();
+            value = expression.Substring(indexOfEquals + 1).Trim();
+        }
+
+        var column = ReportColumn.Get(name);
+        if (column is null)
+            Console.Error.WriteLine($"error: column '{name}' isn't valid");
+
+        return new KeyValuePair<ReportColumn, string>(column!, value);
+    }
+
+    private static Func<ReportRow, bool> CreateConjunctionFilter(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> columnFilters)
+    {
+        if (columnFilters.Count == 0)
+            return _ => true;
+
+        return row =>
+        {
+            foreach (var columnFilter in columnFilters)
             {
-                foreach (var columnFilter in columnFilters)
-                {
-                    if (Evaluate(row, columnFilter))
-                        return true;
-                }
-
-                return false;
-            };
-        }
-
-        private static bool Evaluate(ReportRow row, KeyValuePair<ReportColumn, string> columnFilter)
-        {
-            var column = columnFilter.Key;
-            var term = columnFilter.Value;
-            var text = column.GetValue(row) ?? string.Empty;
-            return Evaluate(term, text);
-        }
-
-        private static bool Evaluate(string term, string text)
-        {
-            var wildcardAtStart = term.StartsWith("*");
-            var wildcardAtEnd = term.EndsWith("*");
-            var actualTerm = term.Trim('*');
-
-            if (wildcardAtStart && wildcardAtEnd)
-                return text.IndexOf(actualTerm, StringComparison.OrdinalIgnoreCase) >= 0;
-
-            if (wildcardAtStart)
-                return text.EndsWith(actualTerm, StringComparison.OrdinalIgnoreCase);
-
-            if (wildcardAtEnd)
-                return text.StartsWith(actualTerm, StringComparison.OrdinalIgnoreCase);
-
-            return text.Equals(actualTerm, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public CsvDocument CreateReport(IReadOnlyCollection<ReportRow> rows, IReadOnlyList<ReportColumn> columns)
-        {
-            if (rows.Count == 0 || columns.Count == 0)
-                return new CsvDocument();
-
-            var headers = columns.Select(h => h.Name);
-            var document = new CsvDocument(headers);
-
-            using (var writer = document.Append())
-            {
-                foreach (var row in rows)
-                {
-                    foreach (var column in columns)
-                    {
-                        var value = column.GetValue(row);
-                        writer.Write(value ?? string.Empty);
-                    }
-
-                    writer.WriteLine();
-                }
+                if (!Evaluate(row, columnFilter))
+                    return false;
             }
 
-            return document;
+            return true;
+        };
+    }
+
+    private static Func<ReportRow, bool> CreateDisjunctionFilter(IReadOnlyCollection<KeyValuePair<ReportColumn, string>> columnFilters)
+    {
+        if (columnFilters.Count == 0)
+            return _ => true;
+
+        return row =>
+        {
+            foreach (var columnFilter in columnFilters)
+            {
+                if (Evaluate(row, columnFilter))
+                    return true;
+            }
+
+            return false;
+        };
+    }
+
+    private static bool Evaluate(ReportRow row, KeyValuePair<ReportColumn, string> columnFilter)
+    {
+        var column = columnFilter.Key;
+        var term = columnFilter.Value;
+        var text = column.GetValue(row) ?? string.Empty;
+        return Evaluate(term, text);
+    }
+
+    private static bool Evaluate(string term, string text)
+    {
+        var wildcardAtStart = term.StartsWith("*");
+        var wildcardAtEnd = term.EndsWith("*");
+        var actualTerm = term.Trim('*');
+
+        if (wildcardAtStart && wildcardAtEnd)
+            return text.IndexOf(actualTerm, StringComparison.OrdinalIgnoreCase) >= 0;
+
+        if (wildcardAtStart)
+            return text.EndsWith(actualTerm, StringComparison.OrdinalIgnoreCase);
+
+        if (wildcardAtEnd)
+            return text.StartsWith(actualTerm, StringComparison.OrdinalIgnoreCase);
+
+        return text.Equals(actualTerm, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public CsvDocument CreateReport(IReadOnlyCollection<ReportRow> rows, IReadOnlyList<ReportColumn> columns)
+    {
+        if (rows.Count == 0 || columns.Count == 0)
+            return new CsvDocument();
+
+        var headers = columns.Select(h => h.Name);
+        var document = new CsvDocument(headers);
+
+        using (var writer = document.Append())
+        {
+            foreach (var row in rows)
+            {
+                foreach (var column in columns)
+                {
+                    var value = column.GetValue(row);
+                    writer.Write(value ?? string.Empty);
+                }
+
+                writer.WriteLine();
+            }
         }
+
+        return document;
     }
 }

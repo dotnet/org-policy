@@ -1,46 +1,45 @@
-﻿namespace Microsoft.Csv
+﻿namespace Microsoft.Csv;
+
+public abstract class CsvWriter : IDisposable
 {
-    public abstract class CsvWriter : IDisposable
+    private CsvSettings _settings;
+
+    protected CsvWriter(CsvSettings settings)
     {
-        private CsvSettings _settings;
+        _settings = settings;
+    }
 
-        protected CsvWriter(CsvSettings settings)
-        {
-            _settings = settings;
-        }
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+    protected virtual void Dispose(bool disposing)
+    {
+    }
 
-        protected virtual void Dispose(bool disposing)
-        {
-        }
+    public abstract void Write(string value);
 
-        public abstract void Write(string value);
+    public virtual void Write(IEnumerable<string> values)
+    {
+        foreach (var value in values)
+            Write(value);
+    }
 
-        public virtual void Write(IEnumerable<string> values)
-        {
-            foreach (var value in values)
-                Write(value);
-        }
+    public abstract void WriteLine();
 
-        public abstract void WriteLine();
+    public virtual void WriteLine(IEnumerable<string> values)
+    {
+        foreach (var value in values)
+            Write(value);
 
-        public virtual void WriteLine(IEnumerable<string> values)
-        {
-            foreach (var value in values)
-                Write(value);
+        WriteLine();
+    }
 
-            WriteLine();
-        }
-
-        public virtual CsvSettings Settings
-        {
-            get => _settings;
-            set => _settings = value;
-        }
+    public virtual CsvSettings Settings
+    {
+        get => _settings;
+        set => _settings = value;
     }
 }
