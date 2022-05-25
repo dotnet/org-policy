@@ -11,7 +11,7 @@ variables:
   sln: $(Build.Repository.LocalPath)\src\Microsoft.DotnetOrg.Policies.sln
   outDir: $(Build.ArtifactStagingDirectory)\
   policop: $(System.ArtifactsDirectory)\drop\policop.exe
-  netversion: 5.x
+  netversion: 6.x
 
 jobs:
 - job: Build
