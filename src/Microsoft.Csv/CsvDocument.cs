@@ -127,6 +127,10 @@ public class CsvDocument
     {
         ArgumentNullException.ThrowIfNull(fileName);
 
+        var containingDirectory = Path.GetDirectoryName(fileName);
+        if (containingDirectory is not null)
+            Directory.CreateDirectory(containingDirectory);
+
         if (!settings.IsValid)
             throw new ArgumentException(nameof(settings));
 
