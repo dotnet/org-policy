@@ -21,8 +21,8 @@ internal sealed class PR20_ReleaseBranchesShouldBeProtected : PolicyRule
             if (!repo.IsOwnedByMicrosoft())
                 continue;
 
-            var unprotectedReleaseBranches = repo.Branches.Where(b => b.Name.StartsWith("release", StringComparison.OrdinalIgnoreCase))
-                .Where(b => !b.Rules.Any());
+            var unprotectedReleaseBranches = repo.Branches.Where(b => b.Name.StartsWith("release/", StringComparison.OrdinalIgnoreCase))
+                                                          .Where(b => !b.Rules.Any());
 
             foreach (var branch in unprotectedReleaseBranches)
             {
