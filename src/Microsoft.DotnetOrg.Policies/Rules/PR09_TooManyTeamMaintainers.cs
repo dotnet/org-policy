@@ -1,34 +1,31 @@
-﻿using System.Linq;
+﻿namespace Microsoft.DotnetOrg.Policies.Rules;
 
-namespace Microsoft.DotnetOrg.Policies.Rules
+internal sealed class PR09_TooManyTeamMaintainers : PolicyRule
 {
-    internal sealed class PR09_TooManyTeamMaintainers : PolicyRule
+    public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        "PR09",
+        "Too many team maintainers",
+        PolicySeverity.Error
+    );
+
+    public override void GetViolations(PolicyAnalysisContext context)
     {
-        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
-            "PR09",
-            "Too many team maintainers",
-            PolicySeverity.Error
-        );
+        const int Threshold = 10;
 
-        public override void GetViolations(PolicyAnalysisContext context)
+        foreach (var team in context.Org.Teams)
         {
-            const int Threshold = 10;
+            var numberOfMaintainers = team.Maintainers.Count(m => !m.IsOwner);
 
-            foreach (var team in context.Org.Teams)
+            if (numberOfMaintainers > Threshold)
             {
-                var numberOfMaintainers = team.Maintainers.Count(m => !m.IsOwner);
-
-                if (numberOfMaintainers > Threshold)
-                {
-                    context.ReportViolation(
-                        Descriptor,
-                        $"Team '{team.Name}' has too many maintainers",
-                        $@"
+                context.ReportViolation(
+                    Descriptor,
+                    $"Team '{team.Name}' has too many maintainers",
+                    $@"
                             The team {team.Markdown()} has {numberOfMaintainers} maintainers. Reduce the number of maintainers to {Threshold} or less.
                         ",
-                        team: team
-                    );
-                }
+                    team: team
+                );
             }
         }
     }

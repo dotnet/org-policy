@@ -1,13 +1,9 @@
-﻿using System.Collections.Generic;
-
-namespace Microsoft.DotnetOrg.Ospo
-{
+﻿namespace Microsoft.DotnetOrg.Ospo;
 #pragma warning disable CS8618 // This is a serialized type.
-    public sealed class GitHubInfo
-    {
-        public int Id { get; set; }
-        public string Login { get; set; }
-        public List<string> Organizations { get; set; }
-    }
-#pragma warning restore CS8618
+public sealed class GitHubInfo
+{
+    public int Id { get; set; }
+    public string Login { get; set; }
+    public List<string> Organizations { get; set; }
 }
+#pragma warning restore CS8618

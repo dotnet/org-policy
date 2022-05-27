@@ -1,35 +1,32 @@
-﻿using System;
+﻿namespace Microsoft.DotnetOrg.Policies.Rules;
 
-namespace Microsoft.DotnetOrg.Policies.Rules
+internal sealed class PR06_InactiveReposShouldBeArchived : PolicyRule
 {
-    internal sealed class PR06_InactiveReposShouldBeArchived : PolicyRule
+    public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        "PR06",
+        "Inactive repos should be archived",
+        PolicySeverity.Warning
+    );
+
+    public override void GetViolations(PolicyAnalysisContext context)
     {
-        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
-            "PR06",
-            "Inactive repos should be archived",
-            PolicySeverity.Warning
-        );
+        var now = DateTimeOffset.Now;
+        var threshold = TimeSpan.FromDays(365);
 
-        public override void GetViolations(PolicyAnalysisContext context)
+        foreach (var repo in context.Org.Repos)
         {
-            var now = DateTimeOffset.Now;
-            var threshold = TimeSpan.FromDays(365);
-
-            foreach (var repo in context.Org.Repos)
+            var alreadyArchived = repo.IsArchived;
+            var inactivity = now - repo.LastPush;
+            if (!alreadyArchived && inactivity > threshold)
             {
-                var alreadyArchived = repo.IsArchived;
-                var inactivity = now - repo.LastPush;
-                if (!alreadyArchived && inactivity > threshold)
-                {
-                    context.ReportViolation(
-                        Descriptor,
-                        title: $"Inactive repo '{repo.Name}' should be archived",
-                        body: $@"
+                context.ReportViolation(
+                    Descriptor,
+                    title: $"Inactive repo '{repo.Name}' should be archived",
+                    body: $@"
                             The last push to repo {repo.Markdown()} is more than {threshold.TotalDays:N0} days ago. It should be archived.
                         ",
-                        repo: repo
-                    );
-                }
+                    repo: repo
+                );
             }
         }
     }

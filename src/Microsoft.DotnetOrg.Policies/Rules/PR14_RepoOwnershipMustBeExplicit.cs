@@ -1,60 +1,56 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.DotnetOrg.GitHubCaching;
 
-using Microsoft.DotnetOrg.GitHubCaching;
+namespace Microsoft.DotnetOrg.Policies.Rules;
 
-namespace Microsoft.DotnetOrg.Policies.Rules
+internal sealed class PR14_RepoOwnershipMustBeExplicit : PolicyRule
 {
-    internal sealed class PR14_RepoOwnershipMustBeExplicit : PolicyRule
+    public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
+        "PR14",
+        "Repo ownership must be explicit",
+        PolicySeverity.Error
+    );
+
+    public override void GetViolations(PolicyAnalysisContext context)
     {
-        public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
-            "PR14",
-            "Repo ownership must be explicit",
-            PolicySeverity.Error
-        );
+        // If the entire org is owned by Microsoft, we don't need explicit ownership
+        if (context.Org.IsOwnedByMicrosoft())
+            return;
 
-        public override void GetViolations(PolicyAnalysisContext context)
+        var microsoftTeam = context.Org.GetMicrosoftTeam();
+        var nonMicrosoftTeam = context.Org.GetNonMicrosoftTeam();
+
+        if (microsoftTeam is null || nonMicrosoftTeam is null)
+            return;
+
+        foreach (var repo in context.Org.Repos)
         {
-            // If the entire org is owned by Microsoft, we don't need explicit ownership
-            if (context.Org.IsOwnedByMicrosoft())
-                return;
+            if (repo.IsArchived)
+                continue;
 
-            var microsoftTeam = context.Org.GetMicrosoftTeam();
-            var nonMicrosoftTeam = context.Org.GetNonMicrosoftTeam();
+            // These repos don't live long. There is no point in enforcing ownership semantics.
+            if (repo.IsTemporaryForkForSecurityAdvisory())
+                continue;
 
-            if (microsoftTeam is null || nonMicrosoftTeam is null)
-                return;
+            var microsoftTeamIsAssigned = repo.Teams.Any(ta => ta.Team == microsoftTeam);
+            var nonMicrosoftTeamIsAssigned = repo.Teams.Any(ta => ta.Team == nonMicrosoftTeam);
 
-            foreach (var repo in context.Org.Repos)
+            var isExplicitlyMarked = microsoftTeamIsAssigned || nonMicrosoftTeamIsAssigned;
+
+            if (!isExplicitlyMarked)
             {
-                if (repo.IsArchived)
-                    continue;
+                var permission = CachedPermission.Read;
 
-                // These repos don't live long. There is no point in enforcing ownership semantics.
-                if (repo.IsTemporaryForkForSecurityAdvisory())
-                    continue;
-
-                var microsoftTeamIsAssigned = repo.Teams.Any(ta => ta.Team == microsoftTeam);
-                var nonMicrosoftTeamIsAssigned = repo.Teams.Any(ta => ta.Team == nonMicrosoftTeam);
-
-                var isExplicitlyMarked = microsoftTeamIsAssigned || nonMicrosoftTeamIsAssigned;
-
-                if (!isExplicitlyMarked)
-                {
-                    var permission = CachedPermission.Read;
-
-                    context.ReportViolation(
-                        Descriptor,
-                        $"Repo '{repo.Name}' must indicate ownership",
-                        $@"
+                context.ReportViolation(
+                    Descriptor,
+                    $"Repo '{repo.Name}' must indicate ownership",
+                    $@"
                             The repo {repo.Markdown()} needs to indicate whether it's owned by Microsoft.
 
                             * **Owned by Microsoft**. Assign the team {microsoftTeam.Markdown()} with {permission.Markdown()} permissions.
                             * **Not owned by Microsoft**. Assign the team {nonMicrosoftTeam.Markdown()} with {permission.Markdown()} permissions.
                         ",
-                        repo: repo
-                    );
-                }
+                    repo: repo
+                );
             }
         }
     }

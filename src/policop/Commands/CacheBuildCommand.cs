@@ -1,85 +1,72 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO.Compression;
+using System.Net.Http.Headers;
 using Humanizer;
-using Microsoft.DotnetOrg.DevOps;
-
+using Microsoft.DotnetOrg.GitHubCaching;
 using Mono.Options;
 
-namespace Microsoft.DotnetOrg.PolicyCop.Commands
+namespace Microsoft.DotnetOrg.PolicyCop.Commands;
+
+internal sealed class CacheBuildCommand : ToolCommand
 {
-    internal sealed class CacheBuildCommand : ToolCommand
+    private string? _orgName;
+    private string? _buildId;
+
+    public override string Name => "cache-build";
+
+    public override string Description => "Caches the org from the latest build";
+
+    public override void AddOptions(OptionSet options)
     {
-        private string? _orgName;
-        private string? _buildId;
+        options.AddOrg(v => _orgName = v)
+               .Add("build=", "The (optional) build {id} to use.", v => _buildId = v);
+    }
 
-        public override string Name => "cache-build";
-
-        public override string Description => "Caches the org from the latest build";
-
-        public override void AddOptions(OptionSet options)
+    public override async Task ExecuteAsync()
+    {
+        var repos = new (string Org, string PolicyRepoOrg, string PolicyRepo)[]
         {
-            options.AddOrg(v => _orgName = v)
-                   .Add("build=", "The (optional) build {id} to use.", v => _buildId = v);
-        }
+            ("aspnet", "aspnet", "org-policy-violations"),
+            ("dotnet", "dotnet", "org-policy-violations"),
+            ("nuget", "dotnet", "nuget-policy-violations"),
+            ("mono", "dotnet", "mono-policy-violations"),
+        };
 
-        public override async Task ExecuteAsync()
+        var client = await GitHubClientFactory.CreateAsync();
+
+        foreach (var (org, policyRepoOrg, policyRepo) in repos)
         {
-            var orgNames = !string.IsNullOrEmpty(_orgName)
-                ? new[] { _orgName }
-                : CacheManager.GetCachedOrgNames().ToArray();
-
-            var client = await DevOpsClientFactory.CreateAsync("dnceng", "internal");
-            var builds = await client.GetBuildsAsync("653", resultFilter: "succeeded", reasonFilter: "schedule,manual");
-            var build = string.IsNullOrEmpty(_buildId)
-                ? builds.FirstOrDefault()
-                : builds.FirstOrDefault(b => b.Id.ToString() == _buildId);
-
-            if (build is null)
+            try
             {
-                if (_buildId is null)
-                    Console.Error.WriteLine("error: no builds found");
+                var artifacts = await client.GetActionArtifacts(policyRepoOrg, policyRepo);
+                var latest = artifacts.FirstOrDefault();
+                if (latest is null)
+                {
+                    Console.WriteLine($"{org,-7} -- No results yet");
+                }
                 else
-                    Console.Error.WriteLine($"error: can't find build {_buildId}");
-
-                return;
-            }
-
-            var buildTime = build.FinishTime;
-            var age = DateTimeOffset.UtcNow - buildTime;
-            Console.Error.WriteLine($"Caching build from {age.Humanize()} ago...");
-
-            foreach (var orgName in orgNames)
-            {
-                var remoteFileName = orgName + ".json";
-                var localFileName = CacheManager.GetOrgCache(orgName).FullName;
-
-                try
                 {
-                    await DownloadArtifactFileAsync(client, build, remoteFileName, localFileName);
-                    File.SetLastWriteTimeUtc(localFileName, buildTime.DateTime);
-                    Console.Error.WriteLine($"{orgName} -> {localFileName}");
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"error: can't download org data for {orgName}: {ex.Message}");
+                    var age = DateTimeOffset.UtcNow - latest.CreatedAt;
+                    Console.WriteLine($"{org,-7} -- Caching build from {age.Humanize()} ago...");
+
+                    var result = await client.Connection.GetRaw(new Uri(latest.ArchiveDownloadUrl), new Dictionary<string, string>());
+                    using var stream = new MemoryStream(result.Body);
+                    using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+                    var entry = archive.Entries.FirstOrDefault(e => string.Equals(Path.GetExtension(e.Name), ".json", StringComparison.OrdinalIgnoreCase));
+                    if (entry is not null)
+                    {
+                        var localFileName = CacheManager.GetOrgCache(org).FullName;
+                        var directory = Path.GetDirectoryName(localFileName)!;
+                        Directory.CreateDirectory(directory);
+
+                        using var sourceStream = entry.Open();
+                        using var targetStream = File.Create(localFileName);
+                        await sourceStream.CopyToAsync(targetStream);
+                    }
                 }
             }
-        }
-
-        private static async Task DownloadArtifactFileAsync(DevOpsClient client, DevOpsBuild build, string remoteFileName, string localFileName)
-        {         
-            using (var remoteStream = await client.GetArtifactFileAsync(build.Id, "drop", remoteFileName))
+            catch (Exception ex)
             {
-                if (remoteStream is null)
-                    return;
-
-                var directory = Path.GetDirectoryName(localFileName)!;
-                Directory.CreateDirectory(directory);
-
-                using (var localStream = File.Create(localFileName))
-                    await remoteStream.CopyToAsync(localStream);
+                Console.Error.WriteLine($"{org,-7} -- Can't cache results: {ex.Message}");
             }
         }
     }

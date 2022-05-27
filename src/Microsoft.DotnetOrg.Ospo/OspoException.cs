@@ -1,37 +1,35 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Runtime.Serialization;
 
-namespace Microsoft.DotnetOrg.Ospo
+namespace Microsoft.DotnetOrg.Ospo;
+
+[Serializable]
+public class OspoException : Exception
 {
-    [Serializable]
-    public class OspoException : Exception
+    public OspoException()
     {
-        public OspoException()
-        {
-        }
-
-        public OspoException(string? message)
-            : base(message)
-        {
-        }
-
-        public OspoException(string? message, Exception? inner)
-            : base(message, inner)
-        {
-        }
-
-        protected OspoException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
-
-        public OspoException(string? message, HttpStatusCode code)
-            : this(message)
-        {
-            Code = code;
-        }
-
-        public HttpStatusCode Code { get; }
     }
+
+    public OspoException(string? message)
+        : base(message)
+    {
+    }
+
+    public OspoException(string? message, Exception? inner)
+        : base(message, inner)
+    {
+    }
+
+    protected OspoException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
+    {
+    }
+
+    public OspoException(string? message, HttpStatusCode code)
+        : this(message)
+    {
+        Code = code;
+    }
+
+    public HttpStatusCode Code { get; }
 }

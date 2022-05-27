@@ -1,10 +1,9 @@
-﻿namespace Microsoft.DotnetOrg.GitHubCaching
+﻿namespace Microsoft.DotnetOrg.GitHubCaching;
+
+public enum CachedRepoAllowedActions
 {
-    public enum CachedRepoAllowedActions
-    {
-        Disabled,
-        All,
-        LocalOnly,
-        Selected
-    }
+    Disabled,
+    All,
+    LocalOnly,
+    Selected
 }

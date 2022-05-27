@@ -1,9 +1,8 @@
-﻿namespace Microsoft.DotnetOrg.Policies
+﻿namespace Microsoft.DotnetOrg.Policies;
+
+public enum PolicySeverity
 {
-    public enum PolicySeverity
-    {
-        Hidden,
-        Warning,
-        Error
-    }
+    Hidden,
+    Warning,
+    Error
 }

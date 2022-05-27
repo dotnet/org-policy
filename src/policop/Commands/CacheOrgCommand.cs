@@ -1,45 +1,40 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Microsoft.DotnetOrg.GitHubCaching;
+﻿using Microsoft.DotnetOrg.GitHubCaching;
 using Microsoft.DotnetOrg.Ospo;
 
 using Mono.Options;
 
-namespace Microsoft.DotnetOrg.PolicyCop.Commands
+namespace Microsoft.DotnetOrg.PolicyCop.Commands;
+
+internal sealed class CacheOrgCommand : ToolCommand
 {
-    internal sealed class CacheOrgCommand : ToolCommand
+    private string? _orgName;
+    private bool _includeLinks;
+
+    public override string Name => "cache-org";
+
+    public override string Description => "Downloads the organization data from GitHub";
+
+    public override void AddOptions(OptionSet options)
     {
-        private string? _orgName;
-        private bool _includeLinks;
+        options.AddOrg(v => _orgName = v)
+               .Add("with-ms-links", "Include linking information to Microsoft users", v => _includeLinks = true);
+    }
 
-        public override string Name => "cache-org";
+    public override async Task ExecuteAsync()
+    {
+        var orgNames = !string.IsNullOrEmpty(_orgName)
+            ? new[] { _orgName }
+            : CacheManager.GetCachedOrgNames().ToArray();
 
-        public override string Description => "Downloads the organization data from GitHub";
+        var client = await GitHubClientFactory.CreateAsync();
+        var connection = await GitHubClientFactory.CreateGraphAsync();
+        var ospoClient = !_includeLinks ? null : await OspoClientFactory.CreateAsync();
 
-        public override void AddOptions(OptionSet options)
+        foreach (var orgName in orgNames)
         {
-            options.AddOrg(v => _orgName = v)
-                   .Add("with-ms-links", "Include linking information to Microsoft users", v => _includeLinks = true);
-        }
-
-        public override async Task ExecuteAsync()
-        {
-            var orgNames = !string.IsNullOrEmpty(_orgName)
-                ? new[] { _orgName }
-                : CacheManager.GetCachedOrgNames().ToArray();
-
-            var client = await GitHubClientFactory.CreateAsync();
-            var connection = await GitHubClientFactory.CreateGraphAsync();
-            var ospoClient = !_includeLinks ? null : await OspoClientFactory.CreateAsync();
-
-            foreach (var orgName in orgNames)
-            {
-                var result = await CachedOrg.LoadAsync(client, connection, orgName, Console.Out, ospoClient);
-                if (result is not null)
-                    await CacheManager.StoreOrgAsync(result);
-            }
+            var result = await CachedOrg.LoadAsync(client, connection, orgName, Console.Out, ospoClient);
+            if (result is not null)
+                await CacheManager.StoreOrgAsync(result);
         }
     }
 }
