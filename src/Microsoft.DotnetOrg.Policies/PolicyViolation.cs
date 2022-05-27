@@ -93,8 +93,12 @@ public sealed class PolicyViolation
             // NOTE: If you add more pieces of information later, it is vitally important
             //       that you only add them when they aren't null. Otherwise, this will
             //       change the fingerprint of all existing violations.
+            //
+            // NOTE: When we wrote this, we were on Windows. Now we're running on Linux.
+            //       In order to not change the hashes, we're still emitting line breaks
+            //       with CR LF breaks.
 
-            using (var writer = new StreamWriter(fingerprintBytes, Encoding.UTF8, 2048, leaveOpen: true))
+            using (var writer = new CrLfWriter(fingerprintBytes, Encoding.UTF8, leaveOpen: true))
             {
                 writer.WriteLine(diagnosticId);
                 writer.WriteLine(repo?.Org.Name);
@@ -115,6 +119,27 @@ public sealed class PolicyViolation
 
             var hashBytes = md5.ComputeHash(fingerprintBytes);
             return new Guid(hashBytes);
+        }
+    }
+
+    private sealed class CrLfWriter : IDisposable
+    {
+        private readonly StreamWriter _streamWriter;
+
+        public CrLfWriter(Stream stream, Encoding encoding, bool leaveOpen)
+        {
+            _streamWriter = new(stream, encoding, leaveOpen: leaveOpen);
+        }
+
+        public void WriteLine(string? text)
+        {
+            _streamWriter.Write(text);
+            _streamWriter.Write("\r\n");
+        }
+
+        public void Dispose()
+        {
+            _streamWriter.Dispose();
         }
     }
 

@@ -1,6 +1,7 @@
-﻿using Humanizer;
-using Microsoft.DotnetOrg.DevOps;
-
+﻿using System.IO.Compression;
+using System.Net.Http.Headers;
+using Humanizer;
+using Microsoft.DotnetOrg.GitHubCaching;
 using Mono.Options;
 
 namespace Microsoft.DotnetOrg.PolicyCop.Commands;
@@ -22,60 +23,51 @@ internal sealed class CacheBuildCommand : ToolCommand
 
     public override async Task ExecuteAsync()
     {
-        var orgNames = !string.IsNullOrEmpty(_orgName)
-            ? new[] { _orgName }
-            : CacheManager.GetCachedOrgNames().ToArray();
-
-        var client = await DevOpsClientFactory.CreateAsync("dnceng", "internal");
-        var builds = await client.GetBuildsAsync("653", resultFilter: "succeeded", reasonFilter: "schedule,manual");
-        var build = string.IsNullOrEmpty(_buildId)
-            ? builds.FirstOrDefault()
-            : builds.FirstOrDefault(b => b.Id.ToString() == _buildId);
-
-        if (build is null)
+        var repos = new (string Org, string PolicyRepoOrg, string PolicyRepo)[]
         {
-            if (_buildId is null)
-                Console.Error.WriteLine("error: no builds found");
-            else
-                Console.Error.WriteLine($"error: can't find build {_buildId}");
+            ("aspnet", "aspnet", "org-policy-violations"),
+            ("dotnet", "dotnet", "org-policy-violations"),
+            ("nuget", "dotnet", "nuget-policy-violations"),
+            ("mono", "dotnet", "mono-policy-violations"),
+        };
 
-            return;
-        }
+        var client = await GitHubClientFactory.CreateAsync();
 
-        var buildTime = build.FinishTime;
-        var age = DateTimeOffset.UtcNow - buildTime;
-        Console.Error.WriteLine($"Caching build from {age.Humanize()} ago...");
-
-        foreach (var orgName in orgNames)
+        foreach (var (org, policyRepoOrg, policyRepo) in repos)
         {
-            var remoteFileName = orgName + ".json";
-            var localFileName = CacheManager.GetOrgCache(orgName).FullName;
-
             try
             {
-                await DownloadArtifactFileAsync(client, build, remoteFileName, localFileName);
-                File.SetLastWriteTimeUtc(localFileName, buildTime.DateTime);
-                Console.Error.WriteLine($"{orgName} -> {localFileName}");
+                var artifacts = await client.GetActionArtifacts(policyRepoOrg, policyRepo);
+                var latest = artifacts.FirstOrDefault();
+                if (latest is null)
+                {
+                    Console.WriteLine($"{org,-7} -- No results yet");
+                }
+                else
+                {
+                    var age = DateTimeOffset.UtcNow - latest.CreatedAt;
+                    Console.WriteLine($"{org,-7} -- Caching build from {age.Humanize()} ago...");
+
+                    var result = await client.Connection.GetRaw(new Uri(latest.ArchiveDownloadUrl), new Dictionary<string, string>());
+                    using var stream = new MemoryStream(result.Body);
+                    using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+                    var entry = archive.Entries.FirstOrDefault(e => string.Equals(Path.GetExtension(e.Name), ".json", StringComparison.OrdinalIgnoreCase));
+                    if (entry is not null)
+                    {
+                        var localFileName = CacheManager.GetOrgCache(org).FullName;
+                        var directory = Path.GetDirectoryName(localFileName)!;
+                        Directory.CreateDirectory(directory);
+
+                        using var sourceStream = entry.Open();
+                        using var targetStream = File.Create(localFileName);
+                        await sourceStream.CopyToAsync(targetStream);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"error: can't download org data for {orgName}: {ex.Message}");
+                Console.Error.WriteLine($"{org,-7} -- Can't cache results: {ex.Message}");
             }
-        }
-    }
-
-    private static async Task DownloadArtifactFileAsync(DevOpsClient client, DevOpsBuild build, string remoteFileName, string localFileName)
-    {         
-        using (var remoteStream = await client.GetArtifactFileAsync(build.Id, "drop", remoteFileName))
-        {
-            if (remoteStream is null)
-                return;
-
-            var directory = Path.GetDirectoryName(localFileName)!;
-            Directory.CreateDirectory(directory);
-
-            using (var localStream = File.Create(localFileName))
-                await remoteStream.CopyToAsync(localStream);
         }
     }
 }

@@ -336,6 +336,21 @@ public static class GitHubClientExtensions
         }
     }
 
+    public static async Task<IReadOnlyList<GitHubArtifact>> GetActionArtifacts(this GitHubClient client, string owner, string repo)
+    {
+        try
+        {
+            var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/actions/artifacts", UriKind.Relative), new Dictionary<string, string>());
+            var json = (string)rawResponse.HttpResponse.Body;
+            var result = JsonSerializer.Deserialize<ActionArtifactsResponse>(json);
+            return result?.artifacts ?? Array.Empty<GitHubArtifact>();
+        }
+        catch (NotFoundException)
+        {
+            return Array.Empty<GitHubArtifact>();
+        }
+    }
+
 #pragma warning disable CS8618 // Serialized type
 
     private sealed class OrgSecretsResponse
@@ -393,8 +408,6 @@ public static class GitHubClientExtensions
         public DateTime updated_at { get; set; }
     }
 
-#pragma warning restore CS8618
-
     private sealed class ActionPermissionsResponse
     {
         public bool enabled { get; set; }
@@ -428,4 +441,12 @@ public static class GitHubClientExtensions
         public string? html_url { get; set; }
         public string? badge_url { get; set; }
     }
+
+    public class ActionArtifactsResponse
+    {
+        public int total_count { get; set; }
+        public GitHubArtifact[] artifacts { get; set; }
+    }
+
+    #pragma warning restore CS8618
 }
