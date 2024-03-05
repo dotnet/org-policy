@@ -3,7 +3,6 @@ using System.Runtime.Serialization;
 
 namespace Microsoft.DotnetOrg.Ospo;
 
-[Serializable]
 public class OspoUnauthorizedException : OspoException
 {
     public OspoUnauthorizedException()
@@ -17,11 +16,6 @@ public class OspoUnauthorizedException : OspoException
 
     public OspoUnauthorizedException(string? message, Exception? inner)
         : base(message, inner)
-    {
-    }
-
-    protected OspoUnauthorizedException(SerializationInfo info, StreamingContext context)
-        : base(info, context)
     {
     }
 
