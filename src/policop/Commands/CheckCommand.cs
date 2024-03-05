@@ -407,7 +407,7 @@ internal sealed class CheckCommand : ToolCommand
         foreach (var user in missingUsers)
         {
             Console.WriteLine($"Granting pull to '{user.Login}'...");
-            var request = new CollaboratorRequest(Permission.Pull);
+            var request = new CollaboratorRequest("read");
             await client.InvokeAsync(c => c.Repository.Collaborator.Add(policyRepo.Owner, policyRepo.Name, user.Login, request));
         }
     }

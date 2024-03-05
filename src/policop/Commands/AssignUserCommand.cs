@@ -55,19 +55,19 @@ internal sealed class AssignUserCommand : ToolCommand
             return;
         }
 
-        Permission permission;
+        string permission;
 
         switch (_permission)
         {
             case null:
             case "read":
-                permission = Permission.Pull;
+                permission = "pull";
                 break;
             case "write":
-                permission = Permission.Push;
+                permission = "push";
                 break;
             case "admin":
-                permission = Permission.Admin;
+                permission = "admin";
                 break;
             default:
                 Console.Error.WriteLine($"error: permission can be 'read', 'write', or 'admin' but not '{_permission}'");

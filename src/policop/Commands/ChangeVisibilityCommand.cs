@@ -47,8 +47,11 @@ internal sealed class ChangeVisibilityCommand : ToolCommand
 
         var client = await GitHubClientFactory.CreateAsync();
 
-        var update = new RepositoryUpdate(_repoName);
-        update.Private = _makePrivate;
+        var update = new RepositoryUpdate
+        {
+            Name = _repoName,
+            Private = _makePrivate
+        };
 
         try
         {
