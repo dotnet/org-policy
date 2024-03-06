@@ -4,7 +4,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching;
 #pragma warning disable CS8618 // This is a serialized type.
 public sealed class CachedRepoEnvironment
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public string NodeId { get; set; }
     public string Name { get; set; }
     public string Url { get; set; }
