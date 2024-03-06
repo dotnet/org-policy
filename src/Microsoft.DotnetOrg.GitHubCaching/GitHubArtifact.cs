@@ -4,7 +4,7 @@ namespace Microsoft.DotnetOrg.GitHubCaching;
 
 public sealed class GitHubArtifact
 {
-    public GitHubArtifact(int id,
+    public GitHubArtifact(long id,
                           string nodeId,
                           string name,
                           long sizeInBytes,
@@ -28,7 +28,7 @@ public sealed class GitHubArtifact
     }
 
     [JsonPropertyName("id")]
-    public int Id { get; }
+    public long Id { get; }
 
     [JsonPropertyName("node_id")]
     public string NodeId { get; }

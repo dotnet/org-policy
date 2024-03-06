@@ -2,7 +2,7 @@
 #pragma warning disable CS8618 // This is a serialized type.
 public sealed class GitHubInfo
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public string Login { get; set; }
     public List<string> Organizations { get; set; }
 }

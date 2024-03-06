@@ -196,7 +196,7 @@ public static class GitHubClientExtensions
         }
     }
 
-    public static async Task<IReadOnlyList<CachedRepoSecret>> GetRepoEnvironmentSecrets(this GitHubClient client, int repositoryId, string environmentName)
+    public static async Task<IReadOnlyList<CachedRepoSecret>> GetRepoEnvironmentSecrets(this GitHubClient client, long repositoryId, string environmentName)
     {
         var rawResponse = await client.Connection.GetRaw(new Uri($"/repositories/{repositoryId}/environments/{environmentName}/secrets", UriKind.Relative), new Dictionary<string, string>()
         {
@@ -399,7 +399,7 @@ public static class GitHubClientExtensions
 
     private sealed class RepoEnvironment
     {
-        public int id { get; set; }
+        public long id { get; set; }
         public string node_id { get; set; }
         public string name { get; set; }
         public string url { get; set; }
@@ -430,7 +430,7 @@ public static class GitHubClientExtensions
 
     private sealed class Workflow
     {
-        public int id { get; set; }
+        public long id { get; set; }
         public string? node_id { get; set; }
         public string? name { get; set; }
         public string? path { get; set; }
