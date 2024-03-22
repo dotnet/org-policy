@@ -161,6 +161,33 @@ public static class GitHubClientExtensions
         return result.ToArray();
     }
 
+    public static async Task<IReadOnlyList<CachedRepoProperty>> GetRepoProperties(this GitHubClient client, string owner, string repo)
+    {
+        try
+        {
+            var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/properties/values", UriKind.Relative), new Dictionary<string, string>());
+            var json = (string)rawResponse.HttpResponse.Body;
+            var response = JsonSerializer.Deserialize<RepoProperty[]>(json);
+
+            var result = new List<CachedRepoProperty>();
+
+            if (response is not null)
+            {
+                foreach (var property in response)
+                {
+                    var cachedProperty = new CachedRepoProperty(property.property_name, property.value);
+                    result.Add(cachedProperty);
+                }
+            }
+
+            return result.ToArray();
+        }
+        catch (NotFoundException)
+        {
+            return Array.Empty<CachedRepoProperty>();
+        }
+    }
+    
     public static async Task<IReadOnlyList<CachedRepoEnvironment>> GetRepoEnvironments(this GitHubClient client, string owner, string repo)
     {
         try
@@ -391,6 +418,12 @@ public static class GitHubClientExtensions
         public string name { get; set; }
     }
 
+    private sealed class RepoProperty
+    {
+        public string property_name { get; set; }
+        public string value { get; set; }
+    }
+    
     private sealed class RepoEnvironmentResponse
     {
         public int total_count { get; set; }

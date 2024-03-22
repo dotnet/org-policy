@@ -162,6 +162,7 @@ internal sealed class CacheLoader
 
         var result = (await RunQueryWithRetry(query)).ToArray();
 
+        await FillProperties(orgName, result);
         await FillBranches(orgName, result);
         await FillBranchProtectionRules(orgName, result);
         await FillEnvironments(orgName, result);
@@ -171,6 +172,14 @@ internal sealed class CacheLoader
         await FillWorkflows(orgName, result);
 
         return result;
+    }
+
+    private async Task FillProperties(string orgName, CachedRepo[] repos)
+    {
+        foreach (var repo in repos)
+        {
+            repo.Properties = await Client.InvokeAsync(c => c.GetRepoProperties(orgName, repo.Name));
+        }
     }
 
     private async Task FillBranches(string orgName, CachedRepo[] repos)

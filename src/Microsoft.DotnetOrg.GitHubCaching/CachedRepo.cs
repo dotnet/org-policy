@@ -18,6 +18,7 @@ public sealed class CachedRepo
     public IReadOnlyList<CachedBranchProtectionRule> BranchProtectionRules { get; set; }
     public IReadOnlyList<CachedRepoEnvironment> Environments { get; set; }
     public IReadOnlyList<CachedRepoSecret> Secrets { get; set; }
+    public IReadOnlyList<CachedRepoProperty> Properties { get; set; }
     public CachedFile? ReadMe { get; set; }
     public CachedFile? Contributing { get; set; }
     public CachedFile? CodeOfConduct { get; set; }
