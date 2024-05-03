@@ -18,6 +18,13 @@ internal sealed class CacheInfoCommand : ToolCommand
     public override Task ExecuteAsync()
     {
         var orgCaches = CacheManager.GetOrgCaches().ToArray();
+        if (orgCaches.Length == 0)
+        {
+            var orgCacheDirectory = CacheManager.GetOrgCacheDirectory();
+            Console.WriteLine($"No orgs cached in {orgCacheDirectory}");
+            return Task.CompletedTask;
+        }
+
         var document = new CsvDocument("org", "date", "time", "size", "path");
 
         using (var writer = document.Append())

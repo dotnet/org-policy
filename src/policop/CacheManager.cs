@@ -10,7 +10,7 @@ internal static class CacheManager
         return GetOrgCaches().Select(fi => Path.GetFileNameWithoutExtension(fi.Name));
     }
 
-    public static FileInfo GetOrgCache(string orgName)
+    public static string GetOrgCacheDirectory()
     {
         var exePath = Environment.GetCommandLineArgs()[0];
         var fileInfo = FileVersionInfo.GetVersionInfo(exePath)!;
@@ -18,6 +18,12 @@ internal static class CacheManager
         var companyName = fileInfo.CompanyName ?? string.Empty;
         var productName = fileInfo.ProductName ?? string.Empty;
         var cachedDirectory = Path.Combine(localAppData, companyName, productName, "Cache");
+        return cachedDirectory;
+    }
+
+    public static FileInfo GetOrgCache(string orgName)
+    {
+        var cachedDirectory = GetOrgCacheDirectory();
         var path = Path.Combine(cachedDirectory, $"{orgName}.json");
         return new FileInfo(path);
     }
