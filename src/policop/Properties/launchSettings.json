@@ -1,6 +1,7 @@
 {
   "profiles": {
     "GitHubPermissionPolicyChecker": {
+    "policop": {
       "commandName": "Project",
       "commandLineArgs": "check --org dotnet --policy-repo dotnet/org-policy-violations -o P:\\org-policy\\violations.csv"
     }

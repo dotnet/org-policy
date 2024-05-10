@@ -48,8 +48,20 @@ internal sealed class CacheBuildCommand : ToolCommand
                     var age = DateTimeOffset.UtcNow - latest.CreatedAt;
                     Console.WriteLine($"{org,-7} -- Caching build from {age.Humanize()} ago...");
 
-                    var result = await client.Connection.GetRaw(new Uri(latest.ArchiveDownloadUrl), new Dictionary<string, string>());
-                    using var stream = new MemoryStream(result.Body);
+                    var token = client.Credentials.Password;
+
+                    var exeName = Path.GetFileNameWithoutExtension(Environment.ProcessPath);
+                    var productHeader = new ProductInfoHeaderValue(new ProductHeaderValue(exeName));
+
+                    using var httpClient = new HttpClient();
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", token);
+                    httpClient.DefaultRequestHeaders.UserAgent.Add(productHeader);
+                    httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+                    httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
+
+                    await using var responseStream = await httpClient.GetStreamAsync(latest.ArchiveDownloadUrl);
+                    await using var stream = new MemoryStream();
+                    await responseStream.CopyToAsync(stream);
                     using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
                     var entry = archive.Entries.FirstOrDefault(e => string.Equals(Path.GetExtension(e.Name), ".json", StringComparison.OrdinalIgnoreCase));
                     if (entry is not null)
