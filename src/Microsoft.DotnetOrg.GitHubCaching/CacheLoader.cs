@@ -30,6 +30,9 @@ internal sealed class CacheLoader
         var start = DateTimeOffset.Now;
 
         Log.WriteLine($"Start: {start}");
+
+        var linkSet = await LoadLinkSetAsync();
+
         Log.WriteLine($"Downloading '{orgName}' org from GitHub...");
 
         var cachedOrg = new CachedOrg
@@ -87,8 +90,6 @@ internal sealed class CacheLoader
             var team = teamBySlug[teamAccess.TeamSlug];
             team.Repos.Add(teamAccess);
         }
-
-        var linkSet = await LoadLinkSetAsync();
 
         foreach (var user in cachedOrg.Users)
         {
