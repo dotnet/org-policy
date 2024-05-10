@@ -21,6 +21,11 @@ internal sealed class ListTokensCommand : ToolCommand
             foreach (var fileName in Directory.GetFiles(directory))
                 Console.WriteLine(fileName);
         }
+        else
+        {
+            Console.WriteLine("Not tokens found in");
+            Console.WriteLine(directory);
+        }
 
         return Task.CompletedTask;
     }
