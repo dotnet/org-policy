@@ -50,7 +50,7 @@ internal sealed class CacheBuildCommand : ToolCommand
 
                     var token = client.Credentials.Password;
 
-                    var exeName = Path.GetFileNameWithoutExtension(Environment.ProcessPath);
+                    var exeName = Path.GetFileNameWithoutExtension(Environment.ProcessPath)!;
                     var productHeader = new ProductInfoHeaderValue(new ProductHeaderValue(exeName));
 
                     using var httpClient = new HttpClient();
