@@ -205,6 +205,14 @@ public static class CachedOrgExtensions
         return $"{name} <{email}>";
     }
 
+    public static string GetMicrosoftAlias(this CachedUser user)
+    {
+        if (user.MicrosoftInfo is null)
+            return string.Empty;
+            
+        return user.MicrosoftInfo.Alias;
+    }
+
     public static bool IsBot(this CachedUser user)
     {
         if (user.IsKnownMicrosoftServiceAccount())

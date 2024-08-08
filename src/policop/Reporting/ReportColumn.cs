@@ -94,6 +94,11 @@ internal abstract class ReportColumn
             r => string.Join("; ", r.GetAdministrators().Select(u => u.GetEmailName()))
         ),
         new RepoReportColumn(
+            "r:ms-owners",
+            "Alias of Microsoft admins",
+            r => string.Join("; ", r.GetAdministrators().Select(u => u.GetMicrosoftAlias()).Where(a => !string.IsNullOrEmpty(a)).Order())
+        ),
+        new RepoReportColumn(
             "r:assign-admin",
             "Randomly selects an admin",
             r =>
