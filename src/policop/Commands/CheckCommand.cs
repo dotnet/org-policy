@@ -604,7 +604,19 @@ internal sealed class CheckCommand : ToolCommand
         {
             var violationByFingerprint = violations.ToDictionary(v => v.Fingerprint);
 
-            var issueByFingerprint = issues.ToDictionary(i => i.Fingerprint);
+            // Only take the first issue for each fingerprint, skip duplicates
+            var issueByFingerprint = new Dictionary<Guid, PolicyIssue>();
+            foreach (var issue in issues)
+            {
+                if (!issueByFingerprint.ContainsKey(issue.Fingerprint))
+                {
+                    issueByFingerprint.Add(issue.Fingerprint, issue);
+                }
+                else
+                {
+                    Console.WriteLine($"warning: issue ''{issue.Issue.Number} {issue.Issue.Title}' with fingerprint '{issue.Fingerprint}' already exists, skipping duplicate.");
+                }
+            }
 
             var mapping = new List<(PolicyViolation? Violation, PolicyIssue? Issue)>();
 
