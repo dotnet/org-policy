@@ -24,8 +24,8 @@ public sealed class CachedRuleset
         if (Target != "branch")
             return false;
 
-        // Check if the branch matches any include pattern
-        bool included = IncludeRefs.Any(pattern => MatchesPattern(branchRef, pattern));
+        // If IncludeRefs is empty, match all branches (GitHub ruleset semantics)
+        bool included = !IncludeRefs.Any() || IncludeRefs.Any(pattern => MatchesPattern(branchRef, pattern));
 
         // Check if the branch matches any exclude pattern
         bool excluded = ExcludeRefs.Any(pattern => MatchesPattern(branchRef, pattern));
