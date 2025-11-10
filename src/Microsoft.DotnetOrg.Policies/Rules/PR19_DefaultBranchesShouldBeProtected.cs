@@ -4,7 +4,7 @@ internal sealed class PR19_DefaultBranchesShouldBeProtected : PolicyRule
 {
     public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
         "PR19",
-        "Default branches should have branch protection",
+        "Default branches should be protected",
         PolicySeverity.Warning
     );
 
@@ -25,13 +25,13 @@ internal sealed class PR19_DefaultBranchesShouldBeProtected : PolicyRule
             if (repo.DefaultBranch is null)
                 continue;
 
-            if (!repo.DefaultBranch.Rules.Any())
+            if (!repo.DefaultBranch.IsProtected)
             {
                 context.ReportViolation(
                     Descriptor,
                     $"The default branch '{repo.DefaultBranch.Name}' in '{repo.Name}' has no branch protection",
                     $@"
-                            The default branch {repo.DefaultBranch.Markdown()} in repo {repo.Markdown()} should have branch protection rules, such as preventing force pushes and requiring PRs.
+                            The default branch {repo.DefaultBranch.Markdown()} in repo {repo.Markdown()} should have branch protection rules or rulesets, such as preventing force pushes and requiring PRs.
                         ",
                     repo: repo,
                     branch: repo.DefaultBranch
