@@ -45,7 +45,7 @@ public sealed class CachedRuleset
 
         if (pattern.EndsWith("/*"))
         {
-            var prefix = pattern.Substring(0, pattern.Length - 2);
+            var prefix = pattern[..^2];
             return branchRef.StartsWith(prefix + "/");
         }
 
