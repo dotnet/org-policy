@@ -166,6 +166,7 @@ internal sealed class CacheLoader
         await FillProperties(orgName, result);
         await FillBranches(orgName, result);
         await FillBranchProtectionRules(orgName, result);
+        await FillRulesets(orgName, result);
         await FillEnvironments(orgName, result);
         await FillSecrets(orgName, result);
         await FillFiles(orgName, result);
@@ -259,6 +260,30 @@ internal sealed class CacheLoader
                 // report a warning, and keep going.
                 Log.WriteLine($"warn: unable to retreive branch protection rules for '{repo.Name}'");
                 repo.BranchProtectionRules = Array.Empty<CachedBranchProtectionRule>();
+            }
+        }
+    }
+
+    private async Task FillRulesets(string orgName, CachedRepo[] repos)
+    {
+        foreach (var repo in repos)
+        {
+            try
+            {
+                var rulesets = await Client.InvokeAsync(c => c.GetRulesets(orgName, repo.Name));
+                repo.Rulesets = rulesets;
+
+                foreach (var ruleset in rulesets)
+                {
+                    ruleset.Repo = repo;
+                }
+            }
+            catch
+            {
+                // If we can't retrieve rulesets (e.g., older GitHub Enterprise instances),
+                // just set an empty list and continue
+                Log.WriteLine($"warn: unable to retrieve rulesets for '{repo.Name}'");
+                repo.Rulesets = Array.Empty<CachedRuleset>();
             }
         }
     }
