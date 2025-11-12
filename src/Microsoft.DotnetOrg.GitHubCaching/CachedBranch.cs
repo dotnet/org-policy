@@ -23,6 +23,12 @@ public sealed class CachedBranch
     [JsonIgnore]
     public IEnumerable<CachedBranchProtectionRule> Rules => Repo.BranchProtectionRules.Where(r => r.MatchingRefs.Contains(Ref));
 
+    [JsonIgnore]
+    public IEnumerable<CachedRuleset> Rulesets => Repo.Rulesets?.Where(r => r.Matches(Ref)) ?? Enumerable.Empty<CachedRuleset>();
+
+    [JsonIgnore]
+    public bool IsProtected => Rules.Any() || Rulesets.Any();
+
     public override string ToString()
     {
         return Name;

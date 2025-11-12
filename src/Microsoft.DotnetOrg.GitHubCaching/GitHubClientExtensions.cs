@@ -378,6 +378,41 @@ public static class GitHubClientExtensions
         }
     }
 
+    public static async Task<IReadOnlyList<CachedRuleset>> GetRulesets(this GitHubClient client, string owner, string repo)
+    {
+        try
+        {
+            var rawResponse = await client.Connection.GetRaw(new Uri($"/repos/{owner}/{repo}/rulesets", UriKind.Relative), new Dictionary<string, string>());
+            var json = (string)rawResponse.HttpResponse.Body;
+            var result = JsonSerializer.Deserialize<RulesetResponse[]>(json);
+
+            if (result == null)
+            {
+                return Array.Empty<CachedRuleset>();
+            }
+
+            var rulesets = new List<CachedRuleset>();
+            foreach (var ruleset in result)
+            {
+                rulesets.Add(new CachedRuleset
+                {
+                    Id = ruleset.id,
+                    Name = ruleset.name,
+                    Target = ruleset.target ?? "branch",
+                    Enforcement = ruleset.enforcement ?? "disabled",
+                    IncludeRefs = ruleset.conditions?.ref_name?.include ?? Array.Empty<string>(),
+                    ExcludeRefs = ruleset.conditions?.ref_name?.exclude ?? Array.Empty<string>()
+                });
+            }
+
+            return rulesets;
+        }
+        catch (NotFoundException)
+        {
+            return Array.Empty<CachedRuleset>();
+        }
+    }
+
 #pragma warning disable CS8618 // Serialized type
 
     private sealed class OrgSecretsResponse
@@ -479,6 +514,26 @@ public static class GitHubClientExtensions
     {
         public int total_count { get; set; }
         public GitHubArtifact[] artifacts { get; set; }
+    }
+
+    private sealed class RulesetResponse
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public string? target { get; set; }
+        public string? enforcement { get; set; }
+        public RulesetConditions? conditions { get; set; }
+    }
+
+    private sealed class RulesetConditions
+    {
+        public RulesetRefName? ref_name { get; set; }
+    }
+
+    private sealed class RulesetRefName
+    {
+        public string[]? include { get; set; }
+        public string[]? exclude { get; set; }
     }
 
     #pragma warning restore CS8618

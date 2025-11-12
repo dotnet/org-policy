@@ -16,6 +16,7 @@ public sealed class CachedRepo
     public string DefaultBranchName { get; set; }
     public IReadOnlyList<CachedBranch> Branches { get; set; }
     public IReadOnlyList<CachedBranchProtectionRule> BranchProtectionRules { get; set; }
+    public IReadOnlyList<CachedRuleset> Rulesets { get; set; }
     public IReadOnlyList<CachedRepoEnvironment> Environments { get; set; }
     public IReadOnlyList<CachedRepoSecret> Secrets { get; set; }
     public IReadOnlyList<CachedRepoProperty> Properties { get; set; }
