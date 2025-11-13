@@ -4,7 +4,7 @@ internal sealed class PR20_ReleaseBranchesShouldBeProtected : PolicyRule
 {
     public override PolicyDescriptor Descriptor { get; } = new PolicyDescriptor(
         "PR20",
-        "Release branches should have branch protection",
+        "Release branches should be protected",
         PolicySeverity.Warning
     );
 
@@ -22,7 +22,7 @@ internal sealed class PR20_ReleaseBranchesShouldBeProtected : PolicyRule
                 continue;
 
             var unprotectedReleaseBranches = repo.Branches.Where(b => b.Name.StartsWith("release/", StringComparison.OrdinalIgnoreCase))
-                                                          .Where(b => !b.Rules.Any());
+                                                          .Where(b => !b.IsProtected);
 
             foreach (var branch in unprotectedReleaseBranches)
             {
@@ -30,7 +30,7 @@ internal sealed class PR20_ReleaseBranchesShouldBeProtected : PolicyRule
                     Descriptor,
                     $"The release branch '{branch.Name}' in '{repo.Name}' has no branch protection",
                     $@"
-                            The branch {branch.Markdown()} in repo {repo.Markdown()} appears to be a release branch and should have branch protection rules, such as preventing force pushes and requiring PRs.
+                            The branch {branch.Markdown()} in repo {repo.Markdown()} appears to be a release branch and should have branch protection rules or rulesets, such as preventing force pushes and requiring PRs.
                         ",
                     repo: repo,
                     branch: branch
